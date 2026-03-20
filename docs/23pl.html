@@ -74,6 +74,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -99,8 +128,12 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
+    <a class="nav-link" href="./logreg.html"> 
+<span class="menu-text">Logistic regression and the intercept</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link active" href="./23pl.html" aria-current="page"> 
-<span class="menu-text">Predictions from the 2PL and 3PL</span></a>
+<span class="menu-text">2PL versus 3PL predictions</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -136,64 +169,11 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="features" class="level2">
-<h2 class="anchored" data-anchor-id="features">Features</h2>
+<p>Consider the IRT 3PL model: <span class="math display">\[\Pr(y=1)=c+\frac{1-c}{1+\text{exp}(-a(\theta-b))}.\]</span> The 3PL model is meant to account for guessing behavior via the <span class="math inline">\(c\)</span> parameter but this parameter is also dificult to estimate. A different question is how well the 2PL model (where we constrain <span class="math inline">\(c=0\)</span>) may do in terms of producing similar predictions as the 3PL. We illustrate this by simulating response from the 3PL for a single item, estimating 3PL and 2PL item parameters based on those responses and true abilities, and then computing the IMV based on predictions of new responses.</p>
+<p>We fix <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> in this example and consider the IMV as a function of either the <span class="math inline">\(c\)</span> value (Tab 1) or the sample size (Tab 2).</p>
 <ul>
-<li><strong>Sensitivity to guessing parameter (c)</strong>: Explore how different levels of guessing affect model performance across 100 random c values</li>
-<li><strong>Sensitivity to sample size</strong>: Understand the impact of sample size on estimation stability</li>
-<li><strong>Interactive visualization</strong>: Base R graphics with smoothed trend lines</li>
-</ul>
-</section>
-<section id="about" class="level2">
-<h2 class="anchored" data-anchor-id="about">About</h2>
-<p>This analysis explores how different parameters affect the OM (Ordered Model) statistics in IRT. The application uses a 3-parameter logistic (3PL) model with:</p>
-<section id="fixed-parameters" class="level3">
-<h3 class="anchored" data-anchor-id="fixed-parameters">Fixed Parameters</h3>
-<ul>
-<li>Discrimination parameter (a) = 1.2</li>
-<li>Difficulty parameter (b) = -0.5</li>
-</ul>
-</section>
-<section id="statistical-approach" class="level3">
-<h3 class="anchored" data-anchor-id="statistical-approach">Statistical Approach</h3>
-<p>The app compares models with and without the guessing parameter to evaluate:</p>
-<ul>
-<li><strong>OM</strong>: Overall model comparison metric</li>
-<li><strong>OMu</strong>: Unstandardized comparison</li>
-<li><strong>OMstd</strong>: Standardized comparison</li>
-</ul>
-</section>
-</section>
-<section id="getting-started" class="level2">
-<h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
-<p>Click the button below to launch the interactive Shiny application.</p>
-<p><a href="app.html" class="btn btn-primary" style="font-size: 18px; padding: 12px 24px;">Launch Interactive App</a></p>
-</section>
-<section id="how-to-use" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-use">How to Use</h2>
-<ol type="1">
-<li><strong>Tab 1 - Sensitivity to c</strong>:
-<ul>
-<li>Adjust the sample size using the slider</li>
-<li>Click “Generate New Data” to create a new random sample of c values</li>
-<li>Observe how OM statistics vary across different guessing parameters</li>
-</ul></li>
-<li><strong>Tab 2 - Sensitivity to Sample Size</strong>:
-<ul>
-<li>Set a fixed guessing parameter (c)</li>
-<li>View how OM statistics stabilize with increasing sample size</li>
-<li>Compare the three metrics across sample sizes from 500 to 10,000</li>
-</ul></li>
-</ol>
-</section>
-<section id="technical-details" class="level2">
-<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
-<p>The application implements:</p>
-<ul>
-<li>Item Response Theory (IRT) 3-parameter logistic model</li>
-<li>Maximum likelihood estimation via <code>optim()</code></li>
-<li>LOESS smoothing for trend visualization</li>
-<li>Bootstrap-style resampling for sensitivity analysis</li>
+<li>For a large sample ($N=5000) in Tab 1, note that the IMV increases as a function of <span class="math inline">\(c\)</span> but is never very large (e.g., above 0.005). The IMV is also near zero when <span class="math inline">\(c\)</span> is near zero which is to be expected.</li>
+<li>In Tab 2, small valus of <span class="math inline">\(c\)</span> produce IMVs very near zero when the sample size is large and sometimes produce negative values when the sample size is small (i.e., overfitting). When <span class="math inline">\(c\)</span> is larger, IMV values are more consistent but, again, never very large.</li>
 </ul>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
@@ -241,7 +221,7 @@ est &lt;- function(x, th, fixc = FALSE) {
 }
 
 ui &lt;- fluidPage(
-  titlePanel("IRT OM Sensitivity Analysis"),
+  titlePanel("Comparison of 2PL and 3PL predictions"),
   
   sidebarLayout(
     sidebarPanel(
@@ -261,7 +241,7 @@ ui &lt;- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Sensitivity to c",
-                 h3("OM as a Function of c Parameter"),
+                 h3("IMV as a Function of c Parameter"),
                  p("100 random c values sampled from Uniform(0, 0.5)"),
                  plotOutput("sensitivity_c_plot", height = "500px"),
                  hr(),
@@ -270,7 +250,7 @@ ui &lt;- fluidPage(
         ),
         
         tabPanel("Sensitivity to Sample Size",
-                 h3("OM as a Function of Sample Size"),
+                 h3("IMV as a Function of Sample Size"),
                  p("Fixed c parameter, varying sample size"),
                  plotOutput("sensitivity_n_plot", height = "500px"),
                  hr(),
@@ -368,7 +348,7 @@ server &lt;- function(input, output, session) {
   
   output$summary_c_output &lt;- renderPrint({
     req(sim_data$sensitivity_c)
-    cat("Summary of OM Statistics across 100 c values:\n")
+    cat("Summary of IMV Statistics across 100 c values:\n")
     cat("=============================================\n\n")
     for(stat in c("om", "omu", "omstd")) {
       vals &lt;- sim_data$sensitivity_c[[stat]]
@@ -384,7 +364,7 @@ server &lt;- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_c$c, sim_data$sensitivity_c$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Guessing Parameter (c)", ylab = "OM Value",
+         xlab = "Guessing Parameter (c)", ylab = "IMV Value",
          main = paste("Sensitivity to c (n =", input$n_persons_tab1, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")
@@ -401,7 +381,7 @@ server &lt;- function(input, output, session) {
   
   output$summary_n_output &lt;- renderPrint({
     req(sim_data$sensitivity_n)
-    cat("Summary of OM Statistics across sample sizes:\n")
+    cat("Summary of IMV Statistics across sample sizes:\n")
     cat("=============================================\n")
     cat(sprintf("c parameter: %.2f\n\n", input$c_param_tab2))
     for(stat in c("om", "omu", "omstd")) {
@@ -418,7 +398,7 @@ server &lt;- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_n$n, sim_data$sensitivity_n$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Sample Size", ylab = "OM Value",
+         xlab = "Sample Size", ylab = "IMV Value",
          main = paste("Sensitivity to Sample Size (c =", input$c_param_tab2, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")
@@ -438,7 +418,6 @@ shinyApp(ui = ui, server = server)</code></pre>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
