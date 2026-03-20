@@ -119,7 +119,7 @@ server <- function(input, output, session) {
     # Plot points
     plot(results$b1vals, results$om,
          xlab = expression(b[1]), 
-         ylab = "IMV",
+         ylab = "IMV(mean(y),hat(y))",
          ylim=c(0,.8),
          main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,

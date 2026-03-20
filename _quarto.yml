@@ -3,12 +3,14 @@ project:
   output-dir: docs
 
 website:
-  title: "IRT OM Sensitivity"
+  title: "The IMV"
   navbar:
     left:
       - href: index.qmd
         text: Home
       - href: logreg.qmd
         text: Logistic regression and the intercept
+      - href: oracle.qmd
+        text: Logistic regression and the Oracle
       - href: 23pl.qmd
         text: 2PL versus 3PL predictions

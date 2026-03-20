@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>IRT OM Sensitivity Analysis - Interactive App – IRT OM Sensitivity</title>
+<title>IRT OM Sensitivity Analysis - Interactive App – The IMV</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -114,7 +114,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">IRT OM Sensitivity</span>
+    <span class="navbar-title">The IMV</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -364,7 +364,7 @@ server &lt;- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_c$c, sim_data$sensitivity_c$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Guessing Parameter (c)", ylab = "IMV Value",
+         xlab = "Guessing Parameter (c)", ylab = "IMV(2PL,3PL)",
          main = paste("Sensitivity to c (n =", input$n_persons_tab1, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")
@@ -398,7 +398,7 @@ server &lt;- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_n$n, sim_data$sensitivity_n$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Sample Size", ylab = "IMV Value",
+         xlab = "Sample Size", ylab = "IMV(2PL,3PL)",
          main = paste("Sensitivity to Sample Size (c =", input$c_param_tab2, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")

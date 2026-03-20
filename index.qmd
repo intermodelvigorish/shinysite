@@ -16,6 +16,8 @@ The goal here is to provide some insight into how the IMV can be used for model 
 
 [Logistic regression and the intercept](logreg.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
 
+[Logistic regression and the Oracle](oracle.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+
 ### IRT examples
 
 [2PL versus 3PL predictions](23pl.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}

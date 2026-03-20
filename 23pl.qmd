@@ -204,7 +204,7 @@ server <- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_c$c, sim_data$sensitivity_c$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Guessing Parameter (c)", ylab = "IMV Value",
+         xlab = "Guessing Parameter (c)", ylab = "IMV(2PL,3PL)",
          main = paste("Sensitivity to c (n =", input$n_persons_tab1, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")
@@ -238,7 +238,7 @@ server <- function(input, output, session) {
     par(mar = c(5, 5, 4, 2))
     plot(sim_data$sensitivity_n$n, sim_data$sensitivity_n$om, 
          type = "n", ylim = c(-0.003, 0.003),
-         xlab = "Sample Size", ylab = "IMV Value",
+         xlab = "Sample Size", ylab = "IMV(2PL,3PL)",
          main = paste("Sensitivity to Sample Size (c =", input$c_param_tab2, ")"),
          cex.lab = 1.2)
     grid(col = "lightgray")

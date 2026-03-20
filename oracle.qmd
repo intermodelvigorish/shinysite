@@ -1,0 +1,159 @@
+---
+title: "Logistic Regression and the Oracle"
+format: 
+  html:
+    theme: cosmo
+    page-layout: full
+filters:
+  - shinylive
+---
+
+We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values and consider the IMV associated with predicting new $y$ outcomes based on the correctly specified logistic regression model (yielding estimates hat(p)) versus the true values ($p$).
+
+Notes:
+
+- As sample sizes increase, the oracle IMV goes to zero (we are observing the consistency of the estimates).
+- When $b1$ is small, the predictions can be quite noisy related to the true $p$ probabilities (thus leading to oracle IMV values well above zero). 
+
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 900
+
+library(shiny)
+
+imv.binary<-function(y, p1, p2, sigma=1e-4) {
+    p1<-ifelse(p1<sigma,sigma,p1)
+    p2<-ifelse(p2<sigma,sigma,p2)
+    p1<-ifelse(p1>1-sigma,1-sigma,p1)
+    p2<-ifelse(p2>1-sigma,1-sigma,p2)
+    
+    ll<-function(x,p) {
+        z<-log(p)*x+log(1-p)*(1-x)
+        z<-sum(z)/length(x)
+        exp(z)
+    }    
+    loglik1<-ll(y,p1)
+    loglik2<-ll(y,p2)
+    getcoins<-function(a) {
+        f<-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))
+        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par
+    }
+    c1<-getcoins(loglik1)
+    c2<-getcoins(loglik2)
+    ew<-function(p1,p0) (p1-p0)/p0
+    imv<-ew(c2,c1)
+    imv
+}
+
+ui <- fluidPage(
+  titlePanel("Logistic Regression: Sample Size vs Out-of-Sample Performance"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("b0", 
+                  "Intercept (b0):", 
+                  min = -2, 
+                  max = 2, 
+                  value = 0, 
+                  step = 0.1),
+      
+      sliderInput("b1", 
+                  "Slope (b1):", 
+                  min = 0, 
+                  max = .5, 
+                  value = 0.25, 
+                  step = 0.01),
+      
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      
+      hr(),
+      
+      p("This app simulates logistic regression models with varying sample sizes and 
+        evaluates their out-of-sample performance using the IMV metric.")
+    ),
+    
+    mainPanel(
+      plotOutput("omPlot", height = "500px"),
+      
+      hr(),
+      
+      verbatimTextOutput("summary")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  simData <- eventReactive(input$run, {
+    b0 <- input$b0
+    b1 <- input$b1
+    
+    N <- runif(100, 2.4, 4)
+    Nvals <- round(10^N)
+    
+    om <- numeric()
+    
+    withProgress(message = 'Running simulation...', value = 0, {
+      for (i in seq_along(Nvals)) {
+        N <- Nvals[i]
+        
+        pr <- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
+        
+        x <- rnorm(N)
+        p <- pr(x, b0 = b0, b1 = b1)
+        y <- rbinom(length(x), 1, p)
+        df <- data.frame(x = x, y = y)
+        m <- glm(y ~ x, df, family = 'binomial')
+        
+        ## oos data
+        x2 <- rnorm(10000)
+        p2 <- pr(x2, b0 = b0, b1 = b1)
+        y2 <- rbinom(length(x2), 1, p2)
+        p.oos <- predict(m, data.frame(x = x2), type = 'response')
+        om[as.character(N)] <- imv.binary(y2, p.oos, p2)
+        
+        incProgress(1/length(Nvals))
+      }
+    })
+    
+    list(n = as.numeric(names(om)), om = om)
+  })
+  
+  output$omPlot <- renderPlot({
+    data <- simData()
+    
+    plot(data$n, data$om,
+         xlab = "Sample Size (N)",
+         ylab = "IMV(hat(p),p)",
+         main = paste0("Sample Size vs Out-of-Sample Performance\n(b0 = ", 
+                      input$b0, ", b1 = ", input$b1, ")"),
+         pch = 16,
+         col = rgb(0, 0, 1, 0.5),
+         cex = 1.2,
+         ylim=c(0,.1),
+	 log = "x")
+    
+    # Add a smoothed trend line
+    lines(lowess(data$n, data$om), col = "red", lwd = 2)
+    grid()
+  })
+  
+  output$summary <- renderPrint({
+    data <- simData()
+    cat("Simulation Summary\n")
+    cat("==================\n\n")
+    cat("Parameters:\n")
+    cat("  b0 (Intercept):", input$b0, "\n")
+    cat("  b1 (Slope):", input$b1, "\n\n")
+    cat("Number of simulations: 100\n")
+    cat("Sample Size Range:", min(data$n), "to", max(data$n), "\n")
+    cat("IMV Range:", round(min(data$om), 4), "to", round(max(data$om), 4), "\n")
+    cat("Mean IMV:", round(mean(data$om), 4), "\n")
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+[← Back to Home](index.html){.btn .btn-secondary}
