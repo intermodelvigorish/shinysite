@@ -1,0 +1,163 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "The InterModel Vigorish (IMV)",
+    "section": "",
+    "text": "The goal here is to provide some insight into how the IMV can be used for model evaluation."
+  },
+  {
+    "objectID": "index.html#overview",
+    "href": "index.html#overview",
+    "title": "The InterModel Vigorish (IMV)",
+    "section": "",
+    "text": "The goal here is to provide some insight into how the IMV can be used for model evaluation."
+  },
+  {
+    "objectID": "index.html#features",
+    "href": "index.html#features",
+    "title": "IRT OM Sensitivity Analysis",
+    "section": "Features",
+    "text": "Features\n\nSensitivity to guessing parameter (c): Explore how different levels of guessing affect model performance across 100 random c values\nSensitivity to sample size: Understand the impact of sample size on estimation stability\nInteractive visualization: Base R graphics with smoothed trend lines"
+  },
+  {
+    "objectID": "index.html#about",
+    "href": "index.html#about",
+    "title": "IRT OM Sensitivity Analysis",
+    "section": "About",
+    "text": "About\nThis analysis explores how different parameters affect the OM (Ordered Model) statistics in IRT. The application uses a 3-parameter logistic (3PL) model with:\n\nFixed Parameters\n\nDiscrimination parameter (a) = 1.2\nDifficulty parameter (b) = -0.5\n\n\n\nStatistical Approach\nThe app compares models with and without the guessing parameter to evaluate:\n\nOM: Overall model comparison metric\nOMu: Unstandardized comparison\nOMstd: Standardized comparison"
+  },
+  {
+    "objectID": "index.html#getting-started",
+    "href": "index.html#getting-started",
+    "title": "IRT OM Sensitivity Analysis",
+    "section": "Getting Started",
+    "text": "Getting Started\nClick the button below to launch the interactive Shiny application.\nLaunch Interactive App"
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "IRT OM Sensitivity Analysis",
+    "section": "How to Use",
+    "text": "How to Use\n\nTab 1 - Sensitivity to c:\n\nAdjust the sample size using the slider\nClick “Generate New Data” to create a new random sample of c values\nObserve how OM statistics vary across different guessing parameters\n\nTab 2 - Sensitivity to Sample Size:\n\nSet a fixed guessing parameter (c)\nView how OM statistics stabilize with increasing sample size\nCompare the three metrics across sample sizes from 500 to 10,000"
+  },
+  {
+    "objectID": "index.html#technical-details",
+    "href": "index.html#technical-details",
+    "title": "IRT OM Sensitivity Analysis",
+    "section": "Technical Details",
+    "text": "Technical Details\nThe application implements:\n\nItem Response Theory (IRT) 3-parameter logistic model\nMaximum likelihood estimation via optim()\nLOESS smoothing for trend visualization\nBootstrap-style resampling for sensitivity analysis"
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "The InterModel Vigorish (IMV)",
+    "section": "References",
+    "text": "References\n\nDomingue, B. W., Rahal, C., Faul, J., Freese, J., Kanopka, K., Rigos, A., … & Tripathi, A. S. (2025). The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. PloS one, 20(3), e0316491.\nDomingue, B. W., Kanopka, K., Kapoor, R., Pohl, S., Chalmers, R. P., Rahal, C., & Rhemtulla, M. (2024). The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items. psychometrika, 89(3), 1034-1054.\nDomingue, B. W., Kanopka, K., Ulitzsch, E., & Zhang, L. (2025). Implied probabilities of polytomous response functions for model-based prediction and comparison. Behaviormetrika, 52(2), 683-705."
+  },
+  {
+    "objectID": "index.html#contact",
+    "href": "index.html#contact",
+    "title": "The InterModel Vigorish (IMV)",
+    "section": "Contact",
+    "text": "Contact\nAdditional computing resources can be found here."
+  },
+  {
+    "objectID": "app.html",
+    "href": "app.html",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "",
+    "text": "← Back to Home"
+  },
+  {
+    "objectID": "app.html#features",
+    "href": "app.html#features",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "Features",
+    "text": "Features\n\nSensitivity to guessing parameter (c): Explore how different levels of guessing affect model performance across 100 random c values\nSensitivity to sample size: Understand the impact of sample size on estimation stability\nInteractive visualization: Base R graphics with smoothed trend lines"
+  },
+  {
+    "objectID": "app.html#about",
+    "href": "app.html#about",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "About",
+    "text": "About\nThis analysis explores how different parameters affect the OM (Ordered Model) statistics in IRT. The application uses a 3-parameter logistic (3PL) model with:\n\nFixed Parameters\n\nDiscrimination parameter (a) = 1.2\nDifficulty parameter (b) = -0.5\n\n\n\nStatistical Approach\nThe app compares models with and without the guessing parameter to evaluate:\n\nOM: Overall model comparison metric\nOMu: Unstandardized comparison\nOMstd: Standardized comparison"
+  },
+  {
+    "objectID": "app.html#getting-started",
+    "href": "app.html#getting-started",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "Getting Started",
+    "text": "Getting Started\nClick the button below to launch the interactive Shiny application.\nLaunch Interactive App"
+  },
+  {
+    "objectID": "app.html#how-to-use",
+    "href": "app.html#how-to-use",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "How to Use",
+    "text": "How to Use\n\nTab 1 - Sensitivity to c:\n\nAdjust the sample size using the slider\nClick “Generate New Data” to create a new random sample of c values\nObserve how OM statistics vary across different guessing parameters\n\nTab 2 - Sensitivity to Sample Size:\n\nSet a fixed guessing parameter (c)\nView how OM statistics stabilize with increasing sample size\nCompare the three metrics across sample sizes from 500 to 10,000"
+  },
+  {
+    "objectID": "app.html#technical-details",
+    "href": "app.html#technical-details",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "Technical Details",
+    "text": "Technical Details\nThe application implements:\n\nItem Response Theory (IRT) 3-parameter logistic model\nMaximum likelihood estimation via optim()\nLOESS smoothing for trend visualization\nBootstrap-style resampling for sensitivity analysis\n\n#| '!! shinylive warning !!': |\n#|   shinylive does not work in self-contained HTML documents.\n#|   Please set `embed-resources: false` in your metadata.\n#| standalone: true\n#| viewerHeight: 900\n\nimv.binary&lt;-function(y, p1, p2, sigma=1e-4) {\n    p1&lt;-ifelse(p1&lt;sigma,sigma,p1)\n    p2&lt;-ifelse(p2&lt;sigma,sigma,p2)\n    p1&lt;-ifelse(p1&gt;1-sigma,1-sigma,p1)\n    p2&lt;-ifelse(p2&gt;1-sigma,1-sigma,p2)\n    \n    ll&lt;-function(x,p) {\n        z&lt;-log(p)*x+log(1-p)*(1-x)\n        z&lt;-sum(z)/length(x)\n        exp(z)\n    }    \n    loglik1&lt;-ll(y,p1)\n    loglik2&lt;-ll(y,p2)\n    getcoins&lt;-function(a) {\n        f&lt;-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))\n        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par\n    }\n    c1&lt;-getcoins(loglik1)\n    c2&lt;-getcoins(loglik2)\n    ew&lt;-function(p1,p0) (p1-p0)/p0\n    imv&lt;-ew(c2,c1)\n    imv\n}\n\nlibrary(shiny)\n\nest &lt;- function(x, th, fixc = FALSE) {\n  ll &lt;- function(pars, x, th) {\n    a &lt;- pars[1]\n    b &lt;- pars[2]\n    if (length(pars) == 3) c &lt;- pars[3] else c &lt;- 0\n    p &lt;- c + (1 - c) / (1 + exp(-a * (th - b)))\n    p &lt;- pmax(pmin(p, 1 - 1e-10), 1e-10)\n    -1 * sum(x * log(p) + (1 - x) * log(1 - p))\n  }\n  if (fixc) pars &lt;- c(1, 0) else pars &lt;- c(1, 0, .1)\n  optim(pars, ll, x = x, th = th)$par\n}\n\nui &lt;- fluidPage(\n  titlePanel(\"IRT OM Sensitivity Analysis\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      h4(\"Tab 1: Sensitivity to c\"),\n      sliderInput(\"n_persons_tab1\", \"Sample Size:\", \n                  min = 1000, max = 10000, value = 5000, step = 1000),\n      actionButton(\"simulate_tab1\", \"Generate New Data\", class = \"btn-primary\"),\n      hr(),\n      h4(\"Tab 2: Sensitivity to Sample Size\"),\n      sliderInput(\"c_param_tab2\", \"Guessing Parameter (c):\", \n                  min = 0, max = 0.5, value = 0.2, step = 0.01),\n      actionButton(\"simulate_tab2\", \"Generate New Data\", class = \"btn-primary\"),\n      hr(),\n      p(\"Fixed parameters: a=1.2, b=-0.5\")\n    ),\n    \n    mainPanel(\n      tabsetPanel(\n        tabPanel(\"Sensitivity to c\",\n                 h3(\"OM as a Function of c Parameter\"),\n                 p(\"100 random c values sampled from Uniform(0, 0.5)\"),\n                 plotOutput(\"sensitivity_c_plot\", height = \"500px\"),\n                 hr(),\n                 h4(\"Summary Statistics\"),\n                 verbatimTextOutput(\"summary_c_output\")\n        ),\n        \n        tabPanel(\"Sensitivity to Sample Size\",\n                 h3(\"OM as a Function of Sample Size\"),\n                 p(\"Fixed c parameter, varying sample size\"),\n                 plotOutput(\"sensitivity_n_plot\", height = \"500px\"),\n                 hr(),\n                 h4(\"Summary Statistics\"),\n                 verbatimTextOutput(\"summary_n_output\")\n        )\n      )\n    )\n  )\n)\n\nserver &lt;- function(input, output, session) {\n  \n  a_param &lt;- 1.2\n  b_param &lt;- -0.5\n  n_samples_c &lt;- 100\n  \n  sim_data &lt;- reactiveValues(sensitivity_c = NULL, sensitivity_n = NULL)\n  \n  generate_data_c &lt;- function() {\n    withProgress(message = 'Generating c sensitivity data...', value = 0, {\n      th &lt;- rnorm(input$n_persons_tab1, mean = 0, sd = 1)\n      p_fixed &lt;- 0.2 + (1 - 0.2) / (1 + exp(-a_param * (th - b_param)))\n      responses2 &lt;- rbinom(input$n_persons_tab1, 1, p_fixed)\n      \n      set.seed(NULL)\n      c_values &lt;- sort(runif(n_samples_c, 0, 0.5))\n      sens_results &lt;- data.frame(c = numeric(), om = numeric(), \n                                 omu = numeric(), omstd = numeric())\n      \n      for (i in seq_along(c_values)) {\n        incProgress(1/n_samples_c, detail = paste(\"Sample\", i, \"of\", n_samples_c))\n        \n        c_val &lt;- c_values[i]\n        p_temp &lt;- c_val + (1 - c_val) / (1 + exp(-a_param * (th - b_param)))\n        resp_temp &lt;- rbinom(input$n_persons_tab1, 1, p_temp)\n        \n        est3_temp &lt;- est(th = th, x = resp_temp)\n        est2_temp &lt;- est(th = th, x = resp_temp, fixc = TRUE)\n        \n        p3_temp &lt;- est3_temp[3] + (1 - est3_temp[3]) / \n          (1 + exp(-est3_temp[1] * (th - est3_temp[2])))\n        p2_temp &lt;- 1 / (1 + exp(-est2_temp[1] * (th - est2_temp[2])))\n        \n        omv_temp &lt;- imv.binary(responses2, p2_temp, p3_temp)\n        \n        sens_results &lt;- rbind(sens_results, data.frame(\n          c = c_val, om = omv_temp[1], omu = omv_temp[2], omstd = omv_temp[3]\n        ))\n      }\n      sim_data$sensitivity_c &lt;- sens_results\n    })\n  }\n  \n  generate_data_n &lt;- function() {\n    withProgress(message = 'Generating sample size sensitivity data...', value = 0, {\n      n_values &lt;- seq(500, 10000, by = 500)\n      sens_results &lt;- data.frame(n = numeric(), om = numeric(), \n                                 omu = numeric(), omstd = numeric())\n      \n      for (i in seq_along(n_values)) {\n        incProgress(1/length(n_values), detail = paste(\"n =\", n_values[i]))\n        \n        n_val &lt;- n_values[i]\n        th &lt;- rnorm(n_val, mean = 0, sd = 1)\n        \n        p &lt;- input$c_param_tab2 + (1 - input$c_param_tab2) / \n          (1 + exp(-a_param * (th - b_param)))\n        responses &lt;- rbinom(n_val, 1, p)\n        responses2 &lt;- rbinom(n_val, 1, p)\n        \n        est3 &lt;- est(th = th, x = responses)\n        est2 &lt;- est(th = th, x = responses, fixc = TRUE)\n        \n        p3 &lt;- est3[3] + (1 - est3[3]) / (1 + exp(-est3[1] * (th - est3[2])))\n        p2 &lt;- 1 / (1 + exp(-est2[1] * (th - est2[2])))\n        \n        omv &lt;- imv.binary(responses2, p2, p3)\n        \n        sens_results &lt;- rbind(sens_results, data.frame(\n          n = n_val, om = omv[1], omu = omv[2], omstd = omv[3]\n        ))\n      }\n      sim_data$sensitivity_n &lt;- sens_results\n    })\n  }\n  \n  observe({ \n    generate_data_c() \n    generate_data_n()\n  })\n  \n  observeEvent(input$simulate_tab1, { generate_data_c() })\n  observeEvent(input$simulate_tab2, { generate_data_n() })\n  \n  output$summary_c_output &lt;- renderPrint({\n    req(sim_data$sensitivity_c)\n    cat(\"Summary of OM Statistics across 100 c values:\\n\")\n    cat(\"=============================================\\n\\n\")\n    for(stat in c(\"om\", \"omu\", \"omstd\")) {\n      vals &lt;- sim_data$sensitivity_c[[stat]]\n      cat(sprintf(\"%s:\\n  Range: [%.4f, %.4f]\\n  Mean: %.4f\\n  SD: %.4f\\n\\n\", \n                  stat, min(vals), max(vals), mean(vals), sd(vals)))\n    }\n  })\n  \n  output$sensitivity_c_plot &lt;- renderPlot({\n    req(sim_data$sensitivity_c)\n    cols &lt;- c(\"red\", \"blue\", \"green\")\n    \n    par(mar = c(5, 5, 4, 2))\n    plot(sim_data$sensitivity_c$c, sim_data$sensitivity_c$om, \n         type = \"n\", ylim = c(-0.003, 0.003),\n         xlab = \"Guessing Parameter (c)\", ylab = \"OM Value\",\n         main = paste(\"Sensitivity to c (n =\", input$n_persons_tab1, \")\"),\n         cex.lab = 1.2)\n    grid(col = \"lightgray\")\n    \n    for(i in 1:3) {\n      stat &lt;- c(\"om\", \"omu\", \"omstd\")[i]\n      y &lt;- sim_data$sensitivity_c[[stat]]\n      points(sim_data$sensitivity_c$c, y, col = adjustcolor(cols[i], 0.4), pch = 16)\n      lines(lowess(sim_data$sensitivity_c$c, y, f = 0.3), col = cols[i], lwd = 2)\n    }\n    legend(\"topleft\", legend = c(\"om\", \"omu\", \"omstd\"), \n           col = cols, lwd = 2, pch = 16, bg = \"white\")\n  })\n  \n  output$summary_n_output &lt;- renderPrint({\n    req(sim_data$sensitivity_n)\n    cat(\"Summary of OM Statistics across sample sizes:\\n\")\n    cat(\"=============================================\\n\")\n    cat(sprintf(\"c parameter: %.2f\\n\\n\", input$c_param_tab2))\n    for(stat in c(\"om\", \"omu\", \"omstd\")) {\n      vals &lt;- sim_data$sensitivity_n[[stat]]\n      cat(sprintf(\"%s:\\n  Range: [%.4f, %.4f]\\n  Mean: %.4f\\n  SD: %.4f\\n\\n\", \n                  stat, min(vals), max(vals), mean(vals), sd(vals)))\n    }\n  })\n  \n  output$sensitivity_n_plot &lt;- renderPlot({\n    req(sim_data$sensitivity_n)\n    cols &lt;- c(\"red\", \"blue\", \"green\")\n    \n    par(mar = c(5, 5, 4, 2))\n    plot(sim_data$sensitivity_n$n, sim_data$sensitivity_n$om, \n         type = \"n\", ylim = c(-0.003, 0.003),\n         xlab = \"Sample Size\", ylab = \"OM Value\",\n         main = paste(\"Sensitivity to Sample Size (c =\", input$c_param_tab2, \")\"),\n         cex.lab = 1.2)\n    grid(col = \"lightgray\")\n    \n    for(i in 1:3) {\n      stat &lt;- c(\"om\", \"omu\", \"omstd\")[i]\n      y &lt;- sim_data$sensitivity_n[[stat]]\n      points(sim_data$sensitivity_n$n, y, col = cols[i], pch = 16, cex = 1.5)\n      lines(lowess(sim_data$sensitivity_n$n, y, f = 0.3), col = cols[i], lwd = 2)\n    }\n    legend(\"topleft\", legend = c(\"om\", \"omu\", \"omstd\"), \n           col = cols, lwd = 2, pch = 16, bg = \"white\")\n  })\n}\n\nshinyApp(ui = ui, server = server)"
+  },
+  {
+    "objectID": "index.html#shiny-examples",
+    "href": "index.html#shiny-examples",
+    "title": "The InterModel Vigorish (IMV)",
+    "section": "Shiny examples",
+    "text": "Shiny examples\n\nBinary prediction\nLogistic regression and the intercept\n\n\nIRT examples\n2PL versus 3PL predictions"
+  },
+  {
+    "objectID": "23pl.html",
+    "href": "23pl.html",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "",
+    "text": "Sensitivity to guessing parameter (c): Explore how different levels of guessing affect model performance across 100 random c values\nSensitivity to sample size: Understand the impact of sample size on estimation stability\nInteractive visualization: Base R graphics with smoothed trend lines"
+  },
+  {
+    "objectID": "23pl.html#features",
+    "href": "23pl.html#features",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "",
+    "text": "Sensitivity to guessing parameter (c): Explore how different levels of guessing affect model performance across 100 random c values\nSensitivity to sample size: Understand the impact of sample size on estimation stability\nInteractive visualization: Base R graphics with smoothed trend lines"
+  },
+  {
+    "objectID": "23pl.html#about",
+    "href": "23pl.html#about",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "About",
+    "text": "About\nThis analysis explores how different parameters affect the OM (Ordered Model) statistics in IRT. The application uses a 3-parameter logistic (3PL) model with:\n\nFixed Parameters\n\nDiscrimination parameter (a) = 1.2\nDifficulty parameter (b) = -0.5\n\n\n\nStatistical Approach\nThe app compares models with and without the guessing parameter to evaluate:\n\nOM: Overall model comparison metric\nOMu: Unstandardized comparison\nOMstd: Standardized comparison"
+  },
+  {
+    "objectID": "23pl.html#getting-started",
+    "href": "23pl.html#getting-started",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "Getting Started",
+    "text": "Getting Started\nClick the button below to launch the interactive Shiny application.\nLaunch Interactive App"
+  },
+  {
+    "objectID": "23pl.html#how-to-use",
+    "href": "23pl.html#how-to-use",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "How to Use",
+    "text": "How to Use\n\nTab 1 - Sensitivity to c:\n\nAdjust the sample size using the slider\nClick “Generate New Data” to create a new random sample of c values\nObserve how OM statistics vary across different guessing parameters\n\nTab 2 - Sensitivity to Sample Size:\n\nSet a fixed guessing parameter (c)\nView how OM statistics stabilize with increasing sample size\nCompare the three metrics across sample sizes from 500 to 10,000"
+  },
+  {
+    "objectID": "23pl.html#technical-details",
+    "href": "23pl.html#technical-details",
+    "title": "IRT OM Sensitivity Analysis - Interactive App",
+    "section": "Technical Details",
+    "text": "Technical Details\nThe application implements:\n\nItem Response Theory (IRT) 3-parameter logistic model\nMaximum likelihood estimation via optim()\nLOESS smoothing for trend visualization\nBootstrap-style resampling for sensitivity analysis\n\n#| '!! shinylive warning !!': |\n#|   shinylive does not work in self-contained HTML documents.\n#|   Please set `embed-resources: false` in your metadata.\n#| standalone: true\n#| viewerHeight: 900\n\nimv.binary&lt;-function(y, p1, p2, sigma=1e-4) {\n    p1&lt;-ifelse(p1&lt;sigma,sigma,p1)\n    p2&lt;-ifelse(p2&lt;sigma,sigma,p2)\n    p1&lt;-ifelse(p1&gt;1-sigma,1-sigma,p1)\n    p2&lt;-ifelse(p2&gt;1-sigma,1-sigma,p2)\n    \n    ll&lt;-function(x,p) {\n        z&lt;-log(p)*x+log(1-p)*(1-x)\n        z&lt;-sum(z)/length(x)\n        exp(z)\n    }    \n    loglik1&lt;-ll(y,p1)\n    loglik2&lt;-ll(y,p2)\n    getcoins&lt;-function(a) {\n        f&lt;-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))\n        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par\n    }\n    c1&lt;-getcoins(loglik1)\n    c2&lt;-getcoins(loglik2)\n    ew&lt;-function(p1,p0) (p1-p0)/p0\n    imv&lt;-ew(c2,c1)\n    imv\n}\n\nlibrary(shiny)\n\nest &lt;- function(x, th, fixc = FALSE) {\n  ll &lt;- function(pars, x, th) {\n    a &lt;- pars[1]\n    b &lt;- pars[2]\n    if (length(pars) == 3) c &lt;- pars[3] else c &lt;- 0\n    p &lt;- c + (1 - c) / (1 + exp(-a * (th - b)))\n    p &lt;- pmax(pmin(p, 1 - 1e-10), 1e-10)\n    -1 * sum(x * log(p) + (1 - x) * log(1 - p))\n  }\n  if (fixc) pars &lt;- c(1, 0) else pars &lt;- c(1, 0, .1)\n  optim(pars, ll, x = x, th = th)$par\n}\n\nui &lt;- fluidPage(\n  titlePanel(\"IRT OM Sensitivity Analysis\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      h4(\"Tab 1: Sensitivity to c\"),\n      sliderInput(\"n_persons_tab1\", \"Sample Size:\", \n                  min = 1000, max = 10000, value = 5000, step = 1000),\n      actionButton(\"simulate_tab1\", \"Generate New Data\", class = \"btn-primary\"),\n      hr(),\n      h4(\"Tab 2: Sensitivity to Sample Size\"),\n      sliderInput(\"c_param_tab2\", \"Guessing Parameter (c):\", \n                  min = 0, max = 0.5, value = 0.2, step = 0.01),\n      actionButton(\"simulate_tab2\", \"Generate New Data\", class = \"btn-primary\"),\n      hr(),\n      p(\"Fixed parameters: a=1.2, b=-0.5\")\n    ),\n    \n    mainPanel(\n      tabsetPanel(\n        tabPanel(\"Sensitivity to c\",\n                 h3(\"OM as a Function of c Parameter\"),\n                 p(\"100 random c values sampled from Uniform(0, 0.5)\"),\n                 plotOutput(\"sensitivity_c_plot\", height = \"500px\"),\n                 hr(),\n                 h4(\"Summary Statistics\"),\n                 verbatimTextOutput(\"summary_c_output\")\n        ),\n        \n        tabPanel(\"Sensitivity to Sample Size\",\n                 h3(\"OM as a Function of Sample Size\"),\n                 p(\"Fixed c parameter, varying sample size\"),\n                 plotOutput(\"sensitivity_n_plot\", height = \"500px\"),\n                 hr(),\n                 h4(\"Summary Statistics\"),\n                 verbatimTextOutput(\"summary_n_output\")\n        )\n      )\n    )\n  )\n)\n\nserver &lt;- function(input, output, session) {\n  \n  a_param &lt;- 1.2\n  b_param &lt;- -0.5\n  n_samples_c &lt;- 100\n  \n  sim_data &lt;- reactiveValues(sensitivity_c = NULL, sensitivity_n = NULL)\n  \n  generate_data_c &lt;- function() {\n    withProgress(message = 'Generating c sensitivity data...', value = 0, {\n      th &lt;- rnorm(input$n_persons_tab1, mean = 0, sd = 1)\n      p_fixed &lt;- 0.2 + (1 - 0.2) / (1 + exp(-a_param * (th - b_param)))\n      responses2 &lt;- rbinom(input$n_persons_tab1, 1, p_fixed)\n      \n      set.seed(NULL)\n      c_values &lt;- sort(runif(n_samples_c, 0, 0.5))\n      sens_results &lt;- data.frame(c = numeric(), om = numeric(), \n                                 omu = numeric(), omstd = numeric())\n      \n      for (i in seq_along(c_values)) {\n        incProgress(1/n_samples_c, detail = paste(\"Sample\", i, \"of\", n_samples_c))\n        \n        c_val &lt;- c_values[i]\n        p_temp &lt;- c_val + (1 - c_val) / (1 + exp(-a_param * (th - b_param)))\n        resp_temp &lt;- rbinom(input$n_persons_tab1, 1, p_temp)\n        \n        est3_temp &lt;- est(th = th, x = resp_temp)\n        est2_temp &lt;- est(th = th, x = resp_temp, fixc = TRUE)\n        \n        p3_temp &lt;- est3_temp[3] + (1 - est3_temp[3]) / \n          (1 + exp(-est3_temp[1] * (th - est3_temp[2])))\n        p2_temp &lt;- 1 / (1 + exp(-est2_temp[1] * (th - est2_temp[2])))\n        \n        omv_temp &lt;- imv.binary(responses2, p2_temp, p3_temp)\n        \n        sens_results &lt;- rbind(sens_results, data.frame(\n          c = c_val, om = omv_temp[1], omu = omv_temp[2], omstd = omv_temp[3]\n        ))\n      }\n      sim_data$sensitivity_c &lt;- sens_results\n    })\n  }\n  \n  generate_data_n &lt;- function() {\n    withProgress(message = 'Generating sample size sensitivity data...', value = 0, {\n      n_values &lt;- seq(500, 10000, by = 500)\n      sens_results &lt;- data.frame(n = numeric(), om = numeric(), \n                                 omu = numeric(), omstd = numeric())\n      \n      for (i in seq_along(n_values)) {\n        incProgress(1/length(n_values), detail = paste(\"n =\", n_values[i]))\n        \n        n_val &lt;- n_values[i]\n        th &lt;- rnorm(n_val, mean = 0, sd = 1)\n        \n        p &lt;- input$c_param_tab2 + (1 - input$c_param_tab2) / \n          (1 + exp(-a_param * (th - b_param)))\n        responses &lt;- rbinom(n_val, 1, p)\n        responses2 &lt;- rbinom(n_val, 1, p)\n        \n        est3 &lt;- est(th = th, x = responses)\n        est2 &lt;- est(th = th, x = responses, fixc = TRUE)\n        \n        p3 &lt;- est3[3] + (1 - est3[3]) / (1 + exp(-est3[1] * (th - est3[2])))\n        p2 &lt;- 1 / (1 + exp(-est2[1] * (th - est2[2])))\n        \n        omv &lt;- imv.binary(responses2, p2, p3)\n        \n        sens_results &lt;- rbind(sens_results, data.frame(\n          n = n_val, om = omv[1], omu = omv[2], omstd = omv[3]\n        ))\n      }\n      sim_data$sensitivity_n &lt;- sens_results\n    })\n  }\n  \n  observe({ \n    generate_data_c() \n    generate_data_n()\n  })\n  \n  observeEvent(input$simulate_tab1, { generate_data_c() })\n  observeEvent(input$simulate_tab2, { generate_data_n() })\n  \n  output$summary_c_output &lt;- renderPrint({\n    req(sim_data$sensitivity_c)\n    cat(\"Summary of OM Statistics across 100 c values:\\n\")\n    cat(\"=============================================\\n\\n\")\n    for(stat in c(\"om\", \"omu\", \"omstd\")) {\n      vals &lt;- sim_data$sensitivity_c[[stat]]\n      cat(sprintf(\"%s:\\n  Range: [%.4f, %.4f]\\n  Mean: %.4f\\n  SD: %.4f\\n\\n\", \n                  stat, min(vals), max(vals), mean(vals), sd(vals)))\n    }\n  })\n  \n  output$sensitivity_c_plot &lt;- renderPlot({\n    req(sim_data$sensitivity_c)\n    cols &lt;- c(\"red\", \"blue\", \"green\")\n    \n    par(mar = c(5, 5, 4, 2))\n    plot(sim_data$sensitivity_c$c, sim_data$sensitivity_c$om, \n         type = \"n\", ylim = c(-0.003, 0.003),\n         xlab = \"Guessing Parameter (c)\", ylab = \"OM Value\",\n         main = paste(\"Sensitivity to c (n =\", input$n_persons_tab1, \")\"),\n         cex.lab = 1.2)\n    grid(col = \"lightgray\")\n    \n    for(i in 1:3) {\n      stat &lt;- c(\"om\", \"omu\", \"omstd\")[i]\n      y &lt;- sim_data$sensitivity_c[[stat]]\n      points(sim_data$sensitivity_c$c, y, col = adjustcolor(cols[i], 0.4), pch = 16)\n      lines(lowess(sim_data$sensitivity_c$c, y, f = 0.3), col = cols[i], lwd = 2)\n    }\n    legend(\"topleft\", legend = c(\"om\", \"omu\", \"omstd\"), \n           col = cols, lwd = 2, pch = 16, bg = \"white\")\n  })\n  \n  output$summary_n_output &lt;- renderPrint({\n    req(sim_data$sensitivity_n)\n    cat(\"Summary of OM Statistics across sample sizes:\\n\")\n    cat(\"=============================================\\n\")\n    cat(sprintf(\"c parameter: %.2f\\n\\n\", input$c_param_tab2))\n    for(stat in c(\"om\", \"omu\", \"omstd\")) {\n      vals &lt;- sim_data$sensitivity_n[[stat]]\n      cat(sprintf(\"%s:\\n  Range: [%.4f, %.4f]\\n  Mean: %.4f\\n  SD: %.4f\\n\\n\", \n                  stat, min(vals), max(vals), mean(vals), sd(vals)))\n    }\n  })\n  \n  output$sensitivity_n_plot &lt;- renderPlot({\n    req(sim_data$sensitivity_n)\n    cols &lt;- c(\"red\", \"blue\", \"green\")\n    \n    par(mar = c(5, 5, 4, 2))\n    plot(sim_data$sensitivity_n$n, sim_data$sensitivity_n$om, \n         type = \"n\", ylim = c(-0.003, 0.003),\n         xlab = \"Sample Size\", ylab = \"OM Value\",\n         main = paste(\"Sensitivity to Sample Size (c =\", input$c_param_tab2, \")\"),\n         cex.lab = 1.2)\n    grid(col = \"lightgray\")\n    \n    for(i in 1:3) {\n      stat &lt;- c(\"om\", \"omu\", \"omstd\")[i]\n      y &lt;- sim_data$sensitivity_n[[stat]]\n      points(sim_data$sensitivity_n$n, y, col = cols[i], pch = 16, cex = 1.5)\n      lines(lowess(sim_data$sensitivity_n$n, y, f = 0.3), col = cols[i], lwd = 2)\n    }\n    legend(\"topleft\", legend = c(\"om\", \"omu\", \"omstd\"), \n           col = cols, lwd = 2, pch = 16, bg = \"white\")\n  })\n}\n\nshinyApp(ui = ui, server = server)\n← Back to Home"
+  },
+  {
+    "objectID": "logreg.html",
+    "href": "logreg.html",
+    "title": "Logistic Regression",
+    "section": "",
+    "text": "In this example, we consider the logistic regression model \\[\\Pr(y=1)=\\frac{1}{1+\\text{exp}(-(b_0+b_1 x))}\\]. We generate \\(y\\) based on a sample of 5000 \\(x\\) values and consider the IMV associated with predicting new \\(y\\) outcomes (based on new \\(x\\) observations for different values of \\(b_0\\) and \\(b_1\\). As we might expect the IMV is always near zero when \\(b_1\\) is near zero. However, as \\(b_0\\) gets large, increases in \\(b_1\\) lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes.\n#| '!! shinylive warning !!': |\n#|   shinylive does not work in self-contained HTML documents.\n#|   Please set `embed-resources: false` in your metadata.\n#| standalone: true\n#| viewerHeight: 900\n\nlibrary(shiny)\n\nimv.binary&lt;-function(y, p1, p2, sigma=1e-4) {\n    p1&lt;-ifelse(p1&lt;sigma,sigma,p1)\n    p2&lt;-ifelse(p2&lt;sigma,sigma,p2)\n    p1&lt;-ifelse(p1&gt;1-sigma,1-sigma,p1)\n    p2&lt;-ifelse(p2&gt;1-sigma,1-sigma,p2)\n    \n    ll&lt;-function(x,p) {\n        z&lt;-log(p)*x+log(1-p)*(1-x)\n        z&lt;-sum(z)/length(x)\n        exp(z)\n    }    \n    loglik1&lt;-ll(y,p1)\n    loglik2&lt;-ll(y,p2)\n    getcoins&lt;-function(a) {\n        f&lt;-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))\n        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par\n    }\n    c1&lt;-getcoins(loglik1)\n    c2&lt;-getcoins(loglik2)\n    ew&lt;-function(p1,p0) (p1-p0)/p0\n    imv&lt;-ew(c2,c1)\n    imv\n}\n\nui &lt;- fluidPage(\n  titlePanel(\"Logistic Regression: om vs b1\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      sliderInput(\"b0\", \n                  \"Intercept (b0):\", \n                  min = -2, \n                  max = 2, \n                  value = 0, \n                  step = 0.1),\n      \n      actionButton(\"run\", \"Run Simulation\", class = \"btn-primary\"),\n      \n      hr(),\n      \n      helpText(\"Adjust b0 and click 'Run Simulation' to see how om varies with b1.\")\n    ),\n    \n    mainPanel(\n      plotOutput(\"omPlot\", height = \"600px\")\n    )\n  )\n)\n\nserver &lt;- function(input, output, session) {\n  \n  sim_results &lt;- eventReactive(input$run, {\n    withProgress(message = 'Running simulation...', value = 0, {\n      \n      b0 &lt;- input$b0\n      b1vals &lt;- seq(-1.5, 1.5, length.out = 100)\n      om &lt;- numeric()\n      \n      for (i in seq_along(b1vals)) {\n        b1 &lt;- b1vals[i]\n        \n        pr &lt;- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))\n        \n        x &lt;- rnorm(5000)\n        p &lt;- pr(x, b0 = b0, b1 = b1)\n        y &lt;- rbinom(length(x), 1, p)\n        df &lt;- data.frame(x = x, y = y)\n        m &lt;- glm(y ~ x, df, family = 'binomial')\n        \n        ##oos data\n        x2 &lt;- rnorm(1000)\n        p2 &lt;- pr(x2, b0 = b0, b1 = b1)\n        y2 &lt;- rbinom(length(x2), 1, p2)\n        p.oos &lt;- predict(m, data.frame(x = x2), type = 'response')\n        om[as.character(b1)] &lt;- imv.binary(y2, mean(y), p.oos)\n        \n        incProgress(1/length(b1vals))\n      }\n      \n      list(b1vals = b1vals, om = om)\n    })\n  })\n  \n  output$omPlot &lt;- renderPlot({\n    req(sim_results())\n    \n    results &lt;- sim_results()\n    \n    # Fit loess\n    loess_fit &lt;- loess(results$om ~ results$b1vals, span = 0.5)\n    loess_pred &lt;- predict(loess_fit)\n    \n    # Plot points\n    plot(results$b1vals, results$om,\n         xlab = \"b1\", \n         ylab = \"om\",\n         ylim=c(0,.8),\n         main = paste0(\"om vs b1 (b0 = \", input$b0, \")\"),\n         pch = 19,\n         col = \"steelblue\")\n    \n    # Add loess smooth\n    lines(results$b1vals, loess_pred, col = \"darkred\", lwd = 2)\n    \n    # Add reference line and grid\n    abline(h = 0, lty = 2, col = \"red\")\n    grid()\n  })\n}\n\nshinyApp(ui = ui, server = server)\n← Back to Home"
+  }
+]

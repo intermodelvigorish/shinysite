@@ -1,0 +1,131 @@
+---
+title: "Logistic Regression"
+format: 
+  html:
+    theme: cosmo
+    page-layout: full
+filters:
+  - shinylive
+---
+
+In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}$$. We generate $y$ based on a sample of 5000 $x$ values and consider the IMV associated with predicting new $y$ outcomes (based on new $x$ observations for different values of $b_0$ and $b_1$. As we might expect the IMV is always near zero when $b_1$ is near zero. However,  as $b_0$ gets large, increases in $b_1$ lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. 
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 900
+
+library(shiny)
+
+imv.binary<-function(y, p1, p2, sigma=1e-4) {
+    p1<-ifelse(p1<sigma,sigma,p1)
+    p2<-ifelse(p2<sigma,sigma,p2)
+    p1<-ifelse(p1>1-sigma,1-sigma,p1)
+    p2<-ifelse(p2>1-sigma,1-sigma,p2)
+    
+    ll<-function(x,p) {
+        z<-log(p)*x+log(1-p)*(1-x)
+        z<-sum(z)/length(x)
+        exp(z)
+    }    
+    loglik1<-ll(y,p1)
+    loglik2<-ll(y,p2)
+    getcoins<-function(a) {
+        f<-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))
+        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par
+    }
+    c1<-getcoins(loglik1)
+    c2<-getcoins(loglik2)
+    ew<-function(p1,p0) (p1-p0)/p0
+    imv<-ew(c2,c1)
+    imv
+}
+
+ui <- fluidPage(
+  titlePanel("Logistic Regression: om vs b1"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("b0", 
+                  "Intercept (b0):", 
+                  min = -2, 
+                  max = 2, 
+                  value = 0, 
+                  step = 0.1),
+      
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      
+      hr(),
+      
+      helpText("Adjust b0 and click 'Run Simulation' to see how om varies with b1.")
+    ),
+    
+    mainPanel(
+      plotOutput("omPlot", height = "600px")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  sim_results <- eventReactive(input$run, {
+    withProgress(message = 'Running simulation...', value = 0, {
+      
+      b0 <- input$b0
+      b1vals <- seq(-1.5, 1.5, length.out = 100)
+      om <- numeric()
+      
+      for (i in seq_along(b1vals)) {
+        b1 <- b1vals[i]
+        
+        pr <- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
+        
+        x <- rnorm(5000)
+        p <- pr(x, b0 = b0, b1 = b1)
+        y <- rbinom(length(x), 1, p)
+        df <- data.frame(x = x, y = y)
+        m <- glm(y ~ x, df, family = 'binomial')
+        
+        ##oos data
+        x2 <- rnorm(1000)
+        p2 <- pr(x2, b0 = b0, b1 = b1)
+        y2 <- rbinom(length(x2), 1, p2)
+        p.oos <- predict(m, data.frame(x = x2), type = 'response')
+        om[as.character(b1)] <- imv.binary(y2, mean(y), p.oos)
+        
+        incProgress(1/length(b1vals))
+      }
+      
+      list(b1vals = b1vals, om = om)
+    })
+  })
+  
+  output$omPlot <- renderPlot({
+    req(sim_results())
+    
+    results <- sim_results()
+    
+    # Fit loess
+    loess_fit <- loess(results$om ~ results$b1vals, span = 0.5)
+    loess_pred <- predict(loess_fit)
+    
+    # Plot points
+    plot(results$b1vals, results$om,
+         xlab = "b1", 
+         ylab = "om",
+         ylim=c(0,.8),
+         main = paste0("om vs b1 (b0 = ", input$b0, ")"),
+         pch = 19,
+         col = "steelblue")
+    
+    # Add loess smooth
+    lines(results$b1vals, loess_pred, col = "darkred", lwd = 2)
+    
+    # Add reference line and grid
+    abline(h = 0, lty = 2, col = "red")
+    grid()
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+[← Back to Home](index.html){.btn .btn-secondary}

@@ -1,0 +1,34 @@
+---
+title: "The InterModel Vigorish (IMV)"
+format: 
+  html:
+    theme: cosmo
+    toc: true
+---
+
+## Overview
+
+The goal here is to provide some insight into how the IMV can be used for model evaluation. 
+
+## Shiny examples
+
+### Binary prediction
+
+[Logistic regression and the intercept](logreg.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+
+### IRT examples
+
+[2PL versus 3PL predictions](23pl.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+
+
+## References
+
+- [Domingue, B. W., Rahal, C., Faul, J., Freese, J., Kanopka, K., Rigos, A., ... & Tripathi, A. S. (2025). The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. PloS one, 20(3), e0316491.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491)
+
+- [Domingue, B. W., Kanopka, K., Kapoor, R., Pohl, S., Chalmers, R. P., Rahal, C., & Rhemtulla, M. (2024). The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items. psychometrika, 89(3), 1034-1054.](https://www.cambridge.org/core/journals/psychometrika/article/intermodel-vigorish-as-a-lens-for-understanding-and-quantifying-the-value-of-item-response-models-for-dichotomously-coded-items/F61C75F6F945A5B13F73C6128EB83998)
+
+- [Domingue, B. W., Kanopka, K., Ulitzsch, E., & Zhang, L. (2025). Implied probabilities of polytomous response functions for model-based prediction and comparison. Behaviormetrika, 52(2), 683-705.](https://idp.springer.com/authorize/casa?redirect_uri=https://link.springer.com/article/10.1007/s41237-025-00262-9&casa_token=oQoY5f6NQ1EAAAAA:DFkdW8dmTsIVmj6uEaHGom4quusZJp6lqi8t0Fxli16xvvMdg0Q7JcveLwLeFLmux5fX8U-8SDlNbY9q)
+
+## Contact
+
+Additional computing resources can be found [here](https://github.com/intermodelvigorish).
