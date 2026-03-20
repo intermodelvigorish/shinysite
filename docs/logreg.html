@@ -129,11 +129,11 @@ window.Quarto = {
   </li>  
   <li class="nav-item">
     <a class="nav-link active" href="./logreg.html" aria-current="page"> 
-<span class="menu-text">Logistic regression predictions and the intercept</span></a>
+<span class="menu-text">Logistic regression and the intercept</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./23pl.html"> 
-<span class="menu-text">Predictions from the 2PL and 3PL</span></a>
+<span class="menu-text">2PL versus 3PL predictions</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -169,7 +169,13 @@ window.Quarto = {
 </header>
 
 
-<p>In this example, we consider the logistic regression model <span class="math display">\[\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}\]</span>. We generate <span class="math inline">\(y\)</span> based on a sample of 5000 <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes (based on new <span class="math inline">\(x\)</span> observations for different values of <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>. As we might expect the IMV is always near zero when <span class="math inline">\(b_1\)</span> is near zero. However, as <span class="math inline">\(b_0\)</span> gets large, increases in <span class="math inline">\(b_1\)</span> lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes.</p>
+<p>In this example, we consider the logistic regression model <span class="math display">\[\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of 5000 <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes (based on new <span class="math inline">\(x\)</span> observations for different values of <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>.</p>
+<p>Notes:</p>
+<ul>
+<li><p>As we might expect the IMV is always near zero when <span class="math inline">\(b_1\)</span> is near zero.</p></li>
+<li><p>When <span class="math inline">\(b_0=0\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of around 0.4.</p></li>
+<li><p>However, as <span class="math inline">\(b_0\)</span> gets large, increases in <span class="math inline">\(b_1\)</span> lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. When <span class="math inline">\(b_0=0.5\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of less than half (<span class="math inline">\(&lt;0.2\)</span>).</p></li>
+</ul>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -203,7 +209,7 @@ imv.binary&lt;-function(y, p1, p2, sigma=1e-4) {
 }
 
 ui &lt;- fluidPage(
-  titlePanel("Logistic Regression: om vs b1"),
+  titlePanel("Logistic Regression: IMV vs b1"),
   
   sidebarLayout(
     sidebarPanel(
@@ -218,7 +224,7 @@ ui &lt;- fluidPage(
       
       hr(),
       
-      helpText("Adjust b0 and click 'Run Simulation' to see how om varies with b1.")
+      helpText("Adjust b0 and click 'Run Simulation' to see how IMV varies with b1.")
     ),
     
     mainPanel(
@@ -272,10 +278,10 @@ server &lt;- function(input, output, session) {
     
     # Plot points
     plot(results$b1vals, results$om,
-         xlab = "b1", 
-         ylab = "om",
+         xlab = expression(b[1]), 
+         ylab = "IMV",
          ylim=c(0,.8),
-         main = paste0("om vs b1 (b0 = ", input$b0, ")"),
+         main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,
          col = "steelblue")
     

@@ -8,7 +8,15 @@ filters:
   - shinylive
 ---
 
-In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}$$. We generate $y$ based on a sample of 5000 $x$ values and consider the IMV associated with predicting new $y$ outcomes (based on new $x$ observations for different values of $b_0$ and $b_1$. As we might expect the IMV is always near zero when $b_1$ is near zero. However,  as $b_0$ gets large, increases in $b_1$ lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. 
+In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of 5000 $x$ values and consider the IMV associated with predicting new $y$ outcomes (based on new $x$ observations for different values of $b_0$ and $b_1$.
+
+Notes:
+
+- As we might expect the IMV is always near zero when $b_1$ is near zero.
+
+- When $b_0=0$, $b_1=1$ translates to an IMV of around 0.4.
+
+- However,  as $b_0$ gets large, increases in $b_1$ lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. When $b_0=0.5$, $b_1=1$ translates to an IMV of less than half ($<0.2$). 
 
 ```{shinylive-r}
 #| standalone: true
@@ -41,7 +49,7 @@ imv.binary<-function(y, p1, p2, sigma=1e-4) {
 }
 
 ui <- fluidPage(
-  titlePanel("Logistic Regression: om vs b1"),
+  titlePanel("Logistic Regression: IMV vs b1"),
   
   sidebarLayout(
     sidebarPanel(
@@ -56,7 +64,7 @@ ui <- fluidPage(
       
       hr(),
       
-      helpText("Adjust b0 and click 'Run Simulation' to see how om varies with b1.")
+      helpText("Adjust b0 and click 'Run Simulation' to see how IMV varies with b1.")
     ),
     
     mainPanel(
@@ -110,10 +118,10 @@ server <- function(input, output, session) {
     
     # Plot points
     plot(results$b1vals, results$om,
-         xlab = "b1", 
-         ylab = "om",
+         xlab = expression(b[1]), 
+         ylab = "IMV",
          ylim=c(0,.8),
-         main = paste0("om vs b1 (b0 = ", input$b0, ")"),
+         main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,
          col = "steelblue")
     
