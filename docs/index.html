@@ -3,26 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shiny App</title>
-    <script
-      src="./shinylive/load-shinylive-sw.js"
-      type="module"
-    ></script>
-    <script type="module">
-      import { runExportedApp } from "./shinylive/shinylive.js";
-      runExportedApp({
-        id: "root",
-        appEngine: "r",
-        relPath: "",
-      });
-    </script>
-    <link rel="stylesheet" href="./shinylive/style-resets.css" />
-    <link rel="stylesheet" href="./shinylive/shinylive.css" />
-    
+    <title>The InterModel Vigorish</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #333;
+      }
+      .btn {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        font-size: 16px;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
   </head>
   <body>
+    <h1>IRT OM Sensitivity Analysis</h1>
     
-    <div style="height: 100vh; width: 100vw" id="root"></div>
+    <p>
+      This interactive application demonstrates sensitivity analysis for 
+      Item Response Theory (IRT) ordered models.
+    </p>
+    
+    <h2>Features</h2>
+    <ul>
+      <li>Sensitivity to guessing parameter (c)</li>
+      <li>Sensitivity to sample size</li>
+      <li>Interactive visualization of results</li>
+    </ul>
+    
+    <h2>About</h2>
+    <p>
+      Add your description here about what this analysis does, 
+      who created it, references, etc.
+    </p>
+    
+    <a href="app.html" class="btn">Launch Shiny App</a>
     
   </body>
 </html>
