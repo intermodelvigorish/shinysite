@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Logistic Regression and the Oracle – The IMV</title>
+<title>Logistic Regression and the Overfit – The IMV</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -132,11 +132,11 @@ window.Quarto = {
 <span class="menu-text">Logistic regression and the intercept</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./oracle.html" aria-current="page"> 
+    <a class="nav-link" href="./oracle.html"> 
 <span class="menu-text">Logistic regression and the Oracle</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./overfit.html"> 
+    <a class="nav-link active" href="./overfit.html" aria-current="page"> 
 <span class="menu-text">Logistic regression and the Overfit</span></a>
   </li>  
   <li class="nav-item">
@@ -160,7 +160,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Logistic Regression and the Oracle</h1>
+<h1 class="title">Logistic Regression and the Overfit</h1>
 </div>
 
 
@@ -177,12 +177,13 @@ window.Quarto = {
 </header>
 
 
-<p>The Oracle IMV can be computed by including information about the true probability used to generate outcomes (it is thus only available in simulations. Let’s see how it can be computed and used to undertstand estimation quality as a function of sample size with logistic regression.</p>
-<p>We again consider the logistic regression model <span class="math display">\[p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes based on the correctly specified logistic regression model (yielding estimates hat(p)) versus the true values (<span class="math inline">\(p\)</span>); <strong>inclusion of the <span class="math inline">\(p\)</span> values here means that we are computing the Oracle</strong>.</p>
+<p>The Overfit IMV can be computed by basing calculation on the in-sample values used to generate probabilities rather than out-of-sample values. Let’s see how it can be computed and used to undertstand estimation quality as a function of sample size with logistic regression.</p>
+<p>We again consider the logistic regression model <span class="math display">\[p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of <span class="math inline">\(x\)</span> values. We’ll consider two models: the correct model <span class="math display">\[p_1=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}\]</span> and an incorreclty specified alternative that includes a quadratic term <span class="math display">\[p_2=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x+b_2 x^2))}.\]</span> We’ll be interested in the IMV comparing <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span>; the estimates <span class="math inline">\(p_1\)</span> should be better given that they are based on the correctly specified model but we shall see that, especially in small samples, this will not always be the case. <strong>The Overfit IMV will be calculated based on <span class="math inline">\(y\)</span> values that are used to estimate the model</strong> rather than new <span class="math inline">\(y2\)</span> outcomes.</p>
 <p>Notes:</p>
 <ul>
-<li>As sample sizes increase, the oracle IMV goes to zero (we are observing the consistency of the estimates).</li>
-<li>When <span class="math inline">\(b1\)</span> is small, the predictions can be quite noisy related to the true <span class="math inline">\(p\)</span> probabilities (thus leading to oracle IMV values well above zero).</li>
+<li><p>When we use the in-sample <span class="math inline">\(y\)</span> values (the red dots and curve), the IMV values are typically greater than zero. A naive interpretation might be that this implies the quadratic term is helping us to better model the results.</p></li>
+<li><p>When we turn to the out-of-sample data, we see that this is not so. The blue curve is below zero suggesting that the <span class="math inline">\(p_2\)</span> predictions are worse than <span class="math inline">\(p_1\)</span> when it comes to predicting new data. The red results are simply due to overfitting.</p></li>
+<li><p>The differences diminish as sample size increases suggesting that overfitting will be a bigger problem with (relatively; depending on model complexity) smaller samples.</p></li>
 </ul>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
@@ -217,38 +218,35 @@ imv.binary&lt;-function(y, p1, p2, sigma=1e-4) {
 }
 
 ui &lt;- fluidPage(
-  titlePanel("Logistic Regression: Sample Size vs Out-of-Sample Performance"),
+  titlePanel("Logistic Regression Overfitting Simulation"),
   
   sidebarLayout(
     sidebarPanel(
       sliderInput("b0", 
-                  "Intercept (b0):", 
+                  "Intercept (b0):",
                   min = -2, 
                   max = 2, 
-                  value = 0, 
+                  value = 0,
                   step = 0.1),
       
       sliderInput("b1", 
-                  "Slope (b1):", 
-                  min = 0, 
-                  max = .5, 
-                  value = 0.25, 
-                  step = 0.01),
+                  "Slope (b1):",
+                  min = -2, 
+                  max = 2, 
+                  value = 0.2,
+                  step = 0.1),
       
       actionButton("run", "Run Simulation", class = "btn-primary"),
       
       hr(),
       
-      p("This app simulates logistic regression models with varying sample sizes and 
-        evaluates their out-of-sample performance using the IMV metric.")
+      helpText("Red points: overfitting (same data used for fitting and testing)"),
+      helpText("Blue points: out-of-sample (independent test data)"),
+      helpText("DGM: y ~ x (true model does not include x²)")
     ),
     
     mainPanel(
-      plotOutput("omPlot", height = "500px"),
-      
-      hr(),
-      
-      verbatimTextOutput("summary")
+      plotOutput("imvPlot", height = "600px")
     )
   )
 )
@@ -259,67 +257,87 @@ server &lt;- function(input, output, session) {
     b0 &lt;- input$b0
     b1 &lt;- input$b1
     
-    N &lt;- runif(100, 2.4, 4)
-    Nvals &lt;- round(10^N)
+    Nvals &lt;- runif(50, log10(100), log10(2000))
+    Nvals &lt;- sort(round(10^Nvals))
     
-    om &lt;- numeric()
+    om &lt;- om.over &lt;- numeric()
     
     withProgress(message = 'Running simulation...', value = 0, {
       for (i in seq_along(Nvals)) {
         N &lt;- Nvals[i]
         
-        pr &lt;- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
-        
         x &lt;- rnorm(N)
-        p &lt;- pr(x, b0 = b0, b1 = b1)
-        y &lt;- rbinom(length(x), 1, p)
-        df &lt;- data.frame(x = x, y = y)
-        m &lt;- glm(y ~ x, df, family = 'binomial')
+        p &lt;- 1/(1 + exp(-(b0 + b1*x)))
+        y &lt;- rbinom(N, 1, p)
+        y2 &lt;- rbinom(N, 1, p)
+        df &lt;- data.frame(x = x, x2 = x*x)
         
-        ## oos data
-        x2 &lt;- rnorm(10000)
-        p2 &lt;- pr(x2, b0 = b0, b1 = b1)
-        y2 &lt;- rbinom(length(x2), 1, p2)
-        p.oos &lt;- predict(m, data.frame(x = x2), type = 'response')
-        om[as.character(N)] &lt;- imv.binary(y2, p.oos, p2)
+        m1 &lt;- glm(y ~ x + x2, family = 'binomial', df)
+        m0 &lt;- glm(y ~ x, family = 'binomial', df)
+        
+        om.over[as.character(N)] &lt;- imv.binary(y, 
+                                                     predict(m0, df, type='response'),
+                                                     predict(m1, df, type='response'))
+        om[as.character(N)] &lt;- imv.binary(y2, 
+                                                predict(m0, df, type='response'),
+                                                predict(m1, df, type='response'))
         
         incProgress(1/length(Nvals))
       }
     })
     
-    list(n = as.numeric(names(om)), om = om)
+    list(om = om, om.over = om.over)
   })
   
-  output$omPlot &lt;- renderPlot({
+  output$imvPlot &lt;- renderPlot({
+    req(simData())
+    
     data &lt;- simData()
     
-    plot(data$n, data$om,
-         xlab = "Sample Size (N)",
-         ylab = "IMV(hat(p),p)",
-         main = paste0("Sample Size vs Out-of-Sample Performance\n(b0 = ", 
-                      input$b0, ", b1 = ", input$b1, ")"),
-         pch = 16,
-         col = rgb(0, 0, 1, 0.5),
+    # Prepare data for loess
+    N_over &lt;- as.numeric(names(data$om.over))
+    N_oos &lt;- as.numeric(names(data$om))
+    
+    plot(N_over, data$om.over, 
+         ylim = c(-0.1, 0.1), 
+         pch = 19, 
+         col = 'red',
+         xlab = "N", 
+         ylab = "IMV(y~x, y~x+x²)",
+         main = paste0("b0 = ", input$b0, ", b1 = ", input$b1),
          cex = 1.2,
-         ylim=c(0,.1),
-     log = "x")
+         cex.lab = 1.2,
+         cex.main = 1.3)
     
-    # Add a smoothed trend line
-    lines(lowess(data$n, data$om), col = "red", lwd = 2)
-    grid()
-  })
-  
-  output$summary &lt;- renderPrint({
-    data &lt;- simData()
-    cat("Simulation Summary\n")
-    cat("==================\n\n")
-    cat("Parameters:\n")
-    cat("  b0 (Intercept):", input$b0, "\n")
-    cat("  b1 (Slope):", input$b1, "\n\n")
-    cat("Number of simulations: 100\n")
-    cat("Sample Size Range:", min(data$n), "to", max(data$n), "\n")
-    cat("IMV Range:", round(min(data$om), 4), "to", round(max(data$om), 4), "\n")
-    cat("Mean IMV:", round(mean(data$om), 4), "\n")
+    points(N_oos, data$om, 
+           col = 'blue', 
+           pch = 19,
+           cex = 1.2)
+    
+    # Add loess lines with default span (0.75)
+    loess_over &lt;- loess(data$om.over ~ N_over, span = 0.75)
+    loess_oos &lt;- loess(data$om ~ N_oos, span = 0.75)
+    
+    # Sort for smooth lines
+    ord_over &lt;- order(N_over)
+    ord_oos &lt;- order(N_oos)
+    
+    lines(N_over[ord_over], predict(loess_over)[ord_over], 
+          col = 'red', lwd = 2.5, lty = 1)
+    lines(N_oos[ord_oos], predict(loess_oos)[ord_oos], 
+          col = 'blue', lwd = 2.5, lty = 1)
+    
+    abline(h = 0, lty = 2, lwd = 1.5)
+    
+    legend("topright", 
+           bty = 'n', 
+           col = c("blue", "red"),
+           pch = c(19, 19),
+           lty = c(1, 1),
+           lwd = c(2.5, 2.5),
+           legend = c("oos", "overfit"),
+           title = "DGM = y~x",
+           cex = 1.1)
   })
 }
 

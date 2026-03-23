@@ -8,7 +8,9 @@ filters:
   - shinylive
 ---
 
-We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values and consider the IMV associated with predicting new $y$ outcomes based on the correctly specified logistic regression model (yielding estimates hat(p)) versus the true values ($p$).
+The Oracle IMV can be computed by including information about the true probability used to generate outcomes (it is thus only available in simulations. Let's see how it can be computed and used to undertstand estimation quality as a function of sample size with logistic regression.
+
+We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values and consider the IMV associated with predicting new $y$ outcomes based on the correctly specified logistic regression model (yielding estimates hat(p)) versus the true values ($p$); **inclusion of the $p$ values here means that we are computing the Oracle**.
 
 Notes:
 

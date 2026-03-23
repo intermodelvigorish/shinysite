@@ -12,5 +12,7 @@ website:
         text: Logistic regression and the intercept
       - href: oracle.qmd
         text: Logistic regression and the Oracle
+      - href: overfit.qmd
+        text: Logistic regression and the Overfit
       - href: 23pl.qmd
         text: 2PL versus 3PL predictions

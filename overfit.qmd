@@ -1,0 +1,180 @@
+---
+title: "Logistic Regression and the Overfit"
+format: 
+  html:
+    theme: cosmo
+    page-layout: full
+filters:
+  - shinylive
+---
+
+The Overfit IMV can be computed by basing calculation on the in-sample values used to generate probabilities rather than out-of-sample values. Let's see how it can be computed and used to undertstand estimation quality as a function of sample size with logistic regression.
+
+We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values. We'll consider two models: the correct model $$p_1=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}$$ and an incorreclty specified alternative that includes a quadratic term $$p_2=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x+b_2 x^2))}.$$ We'll be interested in the IMV comparing $p_1$ and $p_2$; the estimates $p_1$ should be better given that they are based on the correctly specified model but we shall see that, especially in small samples, this will not always be the case. **The Overfit IMV will be calculated based on $y$ values that are used to estimate the model** rather than new $y2$ outcomes.
+
+Notes:
+
+- When we use the in-sample $y$ values (the red dots and curve), the IMV values are typically greater than zero. A naive interpretation might be that this implies the quadratic term is helping us to better model the results.
+
+- When we turn to the out-of-sample data, we see that this is not so. The blue curve is below zero suggesting that the $p_2$ predictions are worse than $p_1$ when it comes to predicting new data. The red results are simply due to overfitting. 
+
+- The differences diminish as sample size increases suggesting that overfitting will be a bigger problem with (relatively; depending on model complexity) smaller samples. 
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 900
+
+library(shiny)
+
+imv.binary<-function(y, p1, p2, sigma=1e-4) {
+    p1<-ifelse(p1<sigma,sigma,p1)
+    p2<-ifelse(p2<sigma,sigma,p2)
+    p1<-ifelse(p1>1-sigma,1-sigma,p1)
+    p2<-ifelse(p2>1-sigma,1-sigma,p2)
+    
+    ll<-function(x,p) {
+        z<-log(p)*x+log(1-p)*(1-x)
+        z<-sum(z)/length(x)
+        exp(z)
+    }    
+    loglik1<-ll(y,p1)
+    loglik2<-ll(y,p2)
+    getcoins<-function(a) {
+        f<-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))
+        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par
+    }
+    c1<-getcoins(loglik1)
+    c2<-getcoins(loglik2)
+    ew<-function(p1,p0) (p1-p0)/p0
+    imv<-ew(c2,c1)
+    imv
+}
+
+ui <- fluidPage(
+  titlePanel("Logistic Regression Overfitting Simulation"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("b0", 
+                  "Intercept (b0):",
+                  min = -2, 
+                  max = 2, 
+                  value = 0,
+                  step = 0.1),
+      
+      sliderInput("b1", 
+                  "Slope (b1):",
+                  min = -2, 
+                  max = 2, 
+                  value = 0.2,
+                  step = 0.1),
+      
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      
+      hr(),
+      
+      helpText("Red points: overfitting (same data used for fitting and testing)"),
+      helpText("Blue points: out-of-sample (independent test data)"),
+      helpText("DGM: y ~ x (true model does not include x²)")
+    ),
+    
+    mainPanel(
+      plotOutput("imvPlot", height = "600px")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  simData <- eventReactive(input$run, {
+    b0 <- input$b0
+    b1 <- input$b1
+    
+    Nvals <- runif(50, log10(100), log10(2000))
+    Nvals <- sort(round(10^Nvals))
+    
+    om <- om.over <- numeric()
+    
+    withProgress(message = 'Running simulation...', value = 0, {
+      for (i in seq_along(Nvals)) {
+        N <- Nvals[i]
+        
+        x <- rnorm(N)
+        p <- 1/(1 + exp(-(b0 + b1*x)))
+        y <- rbinom(N, 1, p)
+        y2 <- rbinom(N, 1, p)
+        df <- data.frame(x = x, x2 = x*x)
+        
+        m1 <- glm(y ~ x + x2, family = 'binomial', df)
+        m0 <- glm(y ~ x, family = 'binomial', df)
+        
+        om.over[as.character(N)] <- imv.binary(y, 
+                                                     predict(m0, df, type='response'),
+                                                     predict(m1, df, type='response'))
+        om[as.character(N)] <- imv.binary(y2, 
+                                                predict(m0, df, type='response'),
+                                                predict(m1, df, type='response'))
+        
+        incProgress(1/length(Nvals))
+      }
+    })
+    
+    list(om = om, om.over = om.over)
+  })
+  
+  output$imvPlot <- renderPlot({
+    req(simData())
+    
+    data <- simData()
+    
+    # Prepare data for loess
+    N_over <- as.numeric(names(data$om.over))
+    N_oos <- as.numeric(names(data$om))
+    
+    plot(N_over, data$om.over, 
+         ylim = c(-0.1, 0.1), 
+         pch = 19, 
+         col = 'red',
+         xlab = "N", 
+         ylab = "IMV(y~x, y~x+x²)",
+         main = paste0("b0 = ", input$b0, ", b1 = ", input$b1),
+         cex = 1.2,
+         cex.lab = 1.2,
+         cex.main = 1.3)
+    
+    points(N_oos, data$om, 
+           col = 'blue', 
+           pch = 19,
+           cex = 1.2)
+    
+    # Add loess lines with default span (0.75)
+    loess_over <- loess(data$om.over ~ N_over, span = 0.75)
+    loess_oos <- loess(data$om ~ N_oos, span = 0.75)
+    
+    # Sort for smooth lines
+    ord_over <- order(N_over)
+    ord_oos <- order(N_oos)
+    
+    lines(N_over[ord_over], predict(loess_over)[ord_over], 
+          col = 'red', lwd = 2.5, lty = 1)
+    lines(N_oos[ord_oos], predict(loess_oos)[ord_oos], 
+          col = 'blue', lwd = 2.5, lty = 1)
+    
+    abline(h = 0, lty = 2, lwd = 1.5)
+    
+    legend("topright", 
+           bty = 'n', 
+           col = c("blue", "red"),
+           pch = c(19, 19),
+           lty = c(1, 1),
+           lwd = c(2.5, 2.5),
+           legend = c("oos", "overfit"),
+           title = "DGM = y~x",
+           cex = 1.1)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+[← Back to Home](index.html){.btn .btn-secondary}
