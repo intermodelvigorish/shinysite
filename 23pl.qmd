@@ -1,5 +1,5 @@
 ---
-title: "IRT OM Sensitivity Analysis - Interactive App"
+title: "2PL versus 3PL predictions"
 format: 
   html:
     theme: cosmo

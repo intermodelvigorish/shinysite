@@ -16,3 +16,5 @@ website:
         text: Logistic regression and the Overfit
       - href: 23pl.qmd
         text: 2PL versus 3PL predictions
+      - href: collapse.qmd
+        text: The collapse of the thresholded IMV
