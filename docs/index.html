@@ -236,7 +236,7 @@ ui &lt;- fluidPage(
       tags$div(class = "coin-label", style = "margin-top:10px;", "Coin 2 outcomes:"),
       uiOutput("flips2_ui"),
       tags$hr(class = "thin"),
-      tags$p("Enter your probability guesses:"),
+      tags$p("Enter your guesses for probability of heads:"),
       sliderInput("g1", "Your guess for Coin 1 (p₁):",
                   min = 0.01, max = 0.99, value = 0.5, step = 0.01),
       sliderInput("g2", "Your guess for Coin 2 (p₂):",
