@@ -180,10 +180,15 @@ library(shiny)
 
 get_coin_weight &lt;- function(avg_ll, sigma = 1e-6) {
   # Find coin weight w such that w*log(w) + (1-w)*log(1-w) = log(avg_ll)
+  # This can fail if avg_ll is so small that no solution exists in (0.5, 1)
+  # i.e. the predictions are so wrong they are worse than a fair coin
   target &lt;- log(avg_ll)
+  # Check feasibility: the minimum of w*log(w)+(1-w)*log(1-w) on (0.5,1) is log(0.5)
+  # If target &lt; log(0.5) there is no solution — predictions worse than chance
+  if (target &lt; log(0.5)) {
+    stop("implausible")
+  }
   f &lt;- function(w) w * log(w) + (1 - w) * log(1 - w) - target
-  # avg_ll is a geometric mean of likelihoods, so it's in (0,1)
-  # w must be in (0.5, 1) — we always map to the "fair" side &gt;= 0.5
   uniroot(f, lower = 0.5 + sigma, upper = 1 - sigma)$root
 }
 
@@ -195,10 +200,9 @@ avg_ll &lt;- function(y, p, sigma = 1e-4) {
 imv_coins &lt;- function(y, p_baseline, p_enhanced) {
   ll0 &lt;- avg_ll(y, p_baseline)
   ll1 &lt;- avg_ll(y, p_enhanced)
-  w0  &lt;- get_coin_weight(ll0)
-  w1  &lt;- get_coin_weight(ll1)
-  imv &lt;- (w1 - w0) / w0
-  list(w0 = w0, w1 = w1, imv = imv)
+  w0  &lt;- tryCatch(get_coin_weight(ll0), error = function(e) NA)
+  w1  &lt;- tryCatch(get_coin_weight(ll1), error = function(e) NA)
+  list(w0 = w0, w1 = w1, imv = if (!is.na(w0) &amp;&amp; !is.na(w1)) (w1 - w0) / w0 else NA)
 }
 
 # ── UI ───────────────────────────────────────────────────────────────────────
@@ -323,6 +327,40 @@ server &lt;- function(input, output, session) {
     p_enhanced_vec &lt;- ifelse(coin_id == 1, input$g1, input$g2)
 
     res &lt;- imv_coins(y_all, p_baseline_vec, p_enhanced_vec)
+
+    # Check which model(s) failed
+    baseline_failed  &lt;- is.na(res$w0)
+    enhanced_failed  &lt;- is.na(res$w1)
+
+    if (baseline_failed || enhanced_failed) {
+      failed_model &lt;- if (baseline_failed &amp;&amp; enhanced_failed) {
+        "both the baseline and your guesses are"
+      } else if (baseline_failed) {
+        "the baseline model is"
+      } else {
+        "your guesses are"
+      }
+      return(tagList(
+        tags$div(class = "result-box",
+          tags$h4("⚠️ Predictions too far from the data"),
+          tags$p(
+            "The IMV cannot be computed because ", failed_model,
+            " so inconsistent with the observed flips that they perform",
+            " worse than a fair coin (p = 0.5). In the weighted-coin framework,",
+            " no valid coin weight exists for predictions this poor."
+          ),
+          tags$p("Try adjusting your guesses to be closer to the observed",
+                 "proportion of heads for each coin."),
+          tags$div(class = "reveal-box",
+            tags$strong("Observed proportions:"),
+            tags$br(),
+            sprintf("Coin 1: %.2f heads  (your guess: %.2f)", mean(game$flips1), input$g1),
+            tags$br(),
+            sprintf("Coin 2: %.2f heads  (your guess: %.2f)", mean(game$flips2), input$g2)
+          )
+        )
+      ))
+    }
 
     imv_val &lt;- res$imv
     imv_class &lt;- if (imv_val &gt; 0.005) "imv-positive" else
