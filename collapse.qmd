@@ -1,21 +1,24 @@
 ---
 title: "The collapse of the thresholded IMV"
-format: 
-  html:
-    theme: cosmo
-    page-layout: full
-filters:
-  - shinylive
 ---
 
-The thresholded IMV for polytomous models has an interesting property. To illustrate this, we'll consider the graded response model. Suppose we have data in $K$ categories based on the graded responses model. Denote the ordered thresholds as $b_k$ with $k \in \{0,...,K-1\}$. As $b_{k}$ decreases towards $b_{k-1}$, this effectively becomes a response in $K-1$ categories. The relevant property is that the thresholded IMV is comparable across the $K-1$ and $K$ category responses. We can really emphasize this in the $K=3$ case by showing that the thresholded IMV collapses to the binary IMV when we consider a case with a fixed $b_0$ and varying $b_1$. As $b_1$ approaches $b_0$, the thresholded IMV approaches the values of the binary IMVs (based on either the 01/2 or 0/12 dichotomizations).
+The IMV for binary outcomes is well-established, but many measurement instruments use ordered polytomous responses — rating scales, Likert items, graded assessments. The **thresholded IMV** (denoted $\omega_t$) extends the IMV framework to these multi-category items by applying the binary IMV at each response threshold and combining the results. A natural question is whether this extension is coherent: does $\omega_t$ reduce to the standard binary IMV when the polytomous item effectively becomes binary?
+
+The answer is yes, and this page demonstrates it. We consider the graded response model (GRM) with $K=3$ ordered categories and two threshold parameters $b_0 < b_1$. As the second threshold $b_1$ decreases toward $b_0$, the middle category disappears and the item collapses to a binary response. The thresholded IMV tracks this collapse and converges to the binary IMV based on the corresponding dichotomization — confirming that $\omega_t$ is a coherent generalization.
+
+The plot shows three IMV series as a function of the second threshold $b_1$:
+
+- **$\omega_t$ (black)**: the thresholded IMV for the full 3-category GRM item, comparing IRT-based predictions against the category prevalence baseline
+- **$\omega_{x'}$ (red)**: the binary IMV for the $x > 0$ dichotomization (collapsing categories 1 and 2 together)
+- **$\omega_{x''}$ (blue)**: the binary IMV for the $x > 1$ dichotomization (collapsing categories 0 and 1 together)
+
+As $b_1 \to b_0$ (left side of the plot), all three series converge — the polytomous and binary IMVs become equivalent, as they should when the item is effectively binary.
 
 Notes:
 
 - We consider here only a single item and treat abilities as known.
-- The IMVs are comparisons of the category averages as compared to IRT-based predictions.
-- At the far left of the panel, all of the IMV values collapse!
-
+- The IMVs are comparisons of the category prevalences (baseline) against IRT-based predictions (enhanced model).
+- At the far left of the panel, all of the IMV values collapse — this is the key theoretical property of $\omega_t$.
 
 ```{shinylive-r}
 #| standalone: true
@@ -680,9 +683,9 @@ server <- function(input, output, session) {
     plot(NULL, 
          xlim = range(results$b1_true),
          ylim = c(0, max(c(results$omega_t, results$omega_x_prime, results$omega_x_double)) * 1.1),
-         xlab = 'Second Threshold (b1)',
-         ylab = 'IMV(CTT,IRT)',
-         main = 'IMV Comparison: GRM vs 2PL Dichotomizations',
+         xlab = expression('Second threshold' ~ (b[1])),
+         ylab = 'IMV (prevalence baseline vs IRT predictions)',
+         main = 'Collapse of the thresholded IMV as categories merge',
          cex.lab = 1.2,
          cex.main = 1.3)
     
@@ -707,13 +710,13 @@ server <- function(input, output, session) {
            bty = 'n',
            lwd = 3,
            col = c("black", "red", "blue"),
-           legend = c("GRM (omega_t)", 
-                     "2PL: x>0 (omega_x_prime)", 
-                     "2PL: x>1 (omega_x_double)"),
+           legend = c(expression(omega[t] ~ "(thresholded IMV, 3-category GRM)"),
+                      expression(omega[x*minute] ~ "(binary IMV: x > 0)"),
+                      expression(omega[x*second] ~ "(binary IMV: x > 1)")),
            cex = 1.1)
     
     # Add note about vertical line
-    mtext(paste("Vertical line: First threshold (b0) =", input$b0), 
+    mtext(bquote("Vertical dashed line: first threshold" ~ b[0] == .(input$b0) ~ "— convergence occurs as" ~ b[1] %->% b[0]), 
           side = 3, line = 0.5, cex = 0.9, col = "gray40")
   })
   
@@ -743,5 +746,11 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
+
+**What you should see:**
+
+- As $b_1$ moves rightward (further from $b_0$), the three categories become more distinct and the thresholded IMV $\omega_t$ grows — the GRM model gains more predictive value over the prevalence baseline.
+- As $b_1$ approaches $b_0$ (left side of the plot), all three curves converge to the same value. This is the collapse property: a 3-category item with two identical thresholds is indistinguishable from a binary item, and $\omega_t$ reflects this exactly.
+- The relative positions of $\omega_{x'}$ and $\omega_{x''}$ depend on the distribution of abilities relative to the thresholds and can be explored by adjusting the mean of the theta distribution.
 
 [← Back to Home](index.html){.btn .btn-secondary}

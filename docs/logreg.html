@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Logistic Regression – The IMV</title>
+<title>Logistic Regression and the Intercept – The InterModel Vigorish (IMV)</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -114,7 +114,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">The IMV</span>
+    <span class="navbar-title">The InterModel Vigorish (IMV)</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -132,8 +132,20 @@ window.Quarto = {
 <span class="menu-text">Logistic regression and the intercept</span></a>
   </li>  
   <li class="nav-item">
+    <a class="nav-link" href="./oracle.html"> 
+<span class="menu-text">Logistic regression and the Oracle</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./overfit.html"> 
+<span class="menu-text">Logistic regression and the Overfit</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="./23pl.html"> 
 <span class="menu-text">2PL versus 3PL predictions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./collapse.html"> 
+<span class="menu-text">The collapse of the thresholded IMV</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -152,7 +164,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Logistic Regression</h1>
+<h1 class="title">Logistic Regression and the Intercept</h1>
 </div>
 
 
@@ -169,13 +181,9 @@ window.Quarto = {
 </header>
 
 
-<p>In this example, we consider the logistic regression model <span class="math display">\[\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of 5000 <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes (based on new <span class="math inline">\(x\)</span> observations for different values of <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>.</p>
-<p>Notes:</p>
-<ul>
-<li><p>As we might expect the IMV is always near zero when <span class="math inline">\(b_1\)</span> is near zero.</p></li>
-<li><p>When <span class="math inline">\(b_0=0\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of around 0.4.</p></li>
-<li><p>However, as <span class="math inline">\(b_0\)</span> gets large, increases in <span class="math inline">\(b_1\)</span> lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. When <span class="math inline">\(b_0=0.5\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of less than half (<span class="math inline">\(&lt;0.2\)</span>).</p></li>
-</ul>
+<p>In this example, we consider the logistic regression model <span class="math display">\[\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of 5000 <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes (based on new <span class="math inline">\(x\)</span> observations) for different values of <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>.</p>
+<p>The <strong>baseline</strong> model uses only the overall proportion of 1s — i.e., <span class="math inline">\(\text{mean}(y)\)</span> — as a flat prediction. The <strong>enhanced</strong> model uses the fitted logistic regression predictions <span class="math inline">\(\hat{p}\)</span>. The IMV measures how much better the regression predictions are compared to simply using the prevalence.</p>
+<p>The key question this example addresses: does the intercept <span class="math inline">\(b_0\)</span> matter for the IMV, even when the slope <span class="math inline">\(b_1\)</span> is held fixed? Adjust <span class="math inline">\(b_0\)</span> with the slider and run the simulation to find out.</p>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -279,7 +287,7 @@ server &lt;- function(input, output, session) {
     # Plot points
     plot(results$b1vals, results$om,
          xlab = expression(b[1]), 
-         ylab = "IMV(mean(y),hat(y))",
+         ylab = "IMV(prevalence, fitted model)",
          ylim=c(0,.8),
          main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,
@@ -295,6 +303,12 @@ server &lt;- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)</code></pre>
+<p><strong>What you should see:</strong></p>
+<ul>
+<li>The IMV is always near zero when <span class="math inline">\(b_1\)</span> is near zero — a flat predictor with no slope carries no information over the baseline.</li>
+<li>The curve is symmetric: negative <span class="math inline">\(b_1\)</span> values give the same IMV as their positive counterparts, since the direction of the relationship doesn’t affect predictive accuracy.</li>
+<li>When <span class="math inline">\(b_0=0\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of around 0.4. But as <span class="math inline">\(b_0\)</span> gets large (high or low prevalence), the same <span class="math inline">\(b_1=1\)</span> yields a much smaller IMV. This is the intercept effect: when outcomes are already highly predictable from prevalence alone, there is less uncertainty for the regression to reduce.</li>
+</ul>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
 
 

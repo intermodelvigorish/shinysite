@@ -1,22 +1,16 @@
 ---
 title: "Logistic Regression and the Overfit"
-format: 
-  html:
-    theme: cosmo
-    page-layout: full
-filters:
-  - shinylive
 ---
 
 The Overfit IMV can be computed by basing calculation on the in-sample values used to generate probabilities rather than out-of-sample values. Let's see how it can be computed and used to understand estimation quality as a function of sample size with logistic regression.
 
-We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$$ We generate $$y$$ based on a sample of $$x$ values. We'll consider two models: the correct model $$p_1=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}$$ and an incorrectly specified alternative that includes a quadratic term $$p_2=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x+b_2 x^2))}.$$$ We'll be interested in the IMV comparing $$p_1$$ and $$p_2$$; the estimates $$p_1$$ should be better given that they are based on the correctly specified model but we shall see that, especially in small samples, this will not always be the case. **The Overfit IMV will be calculated based on $$y$$ values that are used to estimate the model** rather than new $$y2$ outcomes.
+We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values. We'll consider two models: the correct model $p_1=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}$ and an incorrectly specified alternative that includes a quadratic term $p_2=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x+b_2 x^2))}.$ We'll be interested in the IMV comparing $p_1$ and $p_2$; the estimates $\hat{p}_1$ should be better given that they are based on the correctly specified model but we shall see that, especially in small samples, this will not always be the case. **The Overfit IMV will be calculated based on $y$ values that are used to estimate the model** rather than new $y_2$ outcomes.
 
 Notes:
 
-- When we use the in-sample $$y$$ values (the red dots and curve), the IMV values are typically greater than zero. A naive interpretation might be that this implies the quadratic term is helping us to better model the results.
+- When we use the in-sample $y$ values (the red dots and curve), the IMV values are typically greater than zero. A naive interpretation might be that this implies the quadratic term is helping us to better model the results.
 
-- When we turn to the out-of-sample data, we see that this is not so. The blue curve is below zero suggesting that the $$p_2$$ predictions are worse than $$p_1$$ when it comes to predicting new data. The red results are simply due to overfitting. 
+- When we turn to the out-of-sample data, we see that this is not so. The blue curve is below zero suggesting that the $p_2$ predictions are worse than $p_1$ when it comes to predicting new data. The red results are simply due to overfitting. 
 
 - The differences diminish as sample size increases suggesting that overfitting will be a bigger problem with (relatively; depending on model complexity) smaller samples. 
 
@@ -86,8 +80,8 @@ ui <- fluidPage(
                  tags$h3("Overview"),
                  tags$p("This simulation compares two logistic regression models across varying sample sizes:"),
                  tags$ul(
-                   tags$$li(tags$$strong("Correct model:"), " y ~ x"),
-                   tags$$li(tags$$strong("Overfit model:"), " y ~ x + x²")
+                   tags$li(tags$strong("Correct model:"), " y ~ x"),
+                   tags$li(tags$strong("Overfit model:"), " y ~ x + x²")
                  ),
                  tags$p("For each sample size N, we:"),
                  tags$ol(
@@ -98,7 +92,7 @@ ui <- fluidPage(
                  ),
                  tags$hr(),
                  tags$h4("Core Simulation Loop"),
-                 tags$$pre(tags$$code(
+                 tags$pre(tags$code(
 '# Sample sizes (150 values between 100 and 2000, log-spaced)
 Nvals <- runif(150, log10(100), log10(2000))
 Nvals <- sort(round(10^Nvals))
@@ -132,8 +126,8 @@ for (i in seq_along(Nvals)) {
                  )),
                  tags$hr(),
                  tags$h4("IMV Function"),
-                 tags$$p("The ", tags$$code("imv.binary()"), " function computes the Information-to-Model-Variance metric:"),
-                 tags$$pre(tags$$code(
+                 tags$p("The ", tags$code("imv.binary()"), " function computes the Information-to-Model-Variance metric:"),
+                 tags$pre(tags$code(
 'imv.binary <- function(y, p1, p2, sigma=1e-4) {
   # Bound probabilities to avoid log(0)
   p1 <- pmax(pmin(p1, 1-sigma), sigma)
@@ -166,11 +160,11 @@ for (i in seq_along(Nvals)) {
                  tags$hr(),
                  tags$h4("Interpretation"),
                  tags$ul(
-                   tags$$li(tags$$strong("Positive IMV:"), " Model 2 (with x²) appears better"),
-                   tags$$li(tags$$strong("Negative IMV:"), " Model 1 (correct) is better"),
-                   tags$$li(tags$$strong("Red curve (overfit):"), " Typically positive due to overfitting"),
-                   tags$$li(tags$$strong("Blue curve (out-of-sample):"), " Typically negative, showing true model is better"),
-                   tags$$li(tags$$strong("Convergence at large N:"), " Both curves approach zero as overfitting becomes negligible")
+                   tags$li(tags$strong("Positive IMV:"), " Model 2 (with x²) appears better"),
+                   tags$li(tags$strong("Negative IMV:"), " Model 1 (correct) is better"),
+                   tags$li(tags$strong("Red curve (overfit):"), " Typically positive due to overfitting"),
+                   tags$li(tags$strong("Blue curve (out-of-sample):"), " Typically negative, showing true model is better"),
+                   tags$li(tags$strong("Convergence at large N:"), " Both curves approach zero as overfitting becomes negligible")
                  )
         )
       )
@@ -230,7 +224,7 @@ server <- function(input, output, session) {
          col = 'red',
          xlab = "N", 
          ylab = "IMV(y~x, y~x+x²)",
-         main = paste0("b0 = ", input$$b0, ", b1 = ", input$$b1),
+         main = paste0("b0 = ", input$b0, ", b1 = ", input$b1),
          cex = 1.2,
          cex.lab = 1.2,
          cex.main = 1.3)
@@ -266,3 +260,6 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)
+```
+
+[← Back to Home](index.html){.btn .btn-secondary}

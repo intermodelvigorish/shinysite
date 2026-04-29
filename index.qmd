@@ -1,39 +1,301 @@
 ---
 title: "The InterModel Vigorish (IMV)"
-format: 
-  html:
-    theme: cosmo
-    toc: true
 ---
 
-## Overview
+## What is the IMV?
 
-The goal here is to provide some insight into how the IMV can be used for model evaluation. 
+When two models both predict the same binary outcome, how much better is one than the other — and does that difference actually *matter*?
 
-## Shiny examples
+Standard metrics like R², AUC, and the F₁ score can answer versions of this question, but they have a shared limitation: their values depend on the baseline difficulty of the prediction problem. An improvement of 0.03 in AUC means something very different when predicting a rare event (prevalence = 2%) versus a common one (prevalence = 50%). This makes it hard to compare model improvements across different datasets or outcomes.
 
-### Binary prediction
+The **InterModel Vigorish (IMV)** is designed to fix this. It is a metric for quantifying the change in predictive accuracy between two models — a *baseline* and an *enhanced* prediction — in a way that is **portable** (comparable across outcomes with different prevalences) and **intuitive** (grounded in a concrete physical analogy).
 
-[Logistic regression and the intercept](logreg.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+---
 
-[Logistic regression and the Oracle](oracle.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+## The Weighted Coin Analogy
 
-[Logistic regression and the Overfit](overfit.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+The IMV is built on an analogy to **weighted coins**.
 
-### IRT examples
+Any predictive system that assigns probabilities to binary outcomes can be mapped to an equivalent weighted coin — a physical object whose bias exactly matches the average uncertainty in those predictions. When you have two such systems, you can ask: by how much does the enhanced model's coin outperform the baseline model's coin in a single-blind bet?
 
-[2PL versus 3PL predictions](23pl.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+More formally, the IMV is the **expected proportional winnings** from betting according to the enhanced model's probabilities when the baseline model sets the odds. A positive IMV means the enhanced model provides genuine predictive value beyond the baseline; a negative IMV signals overfitting or model misspecification.
 
-[The collapse of the thresholded IMV](collapse.html){.btn .btn-primary style="font-size: 18px; padding: 12px 24px;"}
+This framing has a key consequence: because the baseline model defines the bet, the IMV is **always a statement about relative improvement**, not absolute accuracy. The same absolute improvement in log-likelihood will yield a larger IMV when the baseline outcome is highly uncertain (prevalence near 0.5) than when it is already predictable — which is exactly the right behavior.
+
+### Try it yourself
+
+Two weighted coins are flipped 20 times each. You see the outcomes but not the true weights. Enter your best guesses for each coin's probability of heads — these define your *enhanced* model. The *baseline* model uses only the overall average (treating both coins identically). The IMV then measures how much your guesses improve on that baseline.
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 680
+
+library(shiny)
+
+# ── IMV helpers ──────────────────────────────────────────────────────────────
+
+get_coin_weight <- function(avg_ll, sigma = 1e-6) {
+  # Find coin weight w such that w*log(w) + (1-w)*log(1-w) = log(avg_ll)
+  target <- log(avg_ll)
+  f <- function(w) w * log(w) + (1 - w) * log(1 - w) - target
+  # avg_ll is a geometric mean of likelihoods, so it's in (0,1)
+  # w must be in (0.5, 1) — we always map to the "fair" side >= 0.5
+  uniroot(f, lower = 0.5 + sigma, upper = 1 - sigma)$root
+}
+
+avg_ll <- function(y, p, sigma = 1e-4) {
+  p <- pmin(pmax(p, sigma), 1 - sigma)
+  exp(mean(y * log(p) + (1 - y) * log(1 - p)))
+}
+
+imv_coins <- function(y, p_baseline, p_enhanced) {
+  ll0 <- avg_ll(y, p_baseline)
+  ll1 <- avg_ll(y, p_enhanced)
+  w0  <- get_coin_weight(ll0)
+  w1  <- get_coin_weight(ll1)
+  imv <- (w1 - w0) / w0
+  list(w0 = w0, w1 = w1, imv = imv)
+}
+
+# ── UI ───────────────────────────────────────────────────────────────────────
+
+ui <- fluidPage(
+
+  tags$head(tags$style(HTML("
+    body { font-family: 'Georgia', serif; background: #fafaf8; }
+    .well { background: #f0ede6; border: none; border-radius: 8px; }
+    .flip-row { font-size: 1.3em; letter-spacing: 3px; margin: 4px 0; }
+    .coin-label { font-weight: bold; font-size: 1.05em; margin-top: 10px; }
+    .result-box { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+                  padding: 16px 20px; margin-top: 12px; }
+    .result-box h4 { margin-top: 0; }
+    .imv-positive { color: #2a7d2e; font-weight: bold; }
+    .imv-negative { color: #b33a1e; font-weight: bold; }
+    .imv-zero     { color: #666;    font-weight: bold; }
+    .reveal-box   { background: #f5f0e8; border-left: 4px solid #8b6914;
+                    padding: 12px 16px; border-radius: 4px; margin-top: 10px; }
+    hr.thin { border-top: 1px solid #ddd; margin: 14px 0; }
+  "))),
+
+  titlePanel(NULL),
+
+  sidebarLayout(
+    sidebarPanel(width = 4,
+      actionButton("new_game", "🎲  New coins", class = "btn-primary btn-block",
+                   style = "margin-bottom:14px;"),
+      tags$div(class = "coin-label", "Coin 1 outcomes:"),
+      uiOutput("flips1_ui"),
+      tags$div(class = "coin-label", style = "margin-top:10px;", "Coin 2 outcomes:"),
+      uiOutput("flips2_ui"),
+      tags$hr(class = "thin"),
+      tags$p("Enter your probability guesses:"),
+      sliderInput("g1", "Your guess for Coin 1 (p₁):",
+                  min = 0.01, max = 0.99, value = 0.5, step = 0.01),
+      sliderInput("g2", "Your guess for Coin 2 (p₂):",
+                  min = 0.01, max = 0.99, value = 0.5, step = 0.01),
+      actionButton("submit", "⚖️  Compute IMV", class = "btn-success btn-block",
+                   style = "margin-top:6px;")
+    ),
+
+    mainPanel(width = 8,
+      uiOutput("results_ui")
+    )
+  )
+)
+
+# ── Server ───────────────────────────────────────────────────────────────────
+
+server <- function(input, output, session) {
+
+  # Reactive game state
+  game <- reactiveValues(
+    p1 = NULL, p2 = NULL,
+    flips1 = NULL, flips2 = NULL,
+    submitted = FALSE
+  )
+
+  # Generate new coins on button press (and on startup)
+  observeEvent(input$new_game, {
+    game$p1 <- runif(1, 0.3, 0.85)
+    game$p2 <- runif(1, 0.3, 0.85)
+    game$flips1 <- rbinom(20, 1, game$p1)
+    game$flips2 <- rbinom(20, 1, game$p2)
+    game$submitted <- FALSE
+    updateSliderInput(session, "g1", value = 0.5)
+    updateSliderInput(session, "g2", value = 0.5)
+  }, ignoreNULL = FALSE)   # run on startup too
+
+  # Show flip sequences
+  fmt_flips <- function(flips) {
+    paste(ifelse(flips == 1, "H", "T"), collapse = " ")
+  }
+
+  output$flips1_ui <- renderUI({
+    req(game$flips1)
+    heads <- sum(game$flips1)
+    tags$div(
+      tags$div(class = "flip-row", fmt_flips(game$flips1)),
+      tags$small(style = "color:#555;",
+        sprintf("(%d heads, %d tails out of 20)", heads, 20 - heads))
+    )
+  })
+
+  output$flips2_ui <- renderUI({
+    req(game$flips2)
+    heads <- sum(game$flips2)
+    tags$div(
+      tags$div(class = "flip-row", fmt_flips(game$flips2)),
+      tags$small(style = "color:#555;",
+        sprintf("(%d heads, %d tails out of 20)", heads, 20 - heads))
+    )
+  })
+
+  # On submit: compute and display results
+  observeEvent(input$submit, {
+    game$submitted <- TRUE
+  })
+
+  output$results_ui <- renderUI({
+
+    if (!game$submitted) {
+      return(tags$div(
+        style = "color:#888; margin-top:30px; font-style:italic;",
+        "Adjust your probability guesses using the sliders, then click",
+        tags$strong("Compute IMV"), "to see your results."
+      ))
+    }
+
+    req(game$flips1, game$flips2)
+
+    # Build outcome and prediction vectors over both coins combined
+    y_all  <- c(game$flips1, game$flips2)
+    coin_id <- c(rep(1, 20), rep(2, 20))
+
+    # Baseline: same probability for every flip = overall mean
+    p_base <- mean(y_all)
+    p_baseline_vec <- rep(p_base, 40)
+
+    # Enhanced: user's guesses per coin
+    p_enhanced_vec <- ifelse(coin_id == 1, input$g1, input$g2)
+
+    res <- imv_coins(y_all, p_baseline_vec, p_enhanced_vec)
+
+    imv_val <- res$imv
+    imv_class <- if (imv_val > 0.005) "imv-positive" else
+                 if (imv_val < -0.005) "imv-negative" else "imv-zero"
+    imv_interp <- if (imv_val > 0.005)
+      "Your guesses improve on the baseline — you captured something real about the two coins."
+    else if (imv_val < -0.005)
+      "Your guesses perform worse than just using the overall average. The baseline beats you here."
+    else
+      "Your guesses and the baseline perform about the same — not much signal picked up."
+
+    tagList(
+      tags$div(class = "result-box",
+        tags$h4("📊 Results"),
+
+        tags$p(tags$strong("Baseline model:"),
+          sprintf("treats both coins the same (p = %.3f, implied coin weight = %.4f)",
+                  p_base, res$w0)),
+
+        tags$p(tags$strong("Your model:"),
+          sprintf("Coin 1 = %.2f, Coin 2 = %.2f  →  implied coin weight = %.4f",
+                  input$g1, input$g2, res$w1)),
+
+        tags$hr(class = "thin"),
+
+        tags$p(
+          tags$strong("IMV = "),
+          tags$span(class = imv_class,
+                    sprintf("%.4f", imv_val))
+        ),
+        tags$p(style = "color:#444; font-style:italic;", imv_interp),
+
+        tags$hr(class = "thin"),
+
+        tags$div(class = "reveal-box",
+          tags$strong("🔍 True coin weights:"),
+          tags$br(),
+          sprintf("Coin 1: p₁ = %.3f  (you guessed %.2f, sample proportion = %.2f)",
+                  game$p1, input$g1, mean(game$flips1)),
+          tags$br(),
+          sprintf("Coin 2: p₂ = %.3f  (you guessed %.2f, sample proportion = %.2f)",
+                  game$p2, input$g2, mean(game$flips2))
+        )
+      )
+    )
+  })
+}
+
+shinyApp(ui, server)
+```
+
+---
+
+## A Guided Tour of the Examples
+
+The interactive examples below are organized into two groups. If you are new to the IMV, we recommend working through the binary prediction examples first.
+
+### Binary Prediction
+
+These three examples all use logistic regression and are designed to build intuition progressively.
+
+::: {.callout-note appearance="minimal"}
+#### [1. Logistic regression and the intercept](logreg.html)
+The simplest starting point. Shows how the IMV varies as a function of the slope parameter *b₁* and the intercept *b₀* in a standard logistic regression. Demonstrates the key point that the IMV is near zero when *b₁* ≈ 0 (the predictor carries no information), and illustrates how the intercept — which controls baseline prevalence — modulates the IMV even when *b₁* is held fixed.
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [2. Logistic regression and the Oracle](oracle.html)
+Introduces the **Oracle IMV**: a diagnostic available only in simulation, where the true generating probabilities *p* are known. The Oracle IMV measures how far estimated predictions *p̂* are from the truth — and shows that this gap shrinks to zero as sample size increases (consistency). A useful tool for understanding estimation quality and the role of sample size.
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [3. Logistic regression and the Overfit](overfit.html)
+Introduces the **Overfit IMV**: what happens when you evaluate model fit on the same data used to estimate the model rather than on held-out data. A correctly specified model (*y ~ x*) is compared to an overspecified one (*y ~ x + x²*) under both in-sample and out-of-sample evaluation. The in-sample IMV is positive (the extra term appears to help); the out-of-sample IMV is negative (it actually hurts). The gap between the two narrows as sample size grows.
+:::
+
+### IRT Examples
+
+These examples apply the IMV to item response theory models, where the quantity of interest is how well an IRT model predicts item responses relative to a simpler baseline.
+
+::: {.callout-note appearance="minimal"}
+#### [4. 2PL versus 3PL predictions](23pl.html)
+Compares the predictive performance of a 2PL model (no guessing parameter) against a 3PL model (with guessing) when data are generated from the 3PL. Examines how the IMV varies as a function of both the guessing parameter *c* and sample size. Key finding: even when guessing is present, the 3PL's predictive advantage over the 2PL is small — and can be negative in small samples due to the difficulty of estimating *c*.
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [5. The collapse of the thresholded IMV](collapse.html)
+Extends the IMV to **polytomous (multi-category) items** via the *thresholded IMV* (ω_t). Demonstrates the elegant theoretical property that, as the threshold parameters of a graded response model (GRM) converge, the thresholded IMV collapses to the binary IMV based on the corresponding dichotomization. This makes the IMV comparable across items with different numbers of response categories.
+:::
+
+---
+
+## How to Interpret IMV Values
+
+Because the IMV is defined relative to a baseline, its absolute magnitude depends on the comparison being made. Some reference points from published work:
+
+- **IMV ≈ 0**: The enhanced model offers no predictive improvement over the baseline. This can indicate either that the extra predictors are uninformative or, in small samples, that the model is overfitting.
+- **IMV > 0, small (e.g., 0.001–0.01)**: Modest but potentially meaningful improvement. Typical range for comparing closely related IRT models (e.g., 2PL vs. 3PL, or 1PL vs. 2PL on well-behaved items).
+- **IMV > 0, moderate (e.g., 0.01–0.05)**: Substantively meaningful improvement. Typical range when a new predictor explains a real portion of variance.
+- **IMV < 0**: The enhanced model performs *worse* than the baseline on new data. A diagnostic flag for overfitting or model misspecification.
+
+These benchmarks are discussed in more depth, with simulation-based reference distributions, in the Psychometrika paper below.
+
+---
 
 ## References
 
-- [Domingue, B. W., Rahal, C., Faul, J., Freese, J., Kanopka, K., Rigos, A., ... & Tripathi, A. S. (2025). The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. PloS one, 20(3), e0316491.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491)
+- Domingue, B. W., Rahal, C., Faul, J., Freese, J., Kanopka, K., Rigos, A., … & Tripathi, A. S. (2025). The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. *PLoS ONE*, 20(3), e0316491. [→ Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491)
 
-- [Domingue, B. W., Kanopka, K., Kapoor, R., Pohl, S., Chalmers, R. P., Rahal, C., & Rhemtulla, M. (2024). The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items. psychometrika, 89(3), 1034-1054.](https://www.cambridge.org/core/journals/psychometrika/article/intermodel-vigorish-as-a-lens-for-understanding-and-quantifying-the-value-of-item-response-models-for-dichotomously-coded-items/F61C75F6F945A5B13F73C6128EB83998)
+- Domingue, B. W., Kanopka, K., Kapoor, R., Pohl, S., Chalmers, R. P., Rahal, C., & Rhemtulla, M. (2024). The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items. *Psychometrika*, 89(3), 1034–1054. [→ Paper](https://www.cambridge.org/core/journals/psychometrika/article/intermodel-vigorish-as-a-lens-for-understanding-and-quantifying-the-value-of-item-response-models-for-dichotomously-coded-items/F61C75F6F945A5B13F73C6128EB83998)
 
-- [Domingue, B. W., Kanopka, K., Ulitzsch, E., & Zhang, L. (2025). Implied probabilities of polytomous response functions for model-based prediction and comparison. Behaviormetrika, 52(2), 683-705.](https://idp.springer.com/authorize/casa?redirect_uri=https://link.springer.com/article/10.1007/s41237-025-00262-9&casa_token=oQoY5f6NQ1EAAAAA:DFkdW8dmTsIVmj6uEaHGom4quusZJp6lqi8t0Fxli16xvvMdg0Q7JcveLwLeFLmux5fX8U-8SDlNbY9q)
+- Domingue, B. W., Kanopka, K., Ulitzsch, E., & Zhang, L. (2025). Implied probabilities of polytomous response functions for model-based prediction and comparison. *Behaviormetrika*, 52(2), 683–705. [→ Paper](https://link.springer.com/article/10.1007/s41237-025-00262-9)
 
-## Contact
+- Zhang, L., Rahal, C., Kanopka, K., Ulitzsch, E., Zhang, Z., & Domingue, B. W. (2026). Evaluating model predictive performance in confirmatory factor analysis with binary outcomes using the InterModel Vigorish. *Multivariate Behavioral Research*. DOI: 10.1080/00273171.2026.2645212. [→ Paper](https://doi.org/10.1080/00273171.2026.2645212)
 
-Additional computing resources can be found [here](https://github.com/intermodelvigorish).
+---
+
+## Contact & Computing Resources
+
+Additional code and computing resources are available on [GitHub](https://github.com/intermodelvigorish).

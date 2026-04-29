@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: "The IMV"
+  title: "The InterModel Vigorish (IMV)"
   navbar:
     left:
       - href: index.qmd
@@ -18,3 +18,11 @@ website:
         text: 2PL versus 3PL predictions
       - href: collapse.qmd
         text: The collapse of the thresholded IMV
+
+format:
+  html:
+    theme: cosmo
+    page-layout: full
+
+filters:
+  - shinylive

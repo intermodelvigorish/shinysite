@@ -1,21 +1,12 @@
 ---
 title: "Logistic Regression and the Oracle"
-format: 
-  html:
-    theme: cosmo
-    page-layout: full
-filters:
-  - shinylive
 ---
 
-The Oracle IMV can be computed by including information about the true probability used to generate outcomes (it is thus only available in simulations. Let's see how it can be computed and used to undertstand estimation quality as a function of sample size with logistic regression.
+The **Oracle IMV** is a special diagnostic that is only available in simulation studies, where the true data-generating probabilities $p$ are known. Normally, we only have estimated probabilities $\hat{p}$ from a fitted model. The Oracle IMV compares $\hat{p}$ directly against the true $p$ — measuring not how well the model predicts new outcomes, but how close the estimated probabilities are to the truth. As sample size grows and estimation improves, $\hat{p} \to p$ and the Oracle IMV should shrink toward zero.
 
-We again consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of $x$ values and consider the IMV associated with predicting new $y$ outcomes based on the correctly specified logistic regression model (yielding estimates hat(p)) versus the true values ($p$); **inclusion of the $p$ values here means that we are computing the Oracle**.
+We consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on samples of $x$ values across a wide range of sample sizes. For each sample size we fit the correctly specified model (yielding estimates $\hat{p}$) and compute **IMV($\hat{p}$, $p$)** — the Oracle IMV — which measures how far the estimates are from the true probabilities. A large Oracle IMV indicates substantial estimation noise; an Oracle IMV near zero means $\hat{p} \approx p$.
 
-Notes:
-
-- As sample sizes increase, the oracle IMV goes to zero (we are observing the consistency of the estimates).
-- When $b1$ is small, the predictions can be quite noisy related to the true $p$ probabilities (thus leading to oracle IMV values well above zero). 
+Adjust $b_0$ and $b_1$ and run the simulation to see how estimation quality changes with sample size.
 
 
 ```{shinylive-r}
@@ -71,8 +62,7 @@ ui <- fluidPage(
       
       hr(),
       
-      p("This app simulates logistic regression models with varying sample sizes and 
-        evaluates their out-of-sample performance using the IMV metric.")
+      p("This app computes the Oracle IMV — the gap between estimated probabilities and the true generating probabilities — as a function of sample size.")
     ),
     
     mainPanel(
@@ -127,14 +117,14 @@ server <- function(input, output, session) {
     
     plot(data$n, data$om,
          xlab = "Sample Size (N)",
-         ylab = "IMV(hat(p),p)",
-         main = paste0("Sample Size vs Out-of-Sample Performance\n(b0 = ", 
+         ylab = "Oracle IMV: IMV(estimated p, true p)",
+         main = paste0("Oracle IMV vs Sample Size\n(b0 = ", 
                       input$b0, ", b1 = ", input$b1, ")"),
          pch = 16,
          col = rgb(0, 0, 1, 0.5),
          cex = 1.2,
          ylim=c(0,.1),
-	 log = "x")
+         log = "x")
     
     # Add a smoothed trend line
     lines(lowess(data$n, data$om), col = "red", lwd = 2)
@@ -158,4 +148,12 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 
 ```
+
+**What you should see:**
+
+- As sample size increases, the Oracle IMV decreases toward zero — this is the statistical property of consistency: with enough data, $\hat{p} \to p$ and the estimation gap vanishes.
+- When $b_1$ is small, the outcome probabilities are all close to the prevalence and hard to distinguish. Even with large $N$, there is little signal for the model to recover, so estimation noise remains relatively high.
+- When $b_1$ is large, the model has strong signal to estimate and converges quickly — the Oracle IMV drops steeply as $N$ grows.
+- The Oracle IMV is always non-negative by construction: estimated probabilities can never be systematically *better* than the truth they are approximating.
+
 [← Back to Home](index.html){.btn .btn-secondary}

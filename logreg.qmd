@@ -1,22 +1,12 @@
 ---
-title: "Logistic Regression"
-format: 
-  html:
-    theme: cosmo
-    page-layout: full
-filters:
-  - shinylive
+title: "Logistic Regression and the Intercept"
 ---
 
-In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of 5000 $x$ values and consider the IMV associated with predicting new $y$ outcomes (based on new $x$ observations for different values of $b_0$ and $b_1$.
+In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on a sample of 5000 $x$ values and consider the IMV associated with predicting new $y$ outcomes (based on new $x$ observations) for different values of $b_0$ and $b_1$.
 
-Notes:
+The **baseline** model uses only the overall proportion of 1s — i.e., $\text{mean}(y)$ — as a flat prediction. The **enhanced** model uses the fitted logistic regression predictions $\hat{p}$. The IMV measures how much better the regression predictions are compared to simply using the prevalence.
 
-- As we might expect the IMV is always near zero when $b_1$ is near zero.
-
-- When $b_0=0$, $b_1=1$ translates to an IMV of around 0.4.
-
-- However,  as $b_0$ gets large, increases in $b_1$ lead to less significant predictive gains given that there is substantially less uncertainty in the outcomes. When $b_0=0.5$, $b_1=1$ translates to an IMV of less than half ($<0.2$). 
+The key question this example addresses: does the intercept $b_0$ matter for the IMV, even when the slope $b_1$ is held fixed? Adjust $b_0$ with the slider and run the simulation to find out.
 
 ```{shinylive-r}
 #| standalone: true
@@ -119,7 +109,7 @@ server <- function(input, output, session) {
     # Plot points
     plot(results$b1vals, results$om,
          xlab = expression(b[1]), 
-         ylab = "IMV(mean(y),hat(y))",
+         ylab = "IMV(prevalence, fitted model)",
          ylim=c(0,.8),
          main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,
@@ -136,4 +126,11 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
+
+**What you should see:**
+
+- The IMV is always near zero when $b_1$ is near zero — a flat predictor with no slope carries no information over the baseline.
+- The curve is symmetric: negative $b_1$ values give the same IMV as their positive counterparts, since the direction of the relationship doesn't affect predictive accuracy.
+- When $b_0=0$, $b_1=1$ translates to an IMV of around 0.4. But as $b_0$ gets large (high or low prevalence), the same $b_1=1$ yields a much smaller IMV. This is the intercept effect: when outcomes are already highly predictable from prevalence alone, there is less uncertainty for the regression to reduce.
+
 [← Back to Home](index.html){.btn .btn-secondary}
