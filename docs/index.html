@@ -179,15 +179,14 @@ library(shiny)
 # ── IMV helpers ──────────────────────────────────────────────────────────────
 
 get_coin_weight &lt;- function(avg_ll, sigma = 1e-6) {
-  # Find coin weight w such that w*log(w) + (1-w)*log(1-w) = log(avg_ll)
-  # This can fail if avg_ll is so small that no solution exists in (0.5, 1)
-  # i.e. the predictions are so wrong they are worse than a fair coin
   target &lt;- log(avg_ll)
-  # Check feasibility: the minimum of w*log(w)+(1-w)*log(1-w) on (0.5,1) is log(0.5)
-  # If target &lt; log(0.5) there is no solution — predictions worse than chance
-  if (target &lt; log(0.5)) {
-    stop("implausible")
-  }
+  # The entropy H(w) = w*log(w) + (1-w)*log(1-w) has a minimum of log(0.5) at w=0.5.
+  # If target is below this floor (with small tolerance for floating point),
+  # there is no solution — predictions are worse than a fair coin.
+  tol &lt;- 1e-9
+  if (target &lt; log(0.5) - tol) stop("implausible")
+  # Boundary case: target is at or very near the floor — coin weight is 0.5
+  if (target &lt;= log(0.5) + tol) return(0.5)
   f &lt;- function(w) w * log(w) + (1 - w) * log(1 - w) - target
   uniroot(f, lower = 0.5 + sigma, upper = 1 - sigma)$root
 }
@@ -222,7 +221,24 @@ ui &lt;- fluidPage(
     .imv-zero     { color: #666;    font-weight: bold; }
     .reveal-box   { background: #f5f0e8; border-left: 4px solid #8b6914;
                     padding: 12px 16px; border-radius: 4px; margin-top: 10px; }
+    .error-box    { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: 8px;
+                    padding: 16px 20px; margin-top: 12px; }
+    .error-box h4 { margin-top: 0; color: #b33a1e; }
     hr.thin { border-top: 1px solid #ddd; margin: 14px 0; }
+    details { margin-top: 14px; }
+    summary { cursor: pointer; font-size: 0.9em; color: #666;
+              padding: 6px 0; user-select: none; }
+    summary:hover { color: #333; }
+    details[open] summary { margin-bottom: 10px; }
+    .explainer-inner { background: #fafafa; border: 1px solid #e8e8e8;
+                       border-radius: 6px; padding: 14px 16px; font-size: 0.88em; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .stat-card { background: #f0ede6; border-radius: 6px; padding: 8px 10px; }
+    .stat-label { font-size: 0.78em; color: #666; margin-bottom: 2px; }
+    .stat-val   { font-size: 1.1em; font-weight: bold; }
+    .val-ok   { color: #2a7d2e; }
+    .val-fail { color: #b33a1e; }
+    .curve-wrap { position: relative; width: 100%; height: 200px; margin: 10px 0 4px; }
   "))),
 
   titlePanel(NULL),
@@ -236,7 +252,7 @@ ui &lt;- fluidPage(
       tags$div(class = "coin-label", style = "margin-top:10px;", "Coin 2 outcomes:"),
       uiOutput("flips2_ui"),
       tags$hr(class = "thin"),
-      tags$p("Enter your guesses for probability of heads:"),
+      tags$p("Enter your probability guesses:"),
       sliderInput("g1", "Your guess for Coin 1 (p₁):",
                   min = 0.01, max = 0.99, value = 0.5, step = 0.01),
       sliderInput("g2", "Your guess for Coin 2 (p₂):",
@@ -333,6 +349,14 @@ server &lt;- function(input, output, session) {
     enhanced_failed  &lt;- is.na(res$w1)
 
     if (baseline_failed || enhanced_failed) {
+
+      # avg_ll() returns exp(mean log-likelihood), so log() recovers mean log-likelihood
+      ll_enhanced &lt;- log(avg_ll(y_all, p_enhanced_vec))
+      ll_baseline &lt;- log(avg_ll(y_all, p_baseline_vec))
+      log2_floor  &lt;- log(0.5)
+      gap_enh     &lt;- ll_enhanced - log2_floor
+      gap_base    &lt;- ll_baseline - log2_floor
+
       failed_model &lt;- if (baseline_failed &amp;&amp; enhanced_failed) {
         "both the baseline and your guesses are"
       } else if (baseline_failed) {
@@ -340,27 +364,171 @@ server &lt;- function(input, output, session) {
       } else {
         "your guesses are"
       }
+
+      # Pass values into JS via data attributes on a hidden div
       return(tagList(
-        tags$div(class = "result-box",
-          tags$h4("⚠️ Predictions too far from the data"),
+        tags$div(class = "error-box",
+          tags$h4("\u26a0\ufe0f Predictions too far from the data"),
           tags$p(
             "The IMV cannot be computed because ", failed_model,
             " so inconsistent with the observed flips that they perform",
-            " worse than a fair coin (p = 0.5). In the weighted-coin framework,",
-            " no valid coin weight exists for predictions this poor."
+            " worse than a fair coin (p\u00a0=\u00a00.5). In the weighted-coin",
+            " framework, no valid coin weight exists for predictions this poor."
           ),
           tags$p("Try adjusting your guesses to be closer to the observed",
-                 "proportion of heads for each coin."),
+                 " proportion of heads for each coin."),
           tags$div(class = "reveal-box",
             tags$strong("Observed proportions:"),
             tags$br(),
-            sprintf("Coin 1: %.2f heads  (your guess: %.2f)", mean(game$flips1), input$g1),
+            sprintf("Coin 1: %.2f heads  (your guess: %.2f)",
+                    mean(game$flips1), input$g1),
             tags$br(),
-            sprintf("Coin 2: %.2f heads  (your guess: %.2f)", mean(game$flips2), input$g2)
-          )
-        )
-      ))
+            sprintf("Coin 2: %.2f heads  (your guess: %.2f)",
+                    mean(game$flips2), input$g2)
+          ),
+
+          tags$details(
+            tags$summary("Why does this happen? (click to expand)"),
+            tags$div(class = "explainer-inner",
+              tags$p(
+                "The IMV maps every set of predictions to an equivalent weighted coin",
+                " via the bijection: find w \u2208 (0.5, 1) such that its Bernoulli entropy",
+                " H(w)\u00a0=\u00a0w\u00a0log\u00a0w\u00a0+\u00a0(1\u2212w)\u00a0log(1\u2212w)",
+                " equals your average log-likelihood \u2113\u0304.",
+                " But H(w) has a floor at H(0.5)\u00a0=\u00a0\u2212log\u00a02\u00a0\u2248\u00a0\u22120.693 —",
+                " the entropy of a perfectly fair coin.",
+                " If your \u2113\u0304 falls below this floor, the equation has no solution.",
+                " Your predictions are so confidently wrong they carry",
+                " less information than a fair coin flip."
+              ),
+
+              tags$div(class = "stat-grid",
+                tags$div(class = "stat-card",
+                  tags$div(class = "stat-label", "Your avg log-likelihood \u2113\u0304"),
+                  tags$div(class = paste("stat-val", if (enhanced_failed) "val-fail" else "val-ok"),
+                           sprintf("%.4f", ll_enhanced))
+                ),
+                tags$div(class = "stat-card",
+                  tags$div(class = "stat-label", "Feasibility floor \u2212log\u00a02"),
+                  tags$div(class = "stat-val", "\u22120.6931")
+                ),
+                tags$div(class = "stat-card",
+                  tags$div(class = "stat-label", "Gap to floor"),
+                  tags$div(class = paste("stat-val", if (enhanced_failed) "val-fail" else "val-ok"),
+                           sprintf("%+.4f", gap_enh))
+                ),
+                tags$div(class = "stat-card",
+                  tags$div(class = "stat-label", "Baseline \u2113\u0304"),
+                  tags$div(class = paste("stat-val", if (baseline_failed) "val-fail" else "val-ok"),
+                           sprintf("%.4f", ll_baseline))
+                )
+              ),
+
+              tags$p(style = "font-size:0.85em; color:#555; margin: 8px 0 4px;",
+                "The curve below shows H(w) — the Bernoulli entropy as a function of coin weight w.",
+                " The solid black line is the feasibility floor \u2212log\u00a02.",
+                " The red dashed line is your average log-likelihood \u2113\u0304.",
+                " A coin weight exists only when the red line meets or crosses the curve."),
+
+              tags$div(class = "curve-wrap",
+                tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"),
+                tags$canvas(id = "entropy-curve",
+                  `aria-label` = "Entropy curve showing feasibility floor and current log-likelihood")
+              ),
+
+              # Inline script — polls until Chart.js ready then draws
+              tags$script(HTML(sprintf("
+(function() {
+  var LOG2 = Math.log(0.5);
+  var ll_enh  = %f;
+  var ll_base = %f;
+  var failed_enh  = %s;
+  var failed_base = %s;
+
+  function entropy(w) {
+    return w * Math.log(w) + (1 - w) * Math.log(1 - w);
+  }
+  function coinWeight(ll) {
+    if (ll &lt; LOG2) return null;
+    var f = function(w) { return entropy(w) - ll; };
+    var lo = 0.5, hi = 1 - 1e-9;
+    for (var i = 0; i &lt; 60; i++) {
+      var mid = (lo + hi) / 2;
+      if (f(mid) &lt; 0) hi = mid; else lo = mid;
     }
+    return (lo + hi) / 2;
+  }
+
+  function drawChart() {
+    var canvas = document.getElementById('entropy-curve');
+    if (!canvas || typeof Chart === 'undefined') {
+      setTimeout(drawChart, 50);
+      return;
+    }
+
+    var wPts = [], hPts = [];
+    for (var i = 0; i &lt;= 200; i++) {
+      var w = 0.5 + (i / 200) * 0.499;
+      wPts.push(w.toFixed(3));
+      hPts.push(entropy(w));
+    }
+
+    var yMin = Math.min(-2.6, ll_enh - 0.3, ll_base - 0.1);
+
+    var datasets = [
+      { label: 'H(w) \u2014 Bernoulli entropy curve', data: hPts,
+        borderColor: '#185fa5', borderWidth: 2,
+        pointRadius: 0, tension: 0.3, fill: false },
+      { label: 'Floor: \u2212log 2',
+        data: wPts.map(function() { return LOG2; }),
+        borderColor: '#111', borderWidth: 2, borderDash: [],
+        pointRadius: 0, fill: false },
+      { label: 'Your \u2113\u0304 (avg log-likelihood)',
+        data: wPts.map(function() { return ll_enh; }),
+        borderColor: '#a32d2d',
+        borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false }
+    ];
+
+    var w_enh = coinWeight(ll_enh);
+    if (w_enh !== null) {
+      datasets.push({
+        label: '\u03c9', data: [{ x: w_enh.toFixed(3), y: entropy(w_enh) }],
+        borderColor: 'transparent', backgroundColor: '#2a7d2e',
+        pointRadius: 7, showLine: false
+      });
+    }
+
+    new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels: wPts, datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: {
+          x: { title: { display: true, text: 'Coin weight w', font: { size: 11 } },
+               ticks: { maxTicksLimit: 6,
+                 callback: function(v,i) { return i%%40===0 ? parseFloat(wPts[i]).toFixed(2) : ''; } },
+               grid: { color: 'rgba(0,0,0,0.06)' } },
+          y: { title: { display: true, text: 'H(w)', font: { size: 11 } },
+               min: yMin, max: 0.05,
+               ticks: { callback: function(v) { return v.toFixed(1); } },
+               grid: { color: 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }
+
+  drawChart();
+})();
+              ", ll_enhanced, ll_baseline,
+                 tolower(as.character(enhanced_failed)),
+                 tolower(as.character(baseline_failed))
+              )))
+            ) # explainer-inner
+          )  # details
+        )    # error-box
+      ))     # tagList
+    }        # if failed
 
     imv_val &lt;- res$imv
     imv_class &lt;- if (imv_val &gt; 0.005) "imv-positive" else
