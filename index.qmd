@@ -108,7 +108,7 @@ ui <- fluidPage(
       tags$div(class = "coin-label", style = "margin-top:10px;", "Coin 2 outcomes:"),
       uiOutput("flips2_ui"),
       tags$hr(class = "thin"),
-      tags$p("Enter your probability guesses:"),
+      tags$p("Enter your guess about probability of heads:"),
       sliderInput("g1", "Your guess for Coin 1 (p₁):",
                   min = 0.01, max = 0.99, value = 0.5, step = 0.01),
       sliderInput("g2", "Your guess for Coin 2 (p₂):",
@@ -438,7 +438,242 @@ shinyApp(ui, server)
 
 ---
 
-## A Guided Tour of the Examples
+## The IMV Structure
+
+Every IMV calculation involves exactly two components: a **baseline** model and an **enhanced** model. The baseline is the simpler prediction — often just the outcome prevalence, or a model without a key predictor. The enhanced model is the one being evaluated. Both are translated into equivalent weighted coins, and the IMV is the proportional gain from betting with the enhanced coin when the baseline coin sets the odds.
+
+```{=html}
+<div style="width:100%; overflow-x:auto; margin: 1.2rem 0;">
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg"
+     style="max-width:680px; display:block; margin:0 auto; font-family:Georgia,serif;">
+
+  <!-- boxes -->
+  <rect x="10"  y="30"  width="150" height="50" rx="8" fill="#e8f0fb" stroke="#4a7cc7" stroke-width="1.5"/>
+  <rect x="10"  y="120" width="150" height="50" rx="8" fill="#e8f0fb" stroke="#4a7cc7" stroke-width="1.5"/>
+  <rect x="290" y="30"  width="90"  height="50" rx="8" fill="#f0ede6" stroke="#8b6914" stroke-width="1.5"/>
+  <rect x="290" y="120" width="90"  height="50" rx="8" fill="#f0ede6" stroke="#8b6914" stroke-width="1.5"/>
+  <rect x="460" y="75"  width="110" height="50" rx="8" fill="#f5f0e8" stroke="#8b6914" stroke-width="1.5"/>
+  <rect x="630" y="75"  width="80"  height="50" rx="8" fill="#2a7d2e" stroke="#1a5c1e" stroke-width="1.5"/>
+
+  <!-- labels inside boxes: Baseline Prediction -->
+  <text x="85" y="55" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#1a3a6b">
+    <tspan x="85" dy="0">Baseline</tspan>
+    <tspan x="85" dy="16">Prediction</tspan>
+  </text>
+
+  <!-- labels inside boxes: Enhanced Prediction -->
+  <text x="85" y="138" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#1a3a6b">
+    <tspan x="85" dy="0">Enhanced</tspan>
+    <tspan x="85" dy="16">Prediction</tspan>
+  </text>
+
+  <!-- w0 box: three lines centred in box (y=30, h=50 → centre=55) -->
+  <text x="335" text-anchor="middle" font-size="14" fill="#5a3e00">
+    <tspan x="335" y="47">w₀</tspan>
+    <tspan x="335" dy="14" font-size="11" fill="#7a5a00">(baseline</tspan>
+    <tspan x="335" dy="13" font-size="11" fill="#7a5a00">coin)</tspan>
+  </text>
+
+  <!-- w1 box: three lines centred in box (y=120, h=50 → centre=145) -->
+  <text x="335" text-anchor="middle" font-size="14" fill="#5a3e00">
+    <tspan x="335" y="137">w₁</tspan>
+    <tspan x="335" dy="14" font-size="11" fill="#7a5a00">(enhanced</tspan>
+    <tspan x="335" dy="13" font-size="11" fill="#7a5a00">coin)</tspan>
+  </text>
+
+  <!-- Single-Blind Bet box (y=75, h=50 → centre=100) -->
+  <text x="515" text-anchor="middle" font-size="13" fill="#5a3e00">
+    <tspan x="515" y="95">Single-Blind</tspan>
+    <tspan x="515" dy="16">Bet</tspan>
+  </text>
+
+  <!-- IMV box (y=75, h=50 → centre=100) -->
+  <text x="670" text-anchor="middle" font-size="13" fill="#fff">
+    <tspan x="670" y="95">IMV</tspan>
+    <tspan x="670" dy="16" font-size="11" fill="#d4f0d4">(w₁−w₀)/w₀</tspan>
+  </text>
+
+  <!-- arrows: baseline → w0 -->
+  <line x1="160" y1="55" x2="286" y2="55" stroke="#4a7cc7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- arrows: enhanced → w1 -->
+  <line x1="160" y1="145" x2="286" y2="145" stroke="#4a7cc7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- arrows: w0 → bet -->
+  <line x1="380" y1="55" x2="456" y2="90" stroke="#8b6914" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <!-- arrows: w1 → bet -->
+  <line x1="380" y1="145" x2="456" y2="115" stroke="#8b6914" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <!-- arrows: bet → IMV -->
+  <line x1="570" y1="100" x2="626" y2="100" stroke="#8b6914" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+  <!-- bracket labels below -->
+  <text x="85"  y="192" text-anchor="middle" font-size="10" fill="#888">Observed data</text>
+  <text x="335" y="192" text-anchor="middle" font-size="10" fill="#888">Analogous physical systems</text>
+  <text x="650" y="192" text-anchor="middle" font-size="10" fill="#888">Scale-invariant</text>
+
+  <!-- arrowhead markers -->
+  <defs>
+    <marker id="arr"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a7cc7"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b6914"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+```
+
+The IMV is then $(w_1 - w_0) / w_0$ — the proportional gain. A positive value means the enhanced model's coin is heavier (more informative); a negative value means the enhanced model is actually *worse* than the baseline, typically a sign of overfitting.
+
+### Why not R² or AUC?
+
+The portability of the IMV comes from the fact that it is always measuring the same thing: **reduction in outcome uncertainty**. When the outcome prevalence is near 50%, there is substantial uncertainty in the outcome and a good model can yield a large IMV. When prevalence is extreme — near 0% or 100% — there is almost no uncertainty left to reduce, so even a perfect model yields a small IMV. This is the right behavior: the IMV is small when there is little to predict.
+
+Standard metrics like R² and AUC do not behave this way, and their deviations from this pattern can be misleading. To see the difference, consider the logistic regression model:
+
+$$\Pr(y=1) = \frac{1}{1 + \exp(-(b_0 + b_1 x))}$$
+
+Here $x$ is a predictor, $b_1$ controls the strength of the relationship (the signal), and $b_0$ is the intercept. Changing $b_0$ shifts the outcome prevalence without changing how informative $x$ is — the signal is the same, only the baseline uncertainty changes.
+
+The simulation below fixes $b_1$ and sweeps $b_0$ from −3 to 3, computing IMV, McFadden's R², and AUC at each point. The baseline model is the prevalence alone; the enhanced model is the fitted logistic regression. Each metric is averaged over 20 replications (N = 2,000 each) per $b_0$ value. The x-axis shows both $b_0$ and the implied prevalence.
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 480
+
+library(shiny)
+
+sigmoid <- function(x) 1 / (1 + exp(-x))
+
+get_coin_weight <- function(avg_ll_geom, sigma = 1e-6) {
+  target <- log(avg_ll_geom)
+  tol <- 1e-9
+  if (target < log(0.5) - tol) return(NA)
+  if (target <= log(0.5) + tol) return(0.5)
+  f <- function(w) w * log(w) + (1 - w) * log(1 - w) - target
+  tryCatch(uniroot(f, lower = 0.5 + sigma, upper = 1 - sigma)$root,
+           error = function(e) NA)
+}
+
+avg_ll_geom <- function(y, p, sigma = 1e-4) {
+  p <- pmin(pmax(p, sigma), 1 - sigma)
+  exp(mean(y * log(p) + (1 - y) * log(1 - p)))
+}
+
+compute_one <- function(b0, b1, N = 2000, n_rep = 20) {
+  imv_v <- r2_v <- auc_v <- numeric(n_rep)
+  for (i in seq_len(n_rep)) {
+    x   <- rnorm(N);  p_true <- sigmoid(b0 + b1 * x)
+    y   <- rbinom(N, 1, p_true)
+    x2  <- rnorm(N);  p2_true <- sigmoid(b0 + b1 * x2)
+    y2  <- rbinom(N, 1, p2_true)
+    fit <- glm(y ~ x, family = binomial)
+    p_hat <- sigmoid(coef(fit)[1] + coef(fit)[2] * x2)
+    prev  <- mean(y)
+    # IMV
+    w0 <- get_coin_weight(avg_ll_geom(y2, rep(prev, N)))
+    w1 <- get_coin_weight(avg_ll_geom(y2, p_hat))
+    imv_v[i] <- if (!is.na(w0) && !is.na(w1) && w0 > 0) (w1 - w0) / w0 else NA
+    # McFadden R2
+    ll_null <- sum(dbinom(y2, 1, prev, log = TRUE))
+    ll_full <- sum(dbinom(y2, 1, p_hat, log = TRUE))
+    r2_v[i] <- 1 - ll_full / ll_null
+    # AUC
+    pos <- p_hat[y2 == 1]; neg <- p_hat[y2 == 0]
+    auc_v[i] <- mean(outer(pos, neg, ">")) + 0.5 * mean(outer(pos, neg, "=="))
+  }
+  c(imv = mean(imv_v, na.rm = TRUE),
+    r2  = mean(r2_v,  na.rm = TRUE),
+    auc = mean(auc_v, na.rm = TRUE),
+    prev = sigmoid(b0))   # prevalence at x=0 (mean of x dist)
+}
+
+ui <- fluidPage(
+  tags$head(tags$style(HTML("
+    body { font-family: Georgia, serif; background: #fafaf8; }
+    .well { background: #f0ede6; border: none; border-radius: 8px; }
+  "))),
+  sidebarLayout(
+    sidebarPanel(width = 3,
+      sliderInput("b1", HTML("Slope b<sub>1</sub><br><small>(signal strength — held fixed)</small>"),
+                  min = 0.3, max = 2.0, value = 1.0, step = 0.1),
+      tags$hr(),
+      actionButton("run", "▶  Run simulation", class = "btn-primary btn-block"),
+      tags$p(style = "font-size:0.8em; color:#888; margin-top:8px;",
+        "Sweeps b₀ from −3 to 3 in steps of 0.25.",
+        " Each point averages 20 replications (N = 2,000).",
+        " Takes ~20 seconds.")
+    ),
+    mainPanel(width = 9,
+      plotOutput("sweep_plot", height = "340px")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+
+  sweep <- reactiveVal(NULL)
+
+  observeEvent(input$run, {
+    b1 <- input$b1
+    b0_seq <- seq(-3, 3, by = 0.25)
+    withProgress(message = "Sweeping b₀...", value = 0, {
+      res <- t(sapply(seq_along(b0_seq), function(i) {
+        incProgress(1/length(b0_seq),
+                    detail = sprintf("b₀ = %.2f (prevalence ≈ %.0f%%)",
+                                     b0_seq[i], sigmoid(b0_seq[i]) * 100))
+        compute_one(b0_seq[i], b1)
+      }))
+      sweep(data.frame(b0 = b0_seq, res))
+    })
+  })
+
+  output$sweep_plot <- renderPlot({
+    req(sweep())
+    d <- sweep()
+
+    # x-axis labels: b0 on top, prevalence on bottom
+    b0_ticks  <- seq(-3, 3, by = 1)
+    prev_ticks <- round(sigmoid(b0_ticks) * 100)
+
+    par(mfrow = c(1, 3), mar = c(5, 4, 6, 1), family = "serif")
+
+    plot_panel <- function(y, ylab, col, main) {
+      plot(d$b0, y, type = "l", lwd = 2.5, col = col,
+           xlab = "", ylab = ylab, main = main,
+           xaxt = "n", cex.main = 1.05, cex.lab = 0.95,
+           panel.first = abline(h = mean(y, na.rm=TRUE),
+                                lty = 3, col = "gray70"))
+      abline(h = 0, col = "gray80")
+      # bottom axis: b0 values
+      axis(1, at = b0_ticks, labels = b0_ticks, cex.axis = 0.85)
+      mtext(expression(b[0]), side = 1, line = 2.2, cex = 0.85)
+      # top axis: prevalence
+      axis(3, at = b0_ticks,
+           labels = paste0(prev_ticks, "%"), cex.axis = 0.8, col.axis = "gray40")
+      mtext("Prevalence", side = 3, line = 3.5, cex = 0.8, col = "gray40")
+    }
+
+    plot_panel(d$imv, "IMV",          "#2a7d2e", paste0("IMV  (b₁ = ", input$b1, ")"))
+    plot_panel(d$r2,  "McFadden R²",  "#b33a1e", paste0("McFadden R²  (b₁ = ", input$b1, ")"))
+    plot_panel(d$auc, "AUC",          "#185fa5", paste0("AUC  (b₁ = ", input$b1, ")"))
+
+  }, res = 96)
+}
+
+shinyApp(ui, server)
+```
+
+All three metrics vary with prevalence — but for different reasons and with different implications:
+
+- **IMV** peaks near 50% prevalence and tapers toward zero at the extremes. This reflects the structure of outcome uncertainty: when the outcome is nearly certain (prevalence near 0% or 100%), there is very little uncertainty to reduce and even an excellent model earns a small IMV. This is the desired behavior — the IMV is measuring something real.
+- **McFadden R²** also peaks near 50% but collapses much more sharply at extreme prevalences, understating model quality in a way that is hard to interpret. At very low or high prevalence it can suggest a model is nearly worthless even when it is predicting as well as the data allow.
+- **AUC** is more stable across prevalences but can remain high at extreme prevalences for a misleading reason: when nearly all outcomes are the same value, ranking predictions correctly is easy even for an uninformative model.
+
+The dotted horizontal line in each panel marks the metric's mean across the sweep. The key comparison is not the shape of any single curve but what happens when you try to *compare two datasets with different prevalences*: an IMV of 0.05 means the same thing regardless of the dataset's prevalence; an R² of 0.05 does not.
+
+
+
+---
 
 The interactive examples below are organized into two groups. If you are new to the IMV, we recommend working through the binary prediction examples first.
 
@@ -479,14 +714,164 @@ Extends the IMV to **polytomous (multi-category) items** via the *thresholded IM
 
 ## How to Interpret IMV Values
 
-Because the IMV is defined relative to a baseline, its absolute magnitude depends on the comparison being made. Some reference points from published work:
+The IMV can range from large negative values (severe overfitting) through zero (no improvement) to values above 0.5 in the most highly predictable settings. The annotated number line below places reference values from published work along this scale — spanning games of chance, health outcomes, political science, IRT models, and natural science classification problems.
 
-- **IMV ≈ 0**: The enhanced model offers no predictive improvement over the baseline. This can indicate either that the extra predictors are uninformative or, in small samples, that the model is overfitting.
-- **IMV > 0, small (e.g., 0.001–0.01)**: Modest but potentially meaningful improvement. Typical range for comparing closely related IRT models (e.g., 2PL vs. 3PL, or 1PL vs. 2PL on well-behaved items).
-- **IMV > 0, moderate (e.g., 0.01–0.05)**: Substantively meaningful improvement. Typical range when a new predictor explains a real portion of variance.
-- **IMV < 0**: The enhanced model performs *worse* than the baseline on new data. A diagnostic flag for overfitting or model misspecification.
+```{=html}
+<div style="width:100%; overflow-x:auto; margin: 1.4rem 0;">
+<svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg"
+     style="max-width:740px; display:block; margin:0 auto; font-family:Georgia,serif; font-size:11px;">
 
-These benchmarks are discussed in more depth, with simulation-based reference distributions, in the Psychometrika paper below.
+  <!-- ── axis: log scale, IMV in [0.0001, 0.7] mapped to x in [60, 720] ── -->
+  <!-- x = 60 + (log10(v) + 4) / 3.845 * 660 -->
+
+  <line x1="60" y1="155" x2="725" y2="155" stroke="#333" stroke-width="1.5"/>
+
+  <!-- tick marks -->
+  <line x1="60"  y1="150" x2="60"  y2="160" stroke="#333" stroke-width="1"/>
+  <text x="60"  y="172" text-anchor="middle" fill="#555">0.0001</text>
+  <line x1="232" y1="150" x2="232" y2="160" stroke="#333" stroke-width="1"/>
+  <text x="232" y="172" text-anchor="middle" fill="#555">0.001</text>
+  <line x1="403" y1="150" x2="403" y2="160" stroke="#333" stroke-width="1"/>
+  <text x="403" y="172" text-anchor="middle" fill="#555">0.01</text>
+  <line x1="575" y1="150" x2="575" y2="160" stroke="#333" stroke-width="1"/>
+  <text x="575" y="172" text-anchor="middle" fill="#555">0.1</text>
+  <line x1="694" y1="150" x2="694" y2="160" stroke="#333" stroke-width="1"/>
+  <text x="694" y="172" text-anchor="middle" fill="#555">0.5+</text>
+
+  <text x="390" y="188" text-anchor="middle" fill="#888" font-size="10">IMV (log scale)</text>
+
+  <!-- color bands -->
+  <rect x="60"  y="145" width="172" height="10" fill="#e8f4e8" opacity="0.7"/>
+  <rect x="232" y="145" width="171" height="10" fill="#c8e6c8" opacity="0.7"/>
+  <rect x="403" y="145" width="172" height="10" fill="#88c988" opacity="0.7"/>
+  <rect x="575" y="145" width="149" height="10" fill="#2a7d2e" opacity="0.7"/>
+
+  <text x="146"  y="143" text-anchor="middle" fill="#555"  font-size="9.5">negligible</text>
+  <text x="317"  y="143" text-anchor="middle" fill="#444"  font-size="9.5">small</text>
+  <text x="489"  y="143" text-anchor="middle" fill="#2a4a2a" font-size="9.5">moderate</text>
+  <text x="648"  y="143" text-anchor="middle" fill="#fff"  font-size="9.5">large</text>
+
+  <!-- ── ABOVE the line ── -->
+
+  <!-- 2PL vs 3PL empirical avg ≈ 0.00016 → x≈95 -->
+  <circle cx="95"  cy="155" r="4" fill="#185fa5"/>
+  <line x1="95"  y1="151" x2="95"  y2="118" stroke="#185fa5" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="95"  y="114" text-anchor="middle" fill="#185fa5">2PL vs 3PL</text>
+  <text x="95"  y="103" text-anchor="middle" fill="#185fa5">(IRT, emp.)</text>
+
+  <!-- 2PL vs 3PL sim ≈ 0.0005 → x≈173 -->
+  <circle cx="173" cy="155" r="4" fill="#185fa5"/>
+  <line x1="173" y1="151" x2="173" y2="68" stroke="#185fa5" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="173" y="64" text-anchor="middle" fill="#185fa5">2PL vs 3PL</text>
+  <text x="173" y="53" text-anchor="middle" fill="#185fa5">(IRT, sim.)</text>
+
+  <!-- MLE vs EAP ≈ 0.002 → x≈292 -->
+  <circle cx="292" cy="155" r="4" fill="#185fa5"/>
+  <line x1="292" y1="151" x2="292" y2="118" stroke="#185fa5" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="292" y="114" text-anchor="middle" fill="#185fa5">MLE vs EAP</text>
+  <text x="292" y="103" text-anchor="middle" fill="#185fa5">(IRT, sim.)</text>
+
+  <!-- FFC eviction ≈ 0.005 → x≈343 -->
+  <circle cx="343" cy="155" r="4" fill="#8b6914"/>
+  <line x1="343" y1="151" x2="343" y2="68" stroke="#8b6914" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="343" y="64" text-anchor="middle" fill="#8b6914">FFC eviction</text>
+  <text x="343" y="53" text-anchor="middle" fill="#8b6914">(benchmark→best)</text>
+
+  <!-- 1PL vs 2PL sim ≈ 0.01 → x=403 -->
+  <circle cx="403" cy="155" r="4" fill="#185fa5"/>
+  <line x1="403" y1="151" x2="403" y2="118" stroke="#185fa5" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="403" y="114" text-anchor="middle" fill="#185fa5">1PL vs 2PL</text>
+  <text x="403" y="103" text-anchor="middle" fill="#185fa5">(IRT, sim.)</text>
+
+  <!-- Blackjack ≈ 0.010 → slight offset -->
+  <circle cx="418" cy="155" r="4" fill="#a32d2d"/>
+  <line x1="418" y1="151" x2="418" y2="68" stroke="#a32d2d" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="450" y="64" text-anchor="middle" fill="#a32d2d">Blackjack</text>
+
+  <!-- FFC layoff ≈ 0.010 → x≈403, offset up -->
+  <circle cx="390" cy="155" r="4" fill="#8b6914"/>
+  <line x1="390" y1="151" x2="390" y2="40" stroke="#8b6914" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="355" y="36" text-anchor="middle" fill="#8b6914">FFC layoff</text>
+
+  <!-- ── BELOW the line ── -->
+
+  <!-- BP age 63: age+sex → +educ ≈ 0.008 → x≈380 -->
+  <circle cx="375" cy="155" r="4" fill="#2a6b2a"/>
+  <line x1="375" y1="159" x2="375" y2="210" stroke="#2a6b2a" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="305" y="217" text-anchor="middle" fill="#2a6b2a">BP (age 63):</text>
+  <text x="305" y="228" text-anchor="middle" fill="#2a6b2a">age+sex → +educ</text>
+
+  <!-- Baccarat ≈ 0.048 → x≈510 -->
+  <circle cx="510" cy="155" r="4" fill="#a32d2d"/>
+  <line x1="510" y1="159" x2="510" y2="198" stroke="#a32d2d" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="510" y="205" text-anchor="middle" fill="#a32d2d">Baccarat</text>
+
+  <!-- Coin knowledge ≈ 0.019 → x≈439 -->
+  <circle cx="439" cy="155" r="4" fill="#a32d2d"/>
+  <line x1="439" y1="159" x2="439" y2="228" stroke="#a32d2d" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="439" y="235" text-anchor="middle" fill="#a32d2d">Coin knowledge</text>
+
+  <!-- Party affil 1976 ≈ 0.026 → x≈469 -->
+  <circle cx="469" cy="155" r="4" fill="#2a6b2a"/>
+  <line x1="469" y1="159" x2="469" y2="258" stroke="#2a6b2a" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="469" y="265" text-anchor="middle" fill="#2a6b2a">Party affil.</text>
+  <text x="469" y="276" text-anchor="middle" fill="#2a6b2a">(1976)</text>
+
+  <!-- Sports book ≈ 0.091 → x≈572 -->
+  <circle cx="572" cy="155" r="4" fill="#a32d2d"/>
+  <line x1="572" y1="159" x2="572" y2="268" stroke="#a32d2d" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="530" y="275" text-anchor="middle" fill="#a32d2d">Sports book</text>
+
+  <!-- item-p vs 1PL emp avg ≈ 0.075 → x≈560 -->
+  <circle cx="555" cy="155" r="4" fill="#185fa5"/>
+  <line x1="555" y1="159" x2="555" y2="198" stroke="#185fa5" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="555" y="205" text-anchor="middle" fill="#185fa5">item-p vs 1PL</text>
+  <text x="555" y="216" text-anchor="middle" fill="#185fa5">(IRT, emp. avg)</text>
+
+  <!-- COVID symptoms ≈ 0.092 → x≈583 -->
+  <circle cx="583" cy="155" r="4" fill="#2a6b2a"/>
+  <line x1="583" y1="159" x2="583" y2="238" stroke="#2a6b2a" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="628" y="245" text-anchor="middle" fill="#2a6b2a">COVID symptoms</text>
+
+  <!-- Titanic prev→sex+class ≈ 0.352 → x≈650 -->
+  <circle cx="650" cy="155" r="4" fill="#2a6b2a"/>
+  <line x1="650" y1="159" x2="650" y2="198" stroke="#2a6b2a" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="658" y="205" text-anchor="middle" fill="#2a6b2a">Titanic</text>
+  <text x="658" y="216" text-anchor="middle" fill="#2a6b2a">(sex+class)</text>
+
+  <!-- Breast cancer ≈ 0.526 → x≈700 -->
+  <circle cx="700" cy="155" r="4" fill="#2a6b2a"/>
+  <line x1="700" y1="159" x2="700" y2="238" stroke="#2a6b2a" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <text x="700" y="245" text-anchor="middle" fill="#2a6b2a">Breast cancer</text>
+  <text x="700" y="256" text-anchor="middle" fill="#2a6b2a">(clinical)</text>
+
+  <!-- legend -->
+  <circle cx="80"  cy="298" r="4" fill="#185fa5"/>
+  <text   x="90"  y="302" fill="#185fa5">IRT / psychometrics</text>
+  <circle cx="230" cy="298" r="4" fill="#2a6b2a"/>
+  <text   x="240" y="302" fill="#2a6b2a">Social / health sciences</text>
+  <circle cx="410" cy="298" r="4" fill="#a32d2d"/>
+  <text   x="420" y="302" fill="#a32d2d">Games of chance</text>
+  <circle cx="540" cy="298" r="4" fill="#8b6914"/>
+  <text   x="550" y="302" fill="#8b6914">Fragile Families Challenge</text>
+
+</svg>
+</div>
+```
+
+A few things to note when reading this figure. First, the x-axis is on a **log scale** — each major gridline represents a tenfold increase. The full empirical range of IMV values spans roughly four orders of magnitude, from near-zero differences between closely related IRT models to values above 0.5 for highly predictable outcomes in clinical or natural science settings. Second, these are representative points from published work rather than precise thresholds; the same comparison in different datasets will yield different values depending on sample size, prevalence, and the underlying signal.
+
+**Negligible (IMV < 0.001).** Values here indicate that the enhanced model offers virtually no predictive improvement. The average IMV(2PL, 3PL) from 89 empirical IRT datasets (≈ 0.0002) sits here — adding a guessing parameter to a 2PL model rarely improves out-of-sample predictions in practice, even when guessing is genuinely present.
+
+**Small (0.001–0.01).** Meaningful but modest improvements. The simulated IMV(1PL, 2PL) ≈ 0.01 when discrimination parameters vary substantially, and the PISA Rasch vs. 2PL comparison also falls near 0.01. Notably, blackjack sits at exactly 0.010 — the expected profit of a casino for taking a one dollar bet on a hand of blackjack is similar in magnitude to the value of adding discrimination parameters to an IRT model. The best Fragile Families Challenge models improved over the benchmark by 0.005–0.010 for evictions and layoffs, indicating that even highly sophisticated social science models offer limited predictive gains on these difficult life outcomes.
+
+**Moderate (0.01–0.1).** A substantively meaningful range for many applied problems. Adding age and sex to predict high blood pressure yields IMV ≈ 0.067; COVID symptom data predicts infection with IMV ≈ 0.092; demographic variables predict US party affiliation in 1976 with IMV ≈ 0.026, rising to a peak near 0.25 during the partisan realignment of the 1990s. Baccarat (0.048) and sports betting (0.091) also fall here, providing convenient real-world benchmarks with known house margins.
+
+**Large (IMV > 0.1).** Reserved for highly predictable outcomes, often in natural science or clinical settings where predictors are directly mechanistically related to the outcome. Predicting Titanic survival from sex and ticket class yields IMV ≈ 0.35; breast cancer diagnosis from clinical data yields IMV ≈ 0.53; early diabetes detection IMV ≈ 0.62. In IRT contexts, comparing a model that ignores all person differences (just the grand mean) against an item-level model yields IMV ≈ 0.3 — illustrating how much value is added simply by acknowledging that items differ in difficulty.
+
+**Negative IMV.** A negative value means the enhanced model predicts new data *worse* than the baseline — a diagnostic for overfitting. In CFA simulations, overfitted models yield IMV ≈ −0.00001. Negative values are more pronounced in small samples and when the enhanced model has many free parameters relative to the available data. Always evaluate the IMV on held-out data; in-sample evaluation will tend to produce inflated positive values.
+
+
 
 ---
 
