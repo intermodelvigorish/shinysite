@@ -127,26 +127,56 @@ window.Quarto = {
     <a class="nav-link active" href="./index.html" aria-current="page"> 
 <span class="menu-text">Home</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./logreg.html"> 
-<span class="menu-text">Logistic regression and the intercept</span></a>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-simulation-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Simulation Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-simulation-examples">    
+        <li>
+    <a class="dropdown-item" href="./logreg.html">
+ <span class="dropdown-text">Logistic regression and the intercept</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./oracle.html"> 
-<span class="menu-text">Logistic regression and the Oracle</span></a>
+        <li>
+    <a class="dropdown-item" href="./oracle.html">
+ <span class="dropdown-text">Logistic regression and the Oracle</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./overfit.html"> 
-<span class="menu-text">Logistic regression and the Overfit</span></a>
+        <li>
+    <a class="dropdown-item" href="./overfit.html">
+ <span class="dropdown-text">Logistic regression and the Overfit</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./23pl.html"> 
-<span class="menu-text">2PL versus 3PL predictions</span></a>
+        <li>
+    <a class="dropdown-item" href="./23pl.html">
+ <span class="dropdown-text">2PL versus 3PL predictions</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./collapse.html"> 
-<span class="menu-text">The collapse of the thresholded IMV</span></a>
+        <li>
+    <a class="dropdown-item" href="./collapse.html">
+ <span class="dropdown-text">The collapse of the thresholded IMV</span></a>
   </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-computational-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Computational Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-computational-examples">    
+        <li>
+    <a class="dropdown-item" href="./example_glm.qmd">
+ <span class="dropdown-text">Logistic regression (glm)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_glmer.qmd">
+ <span class="dropdown-text">Mixed-effects logistic regression (glmer)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_irt_uni.qmd">
+ <span class="dropdown-text">Unidimensional IRT</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_irt_multi.qmd">
+ <span class="dropdown-text">Multidimensional IRT</span></a>
+  </li>  
+    </ul>
+  </li>
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -896,6 +926,63 @@ shinyApp(ui, server)</code></pre>
 </div>
 <div class="callout-body-container callout-body">
 <p>Extends the IMV to <strong>polytomous (multi-category) items</strong> via the <em>thresholded IMV</em> (ω_t). Demonstrates the elegant theoretical property that, as the threshold parameters of a graded response model (GRM) converge, the thresholded IMV collapses to the binary IMV based on the corresponding dichotomization. This makes the IMV comparable across items with different numbers of response categories.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="computational-examples" class="level3">
+<h3 class="anchored" data-anchor-id="computational-examples">Computational Examples</h3>
+<p>These examples show how to use the <code>imv</code> R package to compute IMV values in real-life data analysis scenarios. Each example uses a publicly available dataset and walks through installation, model fitting, IMV computation, and interpretation of results.</p>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><a href="example_glm.html">6. Logistic regression (glm)</a>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Uses the <code>imv</code> package with <code>glm()</code> to compare a baseline and enhanced logistic regression model. Demonstrates the standard two-model workflow and shows how to read and interpret the cross-validated IMV output.</p>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><a href="example_glmer.html">7. Mixed-effects logistic regression (glmer)</a>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Applies the <code>imv</code> package to <code>glmer()</code> models from <code>lme4</code>, illustrating how IMV handles clustered data where observations are nested within groups.</p>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><a href="example_irt_uni.html">8. Unidimensional IRT</a>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Uses the <code>imv</code> package with <code>mirt</code> to compare IRT models fit to dichotomous item response data. Shows how IMV quantifies the predictive gain from adding item discrimination parameters (1PL vs.&nbsp;2PL).</p>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><a href="example_irt_multi.html">9. Multidimensional IRT</a>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Extends the IRT example to multidimensional models, comparing a unidimensional and multidimensional <code>mirt</code> solution to assess whether a second dimension provides meaningful predictive improvement.</p>
 </div>
 </div>
 <hr>

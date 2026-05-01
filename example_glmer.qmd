@@ -1,0 +1,125 @@
+---
+title: "Computational Example: Mixed-Effects Logistic Regression (glmer)"
+---
+
+## Overview
+
+This example uses the `imv` package with `glmer()` from `lme4` to quantify 
+how much item-level features improve prediction of verbal aggression responses, 
+beyond what is explained by individual differences alone.
+
+The data come from a study of verbal aggression ([Vansteelandt, 2000](https://lirias.kuleuven.be/retrieve/6674)), 
+available as `VerbAgg` in the `lme4` package. Participants were presented with 
+frustrating scenarios and asked whether they would react in various verbally 
+aggressive ways. The outcome is binary: did the person endorse the aggressive 
+response (`Y`) or not (`N`)?
+
+Because each person responds to multiple items, observations are clustered 
+within individuals. A mixed-effects model with a random intercept for person 
+accounts for this structure — some people are generally more aggressive than 
+others regardless of the situation.
+
+---
+
+## Setup
+
+```r
+# devtools::install_github("ben-domingue/imv")
+library(imv)
+library(lme4)
+
+data("VerbAgg", package = "lme4")
+
+# Convert outcome to binary (0/1)
+VerbAgg$y <- as.integer(VerbAgg$r2 == "Y")
+
+# Preview
+head(VerbAgg[, c("id", "item", "btype", "mode", "y")])
+```
+
+The key variables are:
+
+- `y` — binary outcome: 1 = verbally aggressive response endorsed
+- `id` — person identifier (the clustering variable; N = 316 persons)
+- `btype` — behavior type: `curse`, `scold`, or `shout`
+- `mode` — whether the item asks about wanting to respond (`want`) or 
+  actually doing so (`do`)
+
+---
+
+## Fitting the Models
+
+We compare two models:
+
+- **Baseline** (`m0`): random intercept for person only — captures individual 
+  differences in overall aggressiveness, but ignores all item-level features
+- **Enhanced** (`m1`): adds `btype` and `mode` as fixed effects — does knowing 
+  the type and mode of the aggressive behavior improve prediction beyond 
+  individual tendencies?
+
+```r
+m0 <- glmer(y ~ 1 + (1 | id),
+            data = VerbAgg, family = binomial)
+
+m1 <- glmer(y ~ btype + mode + (1 | id),
+            data = VerbAgg, family = binomial)
+```
+
+---
+
+## Computing the IMV
+
+```r
+set.seed(42)
+result <- imv(m0, m1, data = VerbAgg)
+result
+```
+
+The `imv()` call recognizes the `glmerMod` class and dispatches to 
+`imv.glmerMod`, which performs 4-fold cross-validation. In each fold, both 
+models are refit on the training data and evaluated on the held-out fold. 
+The `allow.new.levels = TRUE` argument is used internally so that persons 
+appearing only in the test fold are handled gracefully.
+
+---
+
+## Interpreting the Results
+
+```r
+cat("Mean IMV:", round(result$mean, 3), "\n")
+cat("SD:      ", round(result$sd,   3), "\n")
+cat("95% CI:  [", round(result$ci["lower"], 3), ",",
+                   round(result$ci["upper"], 3), "]\n")
+```
+
+A positive IMV indicates that `btype` and `mode` provide genuine predictive 
+value beyond the random person effect alone. The IMV is expressed on the same 
+scale as all other IMV comparisons: a value of, say, 0.05 means the enhanced 
+model's predictions would earn roughly **5 cents for every dollar** staked 
+under the baseline model's odds.
+
+Importantly, note that the baseline here is *not* the prevalence — it is a 
+model that already accounts for clustering. The IMV thus measures the 
+incremental value of the item-level fixed effects *given* the random structure, 
+not relative to a flat prediction.
+
+---
+
+## Going Further
+
+The `VerbAgg` dataset also contains `situ` (situation type) and `Anger` 
+(trait anger score) as additional predictors. You can assess their incremental 
+value by extending `m1`:
+
+```r
+m2 <- glmer(y ~ btype + mode + situ + Anger + (1 | id),
+            data = VerbAgg, family = binomial)
+
+set.seed(42)
+result2 <- imv(m1, m2, data = VerbAgg)
+result2
+```
+
+Here `m1` is the baseline and `m2` is the enhanced model — the IMV now 
+measures whether adding situation type and trait anger improves prediction 
+*beyond* behavior type and mode.

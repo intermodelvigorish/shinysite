@@ -1,0 +1,201 @@
+---
+title: "Computational Example: Multidimensional IRT"
+---
+
+## Overview
+
+This example uses the `imv` package to compare a unidimensional 2PL model
+against two multidimensional 2PL models fit to simulated data. The key
+question is not just whether adding a second dimension improves prediction,
+but whether the way that dimension is estimated matters — specifically, whether
+placing priors on the discrimination parameters is necessary to realize any
+predictive benefit from the more complex model.
+
+The example illustrates an important general principle: **a correctly specified
+model with poorly estimated parameters can predict worse than a simpler model
+with stable estimates.** The IMV makes this concrete and quantifiable.
+
+---
+
+## Setup
+
+```r
+# devtools::install_github("ben-domingue/imv")
+library(imv)
+library(mirt)
+library(MASS)
+```
+
+---
+
+## Simulating the Data
+
+We simulate responses from a genuinely two-dimensional model. All 40 items
+load on both dimensions, with discrimination parameters drawn from log-normal
+distributions. The two latent dimensions are correlated (r = 0.5).
+
+```r
+set.seed(10101)
+n_items   <- 40
+n_persons <- 1000
+
+# Discrimination matrix: every item loads on both dimensions
+a_matrix <- cbind(rlnorm(n_items, sdlog = 0.5),
+                  rlnorm(n_items, sdlog = 0.5))
+
+# Item difficulties spread across the ability range
+d_vector <- seq(-2, 2, length.out = n_items)
+
+# Correlated person parameters (r = 0.5)
+Sigma <- matrix(c(1.0, 0.5,
+                  0.5, 1.0), ncol = 2)
+theta <- MASS::mvrnorm(n = n_persons, mu = c(0, 0), Sigma = Sigma)
+
+# Simulate binary item responses
+sim_data <- mirt::simdata(
+  a        = a_matrix,
+  d        = d_vector,
+  N        = n_persons,
+  itemtype = '2PL',
+  Theta    = theta
+)
+```
+
+---
+
+## Fitting the Models
+
+We fit three models of increasing complexity:
+
+- **`m0`** — Unidimensional 2PL. Misspecified: ignores the second dimension
+  entirely.
+- **`m1`** — Two-dimensional 2PL, **no priors**. Correct structure, but
+  discrimination parameters are estimated without regularization. With 80
+  free discrimination parameters (40 items × 2 dimensions), estimation is
+  unstable and parameter recovery is poor.
+- **`m2`** — Two-dimensional 2PL, **with log-normal priors** on all
+  discrimination parameters. Same structure as `m1`, but priors shrink
+  extreme estimates toward plausible values, substantially improving
+  parameter recovery.
+
+```r
+# Unidimensional 2PL (baseline)
+m0 <- mirt::mirt(sim_data, 1, '2PL', verbose = FALSE)
+
+# 2D model without priors
+m1 <- mirt::mirt(sim_data, 2, itemtype = '2PL', verbose = FALSE)
+
+# 2D model with log-normal priors on discriminations
+model_spec <- mirt::mirt.model('
+  F1 = 1-40
+  F2 = 1-40
+  PRIOR = (1-40, a1, lnorm, 0, 1),
+          (1-40, a2, lnorm, 0, 1)
+  COV = F1*F2
+')
+m2 <- mirt::mirt(sim_data, model_spec, itemtype = '2PL', verbose = FALSE)
+```
+
+---
+
+## Parameter Recovery
+
+Before computing the IMV, it is instructive to examine how well each
+multidimensional model recovers the true discrimination parameters. We plot
+estimated vs. true values for the first dimension:
+
+```r
+par(mfrow = c(1, 2))
+
+plot(a_matrix[, 1],
+     coef(m1, simplify = TRUE)$items[, 1],
+     xlab = "True a1", ylab = "Estimated a1",
+     main = "2D 2PL — no priors",
+     pch = 19, col = "#b33a1e")
+abline(0, 1, lty = 2)
+
+plot(a_matrix[, 1],
+     coef(m2, simplify = TRUE)$items[, 1],
+     xlab = "True a1", ylab = "Estimated a1",
+     main = "2D 2PL — with priors",
+     pch = 19, col = "#2a7d2e")
+abline(0, 1, lty = 2)
+```
+
+The left panel (`m1`, no priors) shows poor recovery: estimated discriminations
+scatter widely around the true values, with substantial attenuation and
+instability. The right panel (`m2`, with priors) shows dramatically better
+recovery — estimates track the true values closely along the diagonal.
+
+Both models have the correct number of dimensions and the same item structure.
+The only difference is regularization. This sets up the central question: does
+better parameter recovery translate into better out-of-sample prediction, as
+measured by the IMV?
+
+---
+
+## Computing the IMV
+
+```r
+set.seed(10101)
+result_m1 <- imv(m0, m1, nfold = 4)
+result_m2 <- imv(m0, m2, nfold = 4)
+```
+
+Both calls compare the unidimensional `m0` as baseline against each
+two-dimensional model. A positive IMV means the 2D model predicts better
+than the 1D model; a negative or near-zero IMV means the added complexity
+is not paying off predictively.
+
+---
+
+## Interpreting the Results
+
+```r
+cat("--- 2D no priors vs. 1D ---\n")
+cat("Mean IMV:", round(result_m1$mean, 3), "\n")
+cat("SD:      ", round(result_m1$sd,   3), "\n")
+cat("95% CI:  [", round(result_m1$ci["lower"], 3), ",",
+                   round(result_m1$ci["upper"], 3), "]\n\n")
+
+cat("--- 2D with priors vs. 1D ---\n")
+cat("Mean IMV:", round(result_m2$mean, 3), "\n")
+cat("SD:      ", round(result_m2$sd,   3), "\n")
+cat("95% CI:  [", round(result_m2$ci["lower"], 3), ",",
+                   round(result_m2$ci["upper"], 3), "]\n")
+```
+
+The results illustrate the key message of this example:
+
+- **`m1` vs. `m0`** (2D no priors vs. 1D): The IMV is likely near zero or
+  even negative. Despite being the correctly specified model, `m1`'s unstable
+  discrimination estimates hurt its out-of-sample predictions. The added
+  complexity does not help — and may actively harm — predictive performance.
+- **`m2` vs. `m0`** (2D with priors vs. 1D): The IMV is positive and
+  meaningfully larger. Regularized estimates allow the correct model structure
+  to actually express its advantage over the simpler 1D model.
+
+This contrast makes a point that goes beyond model selection: **the value of
+a more complex model depends not just on whether it is correctly specified,
+but on whether its parameters can be estimated reliably given the data at
+hand.** The IMV captures this distinction directly, because it evaluates
+models on out-of-sample predictions rather than in-sample fit.
+
+---
+
+## Going Further
+
+The simulation above uses N = 1,000 persons. You can examine how the results
+change with smaller samples by reducing `n_persons`:
+
+```r
+# Try n_persons <- 300 or n_persons <- 500
+# Expect the gap between m1 and m2 to widen as N decreases,
+# since estimation instability is more severe in smaller samples.
+```
+
+You can also explore what happens as the correlation between dimensions
+increases toward 1 (near-unidimensional data) or decreases toward 0
+(orthogonal dimensions). As the correlation approaches 1, the 1D model
+becomes a better approximation and the IMV advantage of the 2D model shrinks
+accordingly.

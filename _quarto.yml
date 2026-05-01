@@ -8,16 +8,28 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: logreg.qmd
-        text: Logistic regression and the intercept
-      - href: oracle.qmd
-        text: Logistic regression and the Oracle
-      - href: overfit.qmd
-        text: Logistic regression and the Overfit
-      - href: 23pl.qmd
-        text: 2PL versus 3PL predictions
-      - href: collapse.qmd
-        text: The collapse of the thresholded IMV
+      - text: "Simulation Examples"
+        menu:
+          - href: logreg.qmd
+            text: Logistic regression and the intercept
+          - href: oracle.qmd
+            text: Logistic regression and the Oracle
+          - href: overfit.qmd
+            text: Logistic regression and the Overfit
+          - href: 23pl.qmd
+            text: 2PL versus 3PL predictions
+          - href: collapse.qmd
+            text: The collapse of the thresholded IMV
+      - text: "Computational Examples"
+        menu:
+          - href: example_glm.qmd
+            text: Logistic regression (glm)
+          - href: example_glmer.qmd
+            text: Mixed-effects logistic regression (glmer)
+          - href: example_irt_uni.qmd
+            text: Unidimensional IRT
+          - href: example_irt_multi.qmd
+            text: Multidimensional IRT
 
 format:
   html:

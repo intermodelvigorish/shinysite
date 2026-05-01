@@ -704,6 +704,42 @@ Extends the IMV to **polytomous (multi-category) items** via the *thresholded IM
 
 ---
 
+### Computational Examples
+
+These examples show how to use the `imv` R package to compute IMV values in
+real-life data analysis scenarios. Each example uses a publicly available
+dataset and walks through installation, model fitting, IMV computation, and
+interpretation of results.
+
+::: {.callout-note appearance="minimal"}
+#### [6. Logistic regression (glm)](example_glm.html)
+Uses the `imv` package with `glm()` to compare a baseline and enhanced logistic
+regression model. Demonstrates the standard two-model workflow and shows how to
+read and interpret the cross-validated IMV output.
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [7. Mixed-effects logistic regression (glmer)](example_glmer.html)
+Applies the `imv` package to `glmer()` models from `lme4`, illustrating how IMV
+handles clustered data where observations are nested within groups.
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [8. Unidimensional IRT](example_irt_uni.html)
+Uses the `imv` package with `mirt` to compare IRT models fit to dichotomous
+item response data. Shows how IMV quantifies the predictive gain from adding
+item discrimination parameters (1PL vs. 2PL).
+:::
+
+::: {.callout-note appearance="minimal"}
+#### [9. Multidimensional IRT](example_irt_multi.html)
+Extends the IRT example to multidimensional models, comparing a unidimensional
+and multidimensional `mirt` solution to assess whether a second dimension
+provides meaningful predictive improvement.
+:::
+
+---
+
 ## How to Interpret IMV Values
 
 Because the IMV is defined relative to a baseline, its absolute magnitude depends on the comparison being made. Some reference points from published work:

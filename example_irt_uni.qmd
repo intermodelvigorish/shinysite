@@ -1,0 +1,146 @@
+---
+title: "Computational Example: Unidimensional IRT"
+---
+
+## Overview
+
+This example uses the `imv` package to compare a Rasch (1PL) model against a
+2PL model on real item response data, quantifying how much the addition of
+item discrimination parameters improves out-of-sample prediction.
+
+The data come from the [Item Response Warehouse](https://itemresponsewarehouse.org)
+(IRW), a curated repository of psychometric datasets. We fetch the
+`gilbert_meta_2` dataset using the `irw` R package and fit both models using
+`mirt`.
+
+This example is adapted from the [IRW vignette on IMV calculation](https://itemresponsewarehouse.org/vignettes/imv.html).
+
+---
+
+## Setup
+
+```r
+# devtools::install_github("ben-domingue/imv")
+# install.packages("irw")     # IRW data access
+# install.packages("mirt")    # IRT models
+
+library(imv)
+library(irw)
+library(mirt)
+```
+
+---
+
+## Data
+
+```r
+# Fetch the dataset from the Item Response Warehouse
+df   <- irw::irw_fetch("gilbert_meta_2")
+
+# Convert from long format (one row per person-item) to wide response matrix
+resp <- irw::irw_long2resp(df)
+resp$id <- NULL
+```
+
+The resulting `resp` object is a wide matrix with one row per respondent and
+one column per item, with binary (0/1) entries. The `gilbert_meta_2` dataset
+contains responses to a set of dichotomously scored items from a meta-analytic
+compilation.
+
+---
+
+## Fitting the Models
+
+We compare two models:
+
+- **Baseline** (`m0`): Rasch (1PL) model — all items share a common
+  discrimination parameter; only item difficulties vary
+- **Enhanced** (`m1`): 2PL model — each item has its own discrimination
+  parameter, estimated with a log-normal prior
+
+```r
+# Rasch / 1PL model
+m0 <- mirt::mirt(resp, 1, 'Rasch', verbose = FALSE)
+
+# 2PL model with log-normal prior on discriminations
+ni    <- ncol(resp)
+s     <- paste0("F = 1-", ni, "\n",
+                "PRIOR = (1-", ni, ", a1, lnorm, 0.0, 1.0)")
+model <- mirt::mirt.model(s)
+m1    <- mirt::mirt(resp, model,
+                    itemtype  = rep("2PL", ni),
+                    method    = "EM",
+                    technical = list(NCYCLES = 10000),
+                    verbose   = FALSE)
+```
+
+The log-normal prior `lnorm(0, 1)` on the discrimination parameters
+regularizes the 2PL estimates, shrinking extreme values toward the mean and
+stabilizing estimation — particularly important for shorter tests or items
+with sparse responses.
+
+---
+
+## Computing the IMV
+
+```r
+set.seed(8675309)
+result <- imv(m0, m1)
+result
+```
+
+`imv()` dispatches to `imv.SingleGroupClass` for `mirt` model objects. It
+performs 5-fold cross-validation by default: in each fold, both models are
+refit on the training items/persons and predictions are generated for the
+held-out observations.
+
+---
+
+## Interpreting the Results
+
+```r
+cat("Mean IMV:", round(result$mean, 3), "\n")
+cat("SD:      ", round(result$sd,   3), "\n")
+cat("95% CI:  [", round(result$ci["lower"], 3), ",",
+                   round(result$ci["upper"], 3), "]\n")
+```
+
+The expected mean IMV is approximately **0.014**. Referencing the benchmarks
+in Domingue et al. (2025), this is consistent with the expected gain from
+moving from a 1PL to a 2PL when there is genuine variation in item
+discriminations — the paper's simulations suggest IMV(1PL, 2PL) ≈ 0.01
+under realistic conditions (log discrimination SD ≈ 0.5).
+
+This is a small but meaningful gain: the 2PL's item-specific discrimination
+estimates improve prediction by roughly **1.4 cents per dollar** staked under
+the Rasch model's odds. Whether this gain justifies the added model complexity
+depends on the goals of the analysis and the sample size available to estimate
+the discrimination parameters reliably.
+
+---
+
+## Going Further
+
+To assess how sensitive this result is to the choice of prior on
+discriminations, you can refit `m1` with a tighter prior (less variance in
+discriminations allowed) and recompute the IMV:
+
+```r
+s_tight     <- paste0("F = 1-", ni, "\n",
+                      "PRIOR = (1-", ni, ", a1, lnorm, 0.0, 0.5)")
+model_tight <- mirt::mirt.model(s_tight)
+m1_tight    <- mirt::mirt(resp, model_tight,
+                           itemtype  = rep("2PL", ni),
+                           method    = "EM",
+                           technical = list(NCYCLES = 10000),
+                           verbose   = FALSE)
+
+set.seed(8675309)
+result_tight <- imv(m0, m1_tight)
+result_tight$mean
+```
+
+A tighter prior pulls discrimination estimates closer to 1 (the Rasch value),
+so the IMV for `m1_tight` vs `m0` should be smaller — illustrating how prior
+choice affects the practical difference between the two models in terms of
+predictive performance.

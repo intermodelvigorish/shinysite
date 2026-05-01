@@ -1,0 +1,101 @@
+---
+title: "Computational Example: Logistic Regression (glm)"
+---
+
+## Overview
+
+This example uses the `imv` package to quantify how much sex and passenger 
+class improve prediction of survival on the Titanic, relative to a baseline 
+model that uses only the overall survival rate. The Titanic dataset is a 
+canonical example in the IMV paper (Domingue et al., 2025); we reproduce 
+that calculation here using the `imv.glm` method.
+
+The dataset is available directly from Kaggle or via the `titanic` R package.
+
+---
+
+## Setup
+
+```r
+# Install the imv package from GitHub if not already installed
+# devtools::install_github("ben-domingue/imv")
+
+library(imv)
+
+# The titanic package provides clean training data
+# install.packages("titanic")
+library(titanic)
+
+# Use the Kaggle training set; keep relevant variables
+data <- titanic_train[, c("Survived", "Sex", "Pclass")]
+data <- data[complete.cases(data), ]
+data$Pclass <- factor(data$Pclass)
+```
+
+---
+
+## Fitting the Models
+
+We compare two models:
+
+- **Baseline** (`m0`): intercept only — predicts survival using only the 
+  overall proportion of survivors (prevalence)
+- **Enhanced** (`m1`): adds sex and passenger class as predictors
+
+```r
+m0 <- glm(Survived ~ 1,          data = data, family = binomial)
+m1 <- glm(Survived ~ Sex + Pclass, data = data, family = binomial)
+```
+
+---
+
+## Computing the IMV
+
+```r
+set.seed(42)
+result <- imv(m0, m1, data = data)
+result
+```
+
+The `imv()` call performs 4-fold cross-validation by default. It returns:
+
+- `result$mean` — mean IMV across folds
+- `result$sd` — standard deviation across folds
+- `result$ci` — 95% confidence interval
+- `result$folds` — per-fold IMV values
+
+---
+
+## Interpreting the Results
+
+The paper reports a mean IMV of **0.352** (SD = 0.143) for this comparison.
+This means that a bettor using the sex- and class-enhanced model's predictions 
+would earn roughly **35 cents for every dollar** staked under the baseline 
+model's odds — a substantial improvement.
+
+To put this in context, the paper's Table 1 shows that an IMV of 0.352 sits 
+near the upper end of the empirical examples, comparable to highly predictive 
+clinical outcomes like breast cancer diagnosis. Sex and passenger class are 
+among the most informative predictors ever observed in a social science 
+classification task.
+
+```r
+cat("Mean IMV:", round(result$mean, 3), "\n")
+cat("SD:      ", round(result$sd,   3), "\n")
+cat("95% CI:  [", round(result$ci["lower"], 3), ",",
+                   round(result$ci["upper"], 3), "]\n")
+```
+
+---
+
+## Going Further
+
+The paper also compares a logistic regression model against a gradient-boosted 
+tree (LightGBM) for the same prediction task, finding a much smaller IMV of 
+**0.010** (SD = 0.048). This illustrates an important point: while sex and 
+class together provide a large gain over *nothing* (prevalence), there is 
+relatively little additional predictive signal left for a more complex model 
+to exploit. The IMV quantifies both comparisons on the same interpretable scale.
+
+To replicate the LightGBM comparison using the `imv.default` method with a 
+custom `predict_fn`, see the package documentation.
