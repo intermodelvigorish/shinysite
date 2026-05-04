@@ -222,11 +222,12 @@ window.Quarto = {
 \]</span></p>
 <p>When <span class="math inline">\(E = \emptyset\)</span> this reduces to the standard cumulative probability <span class="math inline">\(\Pr(x \in T \mid \theta)\)</span>.</p>
 <p>While the CRFs from the GRM, PCM, and SRM are visually similar, many implied probabilities differ dramatically across models — they can be non-unit-spanning, asymmetric, or non-monotonic. The <strong>InterModel Vigorish (IMV)</strong> quantifies these predictive differences: an IMV of 0.01 corresponds to the expected profit (in dollars) from a $1 bet, comparable to the 2PL vs.&nbsp;1PL predictive gain in IRT.</p>
-<p>We illustrate three things here. In Tab 1, we show the <strong>category response functions</strong> for all three models (GRM, PCM, SRM) using the item parameters implied by the DGM choice. In Tab 2, we show the <strong>implied probability curves</strong> for every possible dichotomization, comparing how the three models differ. In Tab 3, we compute <strong>IMV(DGM, DAM)</strong> — how much better the DGM’s predictions are relative to the DAM’s, across all dichotomizations — using a fresh set of out-of-sample responses.</p>
+<p>We illustrate three things here. In Tab 1, we show the <strong>category response functions</strong> for all three models (GRM, PCM, SRM) using the selected item parameters. In Tab 2, we show the <strong>implied probability curves</strong> for every possible dichotomization, comparing how the three models differ. In Tab 3, we compute <strong>IMV(DGM, DAM)</strong> — how much better the DGM’s predictions are relative to the DAM’s, across all dichotomizations — using a fresh set of out-of-sample responses.</p>
 <p>Notes:</p>
 <ul>
 <li>The three models have <em>canonical</em> dichotomizations: adjacent categories for the PCM (<span class="math inline">\(T = \{k\}; E = \{k-1\}\)</span>), cumulative for the GRM (<span class="math inline">\(T = \{k, \ldots, K-1\}; E = \emptyset\)</span>), and sequential for the SRM (<span class="math inline">\(T = \{k, \ldots, K-1\}; E = \{0, \ldots, k-1\}\)</span>).</li>
 <li>Cross-model implied probabilities can take on highly unusual shapes — non-unit-spanning, asymmetric, or non-monotonic — when a model is evaluated on a non-canonical dichotomization.</li>
+<li>The GRM requires strictly ordered thresholds (<span class="math inline">\(b_1 &lt; b_2 &lt; \cdots &lt; b_{K-1}\)</span>). If thresholds are disordered, GRM results will be suppressed. The PCM and SRM do not require ordered thresholds.</li>
 <li>In Tab 3, IMV(DGM, DAM) should generally be near or above zero when the DGM is correctly specified: the DGM’s predictions should improve on those of the misspecified DAM.</li>
 <li>Item parameters for both the DGM and DAM are estimated from <span class="math inline">\(N=2000\)</span> simulated responses with known <span class="math inline">\(\theta\)</span> values. A fresh set of <span class="math inline">\(N=2000\)</span> responses is then generated from the DGM using its estimated parameters; IMV(DGM, DAM) is computed by comparing DGM predictions to DAM predictions on those new responses. Estimated parameters are used throughout — never the true ones.</li>
 </ul>
@@ -234,7 +235,7 @@ window.Quarto = {
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
 #| standalone: true
-#| viewerHeight: 1000
+#| viewerHeight: 1050
 
 library(shiny)
 
@@ -283,8 +284,7 @@ simresp &lt;- function(model, th, b, a) {
   sapply(seq_along(th), function(i) which(rmultinom(1, 1, p[i, ])[, 1] &gt; 0) - 1)
 }
 
-estfun &lt;- function(model, resp, th) {
-  K     &lt;- length(unique(resp))
+estfun &lt;- function(model, resp, th, K) {
   inits &lt;- c(1, seq(-1, 1, length.out = K - 1))
   f &lt;- function(pars) {
     p &lt;- getprob(model, th = th, b = pars[-1], a = pars[1])
@@ -413,9 +413,17 @@ ui &lt;- fluidPage(
     sidebarPanel(
 
       h4("Item parameters"),
-      sliderInput("K",      "Categories (K):",    min = 3,   max = 5,   value = 3,   step = 1),
-      sliderInput("a",      "Discrimination (a):", min = 0.5, max = 2.5, value = 1.3, step = 0.1),
-      sliderInput("spread", "Threshold spread:",   min = 0.3, max = 2.5, value = 1.0, step = 0.1),
+      sliderInput("K", "Categories (K):", min = 3, max = 5, value = 3, step = 1),
+      sliderInput("a", "Discrimination (a):", min = 0.5, max = 2.5, value = 1.3, step = 0.1),
+
+      hr(),
+
+      h4("Threshold parameters"),
+      p("Each slider sets one threshold b\u2096. The GRM requires strictly increasing
+        thresholds; results for the GRM will be suppressed if thresholds are disordered.",
+        style = "font-size: 12px; color: #555;"),
+      uiOutput("threshold_sliders"),
+      uiOutput("threshold_warning"),
 
       hr(),
 
@@ -438,7 +446,9 @@ ui &lt;- fluidPage(
 
       hr(),
 
-      p("N = 2000 persons, \u03b8 ~ N(0,1). Both DGM and DAM parameters estimated from first set of responses; IMV computed on a fresh set of responses from the estimated DGM.",
+      p("N = 2000 persons, \u03b8 ~ N(0,1). Both DGM and DAM parameters estimated from
+        first set of responses; IMV computed on a fresh set of responses from the
+        estimated DGM.",
         style = "font-size: 12px; color: #888;")
     ),
 
@@ -450,13 +460,13 @@ ui &lt;- fluidPage(
           br(),
           p("The plots below show the analytical category response functions (CRFs) —
             Pr(x = k | \u03b8) for each category k — for all three models (GRM, PCM, SRM),
-            using a single set of item parameters: the discrimination a and thresholds b
-            (evenly spaced and scaled by the spread slider) as specified above.
-            These are not estimated from data; they describe what each model predicts
-            for a single item with known parameters. Despite differing in construction,
-            the three models produce strikingly similar CRFs for typical parameter values,
-            motivating examination of the full set of implied probabilities (Tab 2)
-            as a more sensitive discriminator."),
+            using the selected item parameters. These are not estimated from data; they
+            describe what each model predicts for a single item with known parameters.
+            Despite differing in construction, the three models produce strikingly similar
+            CRFs for typical parameter values, motivating examination of the full set of
+            implied probabilities (Tab 2) as a more sensitive discriminator.
+            If thresholds are disordered the GRM panel is suppressed."),
+          uiOutput("crf_warning"),
           plotOutput("crf_plot", height = "360px")
         ),
 
@@ -469,19 +479,19 @@ ui &lt;- fluidPage(
             different dichotomizations. Unlike CRFs, implied probabilities can differ
             sharply across models for the same dichotomization, and may be non-unit-spanning,
             asymmetric, or non-monotonic when a model is evaluated on a non-canonical
-            dichotomization."),
+            dichotomization. The GRM curve is suppressed when thresholds are disordered."),
           plotOutput("imp_plot", height = "380px")
         ),
 
         ## ── Tab 3: IMV ─────────────────────────────────────────────────────
         tabPanel("IMV comparison",
           br(),
-          p("Click 'Run simulation' to: (1) draw \u03b8 ~ N(0,1) for N = 2000 persons and simulate
-            item responses from the DGM; (2) estimate item parameters for both the DGM and DAM
-            from those responses using the known \u03b8 values; (3) generate a fresh set of N = 2000
-            responses from the DGM using its estimated parameters; (4) compute IMV(DGM, DAM)
-            for every dichotomization by comparing DGM predictions to DAM predictions on the
-            new responses. Estimated parameters are used throughout.
+          p("Click 'Run simulation' to: (1) draw \u03b8 ~ N(0,1) for N = 2000 persons and
+            simulate item responses from the DGM; (2) estimate item parameters for both
+            the DGM and DAM from those responses using the known \u03b8 values; (3) generate
+            a fresh set of N = 2000 responses from the DGM using its estimated parameters;
+            (4) compute IMV(DGM, DAM) for every dichotomization by comparing DGM predictions
+            to DAM predictions on the new responses. Estimated parameters are used throughout.
             IMV(DGM, DAM) \u2265 0 is expected when the DGM is correctly specified."),
           uiOutput("imv_warning"),
           plotOutput("imv_plot", height = "600px"),
@@ -498,45 +508,80 @@ ui &lt;- fluidPage(
 
 server &lt;- function(input, output, session) {
 
-  output$run_btn &lt;- renderUI({
-    if (input$dgm == input$dam) {
-      tags$button("Run simulation",
-                  class    = "btn btn-primary",
-                  disabled = "disabled",
-                  style    = "width:100%; opacity:0.5; cursor:not-allowed;")
-    } else {
-      actionButton("run", "Run simulation", class = "btn-primary",
-                   style = "width:100%;")
-    }
-  })
-
-
-  get_b &lt;- function(K, spread) {
-    seq(-(K - 2) / 2, (K - 2) / 2, length.out = K - 1) * spread
-  }
-
   th_grid &lt;- seq(-3, 3, length.out = 500)
 
-  ## Analytical CRFs on theta grid for all three models
+  ## ── Dynamic threshold sliders ─────────────────────────────────────────────
+  output$threshold_sliders &lt;- renderUI({
+    K   &lt;- input$K
+    ## default values: evenly spaced in (-1.5, 1.5)
+    def &lt;- seq(-1.5, 1.5, length.out = K - 1)
+    lapply(seq_len(K - 1), function(k) {
+      ## try to preserve current value if slider already exists
+      cur &lt;- isolate(input[[paste0("b", k)]])
+      val &lt;- if (!is.null(cur)) cur else def[k]
+      sliderInput(
+        inputId = paste0("b", k),
+        label   = paste0("b\u2096 (k=", k, "):"),
+        min = -3, max = 3, value = val, step = 0.1
+      )
+    })
+  })
+
+  ## Reactive: collect threshold vector from individual sliders
+  get_b &lt;- reactive({
+    K &lt;- input$K
+    sapply(seq_len(K - 1), function(k) {
+      v &lt;- input[[paste0("b", k)]]
+      if (is.null(v)) 0 else v
+    })
+  })
+
+  ## Reactive: is GRM valid (strictly ordered thresholds)?
+  grm_valid &lt;- reactive({
+    b &lt;- get_b()
+    length(b) &lt; 2 || all(diff(b) &gt; 0)
+  })
+
+  ## Threshold warning in sidebar
+  output$threshold_warning &lt;- renderUI({
+    if (!grm_valid())
+      div(style = "background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;
+                   padding:8px 12px; margin-top:6px; font-size:12px;",
+          "\u26a0 Thresholds are not strictly increasing. GRM results suppressed.")
+  })
+
+  ## CRF-tab warning
+  output$crf_warning &lt;- renderUI({
+    if (!grm_valid())
+      div(style = "background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;
+                   padding:8px 12px; margin-bottom:10px; font-size:13px;",
+          strong("\u26a0 GRM suppressed: "),
+          "thresholds must be strictly increasing for the GRM to be well-defined.")
+  })
+
+  ## Analytical CRFs on theta grid
   all_probs &lt;- reactive({
-    K &lt;- input$K; a &lt;- input$a; b &lt;- get_b(K, input$spread)
-    list(
-      grm = getprob("grm", th_grid, b, a),
+    b &lt;- get_b()
+    a &lt;- input$a
+    out &lt;- list(
       pcm = getprob("pcm", th_grid, b, a),
       srm = getprob("srm", th_grid, b, a)
     )
+    if (grm_valid())
+      out$grm &lt;- getprob("grm", th_grid, b, a)
+    out
   })
 
   all_imp &lt;- reactive({
     probs &lt;- all_probs()
-    list(
-      grm = dichotomize_probs(probs$grm),
-      pcm = dichotomize_probs(probs$pcm),
-      srm = dichotomize_probs(probs$srm)
-    )
+    lapply(probs, dichotomize_probs)
   })
 
-  dich_names &lt;- reactive({ names(all_imp()[["grm"]]) })
+  ## Dichotomization names: use PCM (always available) as reference
+  dich_names &lt;- reactive({
+    imp &lt;- all_imp()
+    names(imp[["pcm"]])
+  })
 
   output$dich_selector &lt;- renderUI({
     nms &lt;- dich_names()
@@ -545,39 +590,68 @@ server &lt;- function(input, output, session) {
                 selected = 1)
   })
 
-  ## ── Tab 1: all three CRFs side by side ───────────────────────────────────
+  ## Run button: disabled when DGM == DAM OR when DGM is GRM with disordered thresholds
+  output$run_btn &lt;- renderUI({
+    disabled &lt;- (input$dgm == input$dam) ||
+                (input$dgm == "grm" &amp;&amp; !grm_valid())
+    reason &lt;- if (input$dgm == input$dam) {
+      "DGM and DAM are the same model."
+    } else if (input$dgm == "grm" &amp;&amp; !grm_valid()) {
+      "GRM requires ordered thresholds."
+    } else ""
+    if (disabled) {
+      tagList(
+        tags$button("Run simulation",
+                    class    = "btn btn-primary",
+                    disabled = "disabled",
+                    style    = "width:100%; opacity:0.5; cursor:not-allowed;"),
+        if (nchar(reason) &gt; 0)
+          p(reason, style = "font-size:12px; color:#a00; margin-top:4px;")
+      )
+    } else {
+      actionButton("run", "Run simulation", class = "btn-primary",
+                   style = "width:100%;")
+    }
+  })
+
+  ## ── Tab 1: CRFs ──────────────────────────────────────────────────────────
   output$crf_plot &lt;- renderPlot({
-    K     &lt;- input$K
-    probs &lt;- all_probs()
-    cat_cols &lt;- c("#185FA5", "#D85A30", "#1D9E75", "#BA7517", "#A32D2D")
+    K      &lt;- input$K
+    probs  &lt;- all_probs()
+    valid  &lt;- grm_valid()
+    mods   &lt;- if (valid) c("grm","pcm","srm") else c("pcm","srm")
+    n_mods &lt;- length(mods)
+    cat_cols   &lt;- c("#185FA5", "#D85A30", "#1D9E75", "#BA7517", "#A32D2D")
     mod_labels &lt;- c(grm = "GRM", pcm = "PCM", srm = "SRM")
-    par(mfrow = c(1, 3), mgp = c(2, 1, 0), mar = c(4, 3.5, 3, 1),
+    b_str &lt;- paste0("b = (", paste(round(get_b(), 1), collapse = ", "), ")")
+    par(mfrow = c(1, n_mods), mgp = c(2, 1, 0), mar = c(4, 3.5, 3, 1),
         oma = c(0, 0, 1.5, 0), family = "serif")
-    for (mod in c("grm", "pcm", "srm")) {
+    for (mod in mods) {
       p &lt;- probs[[mod]]
       plot(NULL, xlim = range(th_grid), ylim = 0:1,
            xlab = expression(theta),
-           ylab = if (mod == "grm") expression(Pr(x == k ~ "|" ~ theta)) else "",
+           ylab = if (mod == mods[1]) expression(Pr(x == k ~ "|" ~ theta)) else "",
            main = mod_labels[mod])
       abline(h = 0.5, col = "gray80", lty = 2)
       for (k in seq_len(K))
         lines(th_grid, p[, k], col = cat_cols[k], lwd = 2)
-      if (mod == "grm")
+      if (mod == mods[1])
         legend("right", bty = "n", lwd = 2, col = cat_cols[seq_len(K)],
                legend = paste0("k=", 0:(K - 1)), cex = 0.85)
     }
-    mtext(paste0("CRFs — a = ", input$a, ", spread = ", input$spread),
-          outer = TRUE, line = 0.3, cex = 1, family = "serif")
+    mtext(paste0("CRFs  —  a = ", input$a, ",  ", b_str),
+          outer = TRUE, line = 0.3, cex = 0.95, family = "serif")
   }, res = 96)
 
-  ## ── Tab 2: implied probability for selected dichotomization ──────────────
+  ## ── Tab 2: Implied probability ───────────────────────────────────────────
   output$imp_plot &lt;- renderPlot({
     req(input$sel_dich)
-    imp &lt;- all_imp()
-    idx &lt;- as.integer(input$sel_dich)
-    nms &lt;- dich_names()
+    imp   &lt;- all_imp()
+    valid &lt;- grm_valid()
+    idx   &lt;- as.integer(input$sel_dich)
+    nms   &lt;- dich_names()
     if (idx &gt; length(nms)) return(NULL)
-    nm  &lt;- nms[idx]
+    nm    &lt;- nms[idx]
 
     cols &lt;- c(grm = "#185FA5", pcm = "#1D9E75", srm = "#D85A30")
     lwds &lt;- c(grm = 1, pcm = 2, srm = 3.5)
@@ -589,69 +663,63 @@ server &lt;- function(input, output, session) {
          ylab = "Pr(dichotomized = 1 | \u03b8)",
          main = paste0("Implied probability: ", nm))
     abline(h = 0.5, col = "gray80", lty = 2)
-    ## draw thinnest first so thicker lines sit on top, thinner ones stay visible
-    for (mod in c("srm", "pcm", "grm")) {
+    draw_mods &lt;- if (valid) c("srm","pcm","grm") else c("srm","pcm")
+    for (mod in draw_mods) {
       ip &lt;- imp[[mod]]
-      if (nm %in% names(ip))
+      if (!is.null(ip) &amp;&amp; nm %in% names(ip))
         lines(th_grid, ip[[nm]], col = cols[mod], lwd = lwds[mod], lty = ltys[mod])
     }
+    leg_mods &lt;- if (valid) c("grm","pcm","srm") else c("pcm","srm")
     legend("right", bty = "n",
-           lwd = c(lwds["grm"], lwds["pcm"], lwds["srm"]),
-           lty = c(ltys["grm"], ltys["pcm"], ltys["srm"]),
-           col = c(cols["grm"], cols["pcm"], cols["srm"]),
-           legend = c("GRM", "PCM", "SRM"), cex = 0.9)
+           lwd = lwds[leg_mods],
+           lty = ltys[leg_mods],
+           col = cols[leg_mods],
+           legend = toupper(leg_mods), cex = 0.9)
   }, res = 96)
 
   ## ── Tab 3: IMV simulation ─────────────────────────────────────────────────
 
-  ## Warning when DGM == DAM
   output$imv_warning &lt;- renderUI({
     if (input$dgm == input$dam)
       div(style = "background:#fff3cd; border:1px solid #ffc107; border-radius:4px;
                    padding:10px 14px; margin-bottom:12px; font-size:13px;",
           strong("Note: "), "DGM and DAM are the same model. IMV(DGM, DAM) will be
-          exactly zero for every dichotomization — the DAM is estimated from responses
-          generated by itself, so its predictions are identical to the DGM baseline.
-          Select different models to see meaningful IMV values.")
+          exactly zero for every dichotomization — both models produce identical
+          predictions. Select different models to see meaningful IMV values.")
   })
 
   imv_results &lt;- eventReactive(input$run, {
     K &lt;- input$K
     a &lt;- input$a
-    b &lt;- get_b(K, input$spread)
+    b &lt;- get_b()
     N &lt;- 2000
 
     withProgress(message = "Running simulation...", value = 0, {
 
-      ## Step 1: draw theta, simulate responses from DGM
       incProgress(0.15, detail = "Simulating responses from DGM")
       th   &lt;- rnorm(N)
       resp &lt;- simresp(input$dgm, th = th, b = b, a = a)
 
-      ## Step 2: estimate both DGM and DAM parameters from those responses
       incProgress(0.25, detail = paste("Estimating", toupper(input$dgm), "parameters"))
       est_dgm &lt;- tryCatch(
-        estfun(input$dgm, resp, th),
+        estfun(input$dgm, resp, th, K),
         error = function(e) c(a, b)
       )
 
       incProgress(0.25, detail = paste("Estimating", toupper(input$dam), "parameters"))
       est_dam &lt;- tryCatch(
-        estfun(input$dam, resp, th),
+        estfun(input$dam, resp, th, K),
         error = function(e) c(a, b)
       )
 
-      ## Step 3: generate a fresh set of responses from DGM with estimated DGM parameters
       incProgress(0.15, detail = "Generating fresh responses from DGM")
       resp2 &lt;- simresp(input$dgm, th = th, b = est_dgm[-1], a = est_dgm[1])
 
-      ## Step 4: predictions — both models use their estimated parameters
-      incProgress(0.15, detail = "Computing IMV")
+      incProgress(0.1, detail = "Computing IMV")
       p_dgm &lt;- getprob(input$dgm, th, b = est_dgm[-1], a = est_dgm[1])
       p_dam &lt;- getprob(input$dam, th, b = est_dam[-1],  a = est_dam[1])
 
-      ## IMV(DGM, DAM): p1 = DAM predictions (baseline), p2 = DGM predictions (enhanced)
-      ## positive when DGM predicts better than DAM, as expected when DGM is correctly specified
+      ## IMV(DGM, DAM): p1 = DAM (baseline), p2 = DGM (enhanced)
       testing_pipeline(resp2, p_dam, p_dgm)
     })
   })
@@ -663,7 +731,8 @@ server &lt;- function(input, output, session) {
     dgm_l &lt;- toupper(input$dgm)
     dam_l &lt;- toupper(input$dam)
     col_map &lt;- c(grm = "#185FA5", pcm = "#1D9E75", srm = "#D85A30")
-    bar_col &lt;- col_map[input$dam]
+    bar_col &lt;- col_map[input$dgm]
+    b_str   &lt;- paste0("b = (", paste(round(get_b(), 1), collapse = ", "), ")")
 
     par(mgp = c(2, 1, 0), mar = c(4, 10, 3, 2), family = "serif")
     barplot(rev(as.numeric(vals)),
@@ -674,9 +743,7 @@ server &lt;- function(input, output, session) {
             border    = bar_col,
             xlab      = paste0("IMV(", dgm_l, ", ", dam_l, ")"),
             main      = paste0("IMV(", dgm_l, ", ", dam_l, ")",
-                               "  [K=", input$K,
-                               ", a=", input$a,
-                               ", spread=", input$spread, "]"),
+                               "  [K=", input$K, ", a=", input$a, ", ", b_str, "]"),
             cex.names = 0.75,
             cex.axis  = 0.85)
     abline(v = 0,    col = "gray30", lty = 2, lwd = 1.5)
@@ -693,9 +760,10 @@ server &lt;- function(input, output, session) {
     vals  &lt;- as.numeric(imv_results())
     dgm_l &lt;- toupper(input$dgm)
     dam_l &lt;- toupper(input$dam)
+    b_str &lt;- paste(round(get_b(), 2), collapse = ", ")
     cat("IMV(", dgm_l, ", ", dam_l, ") across ", length(vals), " dichotomizations\n", sep = "")
     cat("========================================\n\n")
-    cat("Parameters: K =", input$K, "| a =", input$a, "| spread =", input$spread, "\n\n")
+    cat("Parameters: K =", input$K, "| a =", input$a, "| b = (", b_str, ")\n\n")
     cat(sprintf("  Max:    %7.4f\n", max(vals)))
     cat(sprintf("  Mean:   %7.4f\n", mean(vals)))
     cat(sprintf("  Median: %7.4f\n", median(vals)))
