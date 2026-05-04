@@ -20,6 +20,8 @@ website:
             text: 2PL versus 3PL predictions
           - href: collapse.qmd
             text: The collapse of the thresholded IMV
+          - href: implied.qmd
+            text: Implied probabilities and the IMV
       - text: "Computational Examples"
         menu:
           - href: example_glm.qmd

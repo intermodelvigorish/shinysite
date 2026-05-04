@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Logistic Regression and the Overfit – The InterModel Vigorish (IMV)</title>
+<title>Implied Probabilities and the IMV – The InterModel Vigorish (IMV)</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -198,7 +198,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Logistic Regression and the Overfit</h1>
+<h1 class="title">Implied Probabilities and the IMV</h1>
 </div>
 
 
@@ -215,263 +215,498 @@ window.Quarto = {
 </header>
 
 
-<p>The Overfit IMV can be computed by basing calculation on the in-sample values used to generate probabilities rather than out-of-sample values. Let’s see how it can be computed and used to understand estimation quality as a function of sample size with logistic regression.</p>
-<p>We again consider the logistic regression model <span class="math display">\[p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of <span class="math inline">\(x\)</span> values. We’ll consider two models: the correct model <span class="math inline">\(p_1=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}\)</span> and an incorrectly specified alternative that includes a quadratic term <span class="math inline">\(p_2=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x+b_2 x^2))}.\)</span> We’ll be interested in the IMV comparing <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span>; the estimates <span class="math inline">\(\hat{p}_1\)</span> should be better given that they are based on the correctly specified model but we shall see that, especially in small samples, this will not always be the case. <strong>The Overfit IMV will be calculated based on <span class="math inline">\(y\)</span> values that are used to estimate the model</strong> rather than new <span class="math inline">\(y_2\)</span> outcomes.</p>
+<p>Polytomous response models — including the graded response model (GRM), partial credit model (PCM), and sequential response model (SRM) — are each motivated by assumptions about specific dichotomizations of a polytomous outcome <span class="math inline">\(x\)</span> scored in <span class="math inline">\(K\)</span> ordered categories. The <a href="https://link.springer.com/article/10.1007/s41237-025-00262-9"><em>implied probabilities</em></a> of a model are the probabilities associated with the full range of possible dichotomizations of <span class="math inline">\(x\)</span>, computed directly from the category response function (CRF).</p>
+<p>A dichotomization is characterized by a target set <span class="math inline">\(T \subseteq \{0, \ldots, K-1\}\)</span> and an excluded set <span class="math inline">\(E \subseteq \{0, \ldots, K-1\} \setminus T\)</span>. The implied probability is:</p>
+<p><span class="math display">\[
+\Pr\!\left(x \in T \;\middle|\; x \in T \cup E,\, \theta\right) = \frac{\sum_{k \in T} \Pr(x = k \mid \theta)}{\sum_{k \in T \cup E} \Pr(x = k \mid \theta)}
+\]</span></p>
+<p>When <span class="math inline">\(E = \emptyset\)</span> this reduces to the standard cumulative probability <span class="math inline">\(\Pr(x \in T \mid \theta)\)</span>.</p>
+<p>While the CRFs from the GRM, PCM, and SRM are visually similar, many implied probabilities differ dramatically across models — they can be non-unit-spanning, asymmetric, or non-monotonic. The <strong>InterModel Vigorish (IMV)</strong> quantifies these predictive differences: an IMV of 0.01 corresponds to the expected profit (in dollars) from a $1 bet, comparable to the 2PL vs.&nbsp;1PL predictive gain in IRT.</p>
+<p>We illustrate three things here. In Tab 1, we show the <strong>category response functions</strong> for all three models (GRM, PCM, SRM) using the item parameters implied by the DGM choice. In Tab 2, we show the <strong>implied probability curves</strong> for every possible dichotomization, comparing how the three models differ. In Tab 3, we compute <strong>IMV(DGM, DAM)</strong> — how much better the DGM’s predictions are relative to the DAM’s, across all dichotomizations — using a fresh set of out-of-sample responses.</p>
 <p>Notes:</p>
 <ul>
-<li><p>When we use the in-sample <span class="math inline">\(y\)</span> values (the red dots and curve), the IMV values are typically greater than zero. A naive interpretation might be that this implies the quadratic term is helping us to better model the results.</p></li>
-<li><p>When we turn to the out-of-sample data, we see that this is not so. The blue curve is below zero suggesting that the <span class="math inline">\(p_2\)</span> predictions are worse than <span class="math inline">\(p_1\)</span> when it comes to predicting new data. The red results are simply due to overfitting.</p></li>
-<li><p>The differences diminish as sample size increases suggesting that overfitting will be a bigger problem with (relatively; depending on model complexity) smaller samples.</p></li>
+<li>The three models have <em>canonical</em> dichotomizations: adjacent categories for the PCM (<span class="math inline">\(T = \{k\}; E = \{k-1\}\)</span>), cumulative for the GRM (<span class="math inline">\(T = \{k, \ldots, K-1\}; E = \emptyset\)</span>), and sequential for the SRM (<span class="math inline">\(T = \{k, \ldots, K-1\}; E = \{0, \ldots, k-1\}\)</span>).</li>
+<li>Cross-model implied probabilities can take on highly unusual shapes — non-unit-spanning, asymmetric, or non-monotonic — when a model is evaluated on a non-canonical dichotomization.</li>
+<li>In Tab 3, IMV(DGM, DAM) should generally be near or above zero when the DGM is correctly specified: the DGM’s predictions should improve on those of the misspecified DAM.</li>
+<li>Item parameters for both the DGM and DAM are estimated from <span class="math inline">\(N=2000\)</span> simulated responses with known <span class="math inline">\(\theta\)</span> values. A fresh set of <span class="math inline">\(N=2000\)</span> responses is then generated from the DGM using its estimated parameters; IMV(DGM, DAM) is computed by comparing DGM predictions to DAM predictions on those new responses. Estimated parameters are used throughout — never the true ones.</li>
 </ul>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
 #| standalone: true
-#| viewerHeight: 900
+#| viewerHeight: 1000
 
 library(shiny)
 
-imv.binary&lt;-function(y, p1, p2, sigma=1e-4) {
-    p1&lt;-ifelse(p1&lt;sigma,sigma,p1)
-    p2&lt;-ifelse(p2&lt;sigma,sigma,p2)
-    p1&lt;-ifelse(p1&gt;1-sigma,1-sigma,p1)
-    p2&lt;-ifelse(p2&gt;1-sigma,1-sigma,p2)
-    
-    ll&lt;-function(x,p) {
-        z&lt;-log(p)*x+log(1-p)*(1-x)
-        z&lt;-sum(z)/length(x)
-        exp(z)
-    }    
-    loglik1&lt;-ll(y,p1)
-    loglik2&lt;-ll(y,p2)
-    getcoins&lt;-function(a) {
-        f&lt;-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))
-        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par
+## ── Model functions ──────────────────────────────────────────────────────────
+
+getprob &lt;- function(model, th, b, a) {
+  pcm &lt;- function(th, b, a) {
+    K &lt;- length(b) + 1
+    psi &lt;- list()
+    psi[[1]] &lt;- rep(1, length(th))
+    for (k in 1:(K - 1)) {
+      kern &lt;- k * th - sum(b[1:k])
+      psi[[k + 1]] &lt;- exp(a * kern)
     }
-    c1&lt;-getcoins(loglik1)
-    c2&lt;-getcoins(loglik2)
-    ew&lt;-function(p1,p0) (p1-p0)/p0
-    imv&lt;-ew(c2,c1)
-    imv
+    psi &lt;- do.call("cbind", psi)
+    psi / rowSums(psi)
+  }
+  grm &lt;- function(th, b, a) {
+    invlogit &lt;- function(z) 1 / (1 + exp(-z))
+    K &lt;- length(b) + 1
+    pr &lt;- lapply(1:(K - 1), function(i) invlogit(a * (th - b[i])))
+    pr &lt;- do.call("cbind", pr)
+    pr &lt;- cbind(1, pr, 0)
+    p  &lt;- lapply(1:K, function(i) pr[, i] - pr[, i + 1])
+    do.call("cbind", p)
+  }
+  srm &lt;- function(th, b, a) {
+    invlogit &lt;- function(z) 1 / (1 + exp(-z))
+    K  &lt;- length(b) + 1
+    pr &lt;- lapply(1:(K - 1), function(i) invlogit(a * (th - b[i])))
+    pr &lt;- do.call("cbind", pr)
+    p  &lt;- list()
+    for (i in 1:K) {
+      if (i == 1)      tmp &lt;- 1 - pr[, 1]
+      else if (i == K) tmp &lt;- apply(pr, 1, prod)
+      else             tmp &lt;- apply(pr[, 1:(i - 1), drop = FALSE], 1, prod) * (1 - pr[, i])
+      p[[i]] &lt;- tmp
+    }
+    do.call("cbind", p)
+  }
+  do.call(model, args = list(th = th, b = b, a = a))
 }
 
+simresp &lt;- function(model, th, b, a) {
+  p &lt;- getprob(model, th = th, b = b, a = a)
+  sapply(seq_along(th), function(i) which(rmultinom(1, 1, p[i, ])[, 1] &gt; 0) - 1)
+}
+
+estfun &lt;- function(model, resp, th) {
+  K     &lt;- length(unique(resp))
+  inits &lt;- c(1, seq(-1, 1, length.out = K - 1))
+  f &lt;- function(pars) {
+    p &lt;- getprob(model, th = th, b = pars[-1], a = pars[1])
+    z &lt;- mapply(function(i, j) p[i, j], seq_along(th), resp + 1)
+    -sum(log(pmax(z, 1e-10)))
+  }
+  optim(inits, fn = f)$par
+}
+
+## ── IMV ──────────────────────────────────────────────────────────────────────
+
+imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
+  p1 &lt;- pmin(pmax(p1, sigma), 1 - sigma)
+  p2 &lt;- pmin(pmax(p2, sigma), 1 - sigma)
+  ll &lt;- function(x, p) exp(mean(log(p) * x + log(1 - p) * (1 - x)))
+  getcoins &lt;- function(a) {
+    f &lt;- function(p, a) abs(p * log(p) + (1 - p) * log(1 - p) - log(a))
+    nlminb(0.5, f, lower = 0.001, upper = 0.999, a = a)$par
+  }
+  c1 &lt;- getcoins(ll(y, p1))
+  c2 &lt;- getcoins(ll(y, p2))
+  (c2 - c1) / c1
+}
+
+## ── Implied probabilities ────────────────────────────────────────────────────
+
+dichotomize_probs &lt;- function(p) {
+  K &lt;- ncol(p)
+  dichotomize &lt;- function(tag, exc = NULL, p) {
+    vals &lt;- 0:(K - 1)
+    if (length(exc) &gt; 0) vals &lt;- vals[!(vals %in% exc)]
+    L &lt;- lapply(seq_len(tag), function(i) vals)
+    z &lt;- expand.grid(L)
+    if (ncol(z) &gt; 1) {
+      del &lt;- apply(z, 1, function(x) min(diff(x)))
+      z   &lt;- z[del &gt; 0, , drop = FALSE]
+    }
+    if (2 * tag == length(vals)) z &lt;- z[seq_len(nrow(z) / 2), , drop = FALSE]
+    om &lt;- list()
+    for (i in seq_len(nrow(z))) {
+      p.star   &lt;- p[, unlist(z[i, ]) + 1, drop = FALSE]
+      p.den    &lt;- if (length(exc) &gt; 0) 1 - rowSums(p[, as.numeric(exc) + 1, drop = FALSE]) else rowSums(p)
+      exc.text &lt;- if (length(exc) == 0) "" else paste(exc, collapse = "/")
+      om[[paste0("T=", paste0(z[i, ], collapse = "/"), ";E=", exc.text)]] &lt;- rowSums(p.star) / p.den
+    }
+    om
+  }
+  out &lt;- list()
+  for (n.exc in 0:(K - 2)) for (n.tag in seq_len(floor((K - n.exc) / 2))) {
+    tmp &lt;- list()
+    if (n.exc &gt; 0) {
+      L &lt;- lapply(seq_len(n.exc), function(i) 0:(K - 1))
+      z &lt;- expand.grid(L)
+      if (ncol(z) &gt; 1) {
+        del &lt;- apply(z, 1, function(x) min(diff(x)))
+        z   &lt;- z[del &gt; 0, , drop = FALSE]
+      }
+      for (i in seq_len(nrow(z))) tmp[[i]] &lt;- dichotomize(tag = n.tag, exc = z[i, ], p = p)
+    } else {
+      tmp[[1]] &lt;- dichotomize(tag = n.tag, p = p)
+    }
+    out[[paste(n.exc, n.tag)]] &lt;- tmp
+  }
+  names(out) &lt;- NULL
+  do.call("c", do.call("c", out))
+}
+
+## ── Testing pipeline ─────────────────────────────────────────────────────────
+
+testing_pipeline &lt;- function(resp, p1, p2) {
+  K &lt;- ncol(p1)
+  dichotomize &lt;- function(tag, exc = NULL, resp, p1, p2) {
+    vals &lt;- 0:(K - 1)
+    if (length(exc) &gt; 0) {
+      vals &lt;- vals[!(vals %in% exc)]
+      keep &lt;- !(resp %in% exc)
+      resp &lt;- resp[keep]; p1 &lt;- p1[keep, ]; p2 &lt;- p2[keep, ]
+    }
+    L &lt;- lapply(seq_len(tag), function(i) vals)
+    z &lt;- expand.grid(L)
+    if (ncol(z) &gt; 1) {
+      del &lt;- apply(z, 1, function(x) min(diff(x)))
+      z   &lt;- z[del &gt; 0, , drop = FALSE]
+    }
+    if (2 * tag == length(vals)) z &lt;- z[seq_len(nrow(z) / 2), , drop = FALSE]
+    om &lt;- list()
+    for (i in seq_len(nrow(z))) {
+      r0      &lt;- as.integer(resp %in% unlist(z[i, ]))
+      cols    &lt;- unlist(z[i, ]) + 1
+      p1.star &lt;- p1[, cols, drop = FALSE]
+      p2.star &lt;- p2[, cols, drop = FALSE]
+      p1.den  &lt;- if (length(exc) &gt; 0) 1 - rowSums(p1[, as.numeric(exc) + 1, drop = FALSE]) else rowSums(p1)
+      p2.den  &lt;- if (length(exc) &gt; 0) 1 - rowSums(p2[, as.numeric(exc) + 1, drop = FALSE]) else rowSums(p2)
+      exc.text &lt;- if (length(exc) == 0) "" else paste(exc, collapse = "/")
+      om[[paste0("T=", paste0(z[i, ], collapse = "/"), ";E=", exc.text)]] &lt;-
+        imv.binary(r0, rowSums(p1.star) / p1.den, rowSums(p2.star) / p2.den)
+    }
+    om
+  }
+  out &lt;- list()
+  for (n.exc in 0:(K - 2)) for (n.tag in seq_len(floor((K - n.exc) / 2))) {
+    tmp &lt;- list()
+    if (n.exc &gt; 0) {
+      L &lt;- lapply(seq_len(n.exc), function(i) 0:(K - 1))
+      z &lt;- expand.grid(L)
+      if (ncol(z) &gt; 1) {
+        del &lt;- apply(z, 1, function(x) min(diff(x)))
+        z   &lt;- z[del &gt; 0, , drop = FALSE]
+      }
+      for (i in seq_len(nrow(z))) tmp[[i]] &lt;- dichotomize(resp = resp, tag = n.tag, exc = z[i, ], p1 = p1, p2 = p2)
+    } else {
+      tmp[[1]] &lt;- dichotomize(resp = resp, tag = n.tag, p1 = p1, p2 = p2)
+    }
+    out[[paste(n.exc, n.tag)]] &lt;- tmp
+  }
+  names(out) &lt;- NULL
+  unlist(do.call("c", out))
+}
+
+## ── UI ───────────────────────────────────────────────────────────────────────
+
 ui &lt;- fluidPage(
-  titlePanel("Logistic Regression Overfitting Simulation"),
-  
+  titlePanel("Implied probabilities and the IMV"),
+
   sidebarLayout(
     sidebarPanel(
-      sliderInput("b0", 
-                  "Intercept (b0):",
-                  min = -2, 
-                  max = 2, 
-                  value = 0,
-                  step = 0.1),
-      
-      sliderInput("b1", 
-                  "Slope (b1):",
-                  min = -2, 
-                  max = 2, 
-                  value = 0.2,
-                  step = 0.1),
-      
-      actionButton("run", "Run Simulation", class = "btn-primary"),
-      
+
+      h4("Item parameters"),
+      sliderInput("K",      "Categories (K):",    min = 3,   max = 5,   value = 3,   step = 1),
+      sliderInput("a",      "Discrimination (a):", min = 0.5, max = 2.5, value = 1.3, step = 0.1),
+      sliderInput("spread", "Threshold spread:",   min = 0.3, max = 2.5, value = 1.0, step = 0.1),
+
       hr(),
-      
-      helpText("Red points: overfitting (same data used for fitting and testing)"),
-      helpText("Blue points: out-of-sample (independent test data)"),
-      helpText("DGM: y ~ x (true model does not include x²)")
+
+      h4("Model comparison"),
+      selectInput("dgm", "Data-generating model (DGM):",
+                  choices  = c("GRM" = "grm", "PCM" = "pcm", "SRM" = "srm"),
+                  selected = "pcm"),
+      selectInput("dam", "Data-analysis model (DAM):",
+                  choices  = c("GRM" = "grm", "PCM" = "pcm", "SRM" = "srm"),
+                  selected = "grm"),
+
+      hr(),
+
+      h4("Dichotomization (Tab 2)"),
+      uiOutput("dich_selector"),
+
+      hr(),
+
+      uiOutput("run_btn"),
+
+      hr(),
+
+      p("N = 2000 persons, \u03b8 ~ N(0,1). Both DGM and DAM parameters estimated from first set of responses; IMV computed on a fresh set of responses from the estimated DGM.",
+        style = "font-size: 12px; color: #888;")
     ),
-    
+
     mainPanel(
       tabsetPanel(
-        tabPanel("Results", 
-                 plotOutput("imvPlot", height = "600px")),
-        tabPanel("Simulation Code",
-                 tags$h3("Overview"),
-                 tags$p("This simulation compares two logistic regression models across varying sample sizes:"),
-                 tags$ul(
-                   tags$li(tags$strong("Correct model:"), " y ~ x"),
-                   tags$li(tags$strong("Overfit model:"), " y ~ x + x²")
-                 ),
-                 tags$p("For each sample size N, we:"),
-                 tags$ol(
-                   tags$li("Generate data from the true model (y ~ x)"),
-                   tags$li("Fit both models to the data"),
-                   tags$li("Compute IMV using in-sample y (overfitting scenario, shown in red)"),
-                   tags$li("Compute IMV using out-of-sample y2 (proper evaluation, shown in blue)")
-                 ),
-                 tags$hr(),
-                 tags$h4("Core Simulation Loop"),
-                 tags$pre(tags$code(
-'# Sample sizes (150 values between 100 and 2000, log-spaced)
-Nvals &lt;- runif(150, log10(100), log10(2000))
-Nvals &lt;- sort(round(10^Nvals))
 
-for (i in seq_along(Nvals)) {
-  N &lt;- Nvals[i]
-  
-  # 1. Generate data from true model
-  x &lt;- rnorm(N)
-  p &lt;- 1/(1 + exp(-(b0 + b1*x)))    # True probabilities
-  y &lt;- rbinom(N, 1, p)               # In-sample outcomes
-  y2 &lt;- rbinom(N, 1, p)              # Independent out-of-sample outcomes
-  df &lt;- data.frame(x = x, x2 = x*x)
-  
-  # 2. Fit both models to the same data (y)
-  m0 &lt;- glm(y ~ x, family = "binomial", df)        # Correct model
-  m1 &lt;- glm(y ~ x + x2, family = "binomial", df)   # Overfit model
-  
-  # Get predicted probabilities
-  pred0 &lt;- predict(m0, df, type="response")
-  pred1 &lt;- predict(m1, df, type="response")
-  
-  # 3. Compute IMV with in-sample y (OVERFIT - red curve)
-  #    This uses the same y that was used to fit the models
-  om.over[i] &lt;- imv.binary(y, pred0, pred1)
-  
-  # 4. Compute IMV with out-of-sample y2 (PROPER - blue curve)
-  #    This uses independent outcomes not used in fitting
-  om[i] &lt;- imv.binary(y2, pred0, pred1)
-}'
-                 )),
-                 tags$hr(),
-                 tags$h4("IMV Function"),
-                 tags$p("The ", tags$code("imv.binary()"), " function computes the Information-to-Model-Variance metric:"),
-                 tags$pre(tags$code(
-'imv.binary &lt;- function(y, p1, p2, sigma=1e-4) {
-  # Bound probabilities to avoid log(0)
-  p1 &lt;- pmax(pmin(p1, 1-sigma), sigma)
-  p2 &lt;- pmax(pmin(p2, 1-sigma), sigma)
-  
-  # Compute log-likelihood for each model
-  ll &lt;- function(x, p) {
-    z &lt;- log(p)*x + log(1-p)*(1-x)
-    exp(sum(z)/length(x))
-  }
-  
-  loglik1 &lt;- ll(y, p1)
-  loglik2 &lt;- ll(y, p2)
-  
-  # Convert to "equivalent coins" metric
-  # Find coin probability that gives same log-likelihood
-  getcoins &lt;- function(a) {
-    f &lt;- function(p, a) abs(p*log(p) + (1-p)*log(1-p) - log(a))
-    nlminb(.5, f, lower=0.001, upper=.999, a=a)$par
-  }
-  
-  c1 &lt;- getcoins(loglik1)
-  c2 &lt;- getcoins(loglik2)
-  
-  # Return relative improvement
-  imv &lt;- (c2 - c1) / c1
-  return(imv)
-}'
-                 )),
-                 tags$hr(),
-                 tags$h4("Interpretation"),
-                 tags$ul(
-                   tags$li(tags$strong("Positive IMV:"), " Model 2 (with x²) appears better"),
-                   tags$li(tags$strong("Negative IMV:"), " Model 1 (correct) is better"),
-                   tags$li(tags$strong("Red curve (overfit):"), " Typically positive due to overfitting"),
-                   tags$li(tags$strong("Blue curve (out-of-sample):"), " Typically negative, showing true model is better"),
-                   tags$li(tags$strong("Convergence at large N:"), " Both curves approach zero as overfitting becomes negligible")
-                 )
+        ## ── Tab 1: CRFs ────────────────────────────────────────────────────
+        tabPanel("Category response functions",
+          br(),
+          p("The plots below show the analytical category response functions (CRFs) —
+            Pr(x = k | \u03b8) for each category k — for all three models (GRM, PCM, SRM),
+            using a single set of item parameters: the discrimination a and thresholds b
+            (evenly spaced and scaled by the spread slider) as specified above.
+            These are not estimated from data; they describe what each model predicts
+            for a single item with known parameters. Despite differing in construction,
+            the three models produce strikingly similar CRFs for typical parameter values,
+            motivating examination of the full set of implied probabilities (Tab 2)
+            as a more sensitive discriminator."),
+          plotOutput("crf_plot", height = "360px")
+        ),
+
+        ## ── Tab 2: Implied probabilities ───────────────────────────────────
+        tabPanel("Implied probabilities",
+          br(),
+          p("Each curve shows an implied probability — Pr(x \u2208 T | x \u2208 T \u222a E, \u03b8) —
+            as a function of \u03b8, computed analytically from the CRFs of all three models
+            using the selected item parameters. Use the selector in the sidebar to explore
+            different dichotomizations. Unlike CRFs, implied probabilities can differ
+            sharply across models for the same dichotomization, and may be non-unit-spanning,
+            asymmetric, or non-monotonic when a model is evaluated on a non-canonical
+            dichotomization."),
+          plotOutput("imp_plot", height = "380px")
+        ),
+
+        ## ── Tab 3: IMV ─────────────────────────────────────────────────────
+        tabPanel("IMV comparison",
+          br(),
+          p("Click 'Run simulation' to: (1) draw \u03b8 ~ N(0,1) for N = 2000 persons and simulate
+            item responses from the DGM; (2) estimate item parameters for both the DGM and DAM
+            from those responses using the known \u03b8 values; (3) generate a fresh set of N = 2000
+            responses from the DGM using its estimated parameters; (4) compute IMV(DGM, DAM)
+            for every dichotomization by comparing DGM predictions to DAM predictions on the
+            new responses. Estimated parameters are used throughout.
+            IMV(DGM, DAM) \u2265 0 is expected when the DGM is correctly specified."),
+          uiOutput("imv_warning"),
+          plotOutput("imv_plot", height = "600px"),
+          hr(),
+          h4("Summary"),
+          verbatimTextOutput("imv_summary")
         )
       )
     )
   )
 )
 
+## ── Server ───────────────────────────────────────────────────────────────────
+
 server &lt;- function(input, output, session) {
-  
-  simData &lt;- eventReactive(input$run, {
-    b0 &lt;- input$b0
-    b1 &lt;- input$b1
-    
-    Nvals &lt;- runif(150, log10(100), log10(2000))
-    Nvals &lt;- sort(round(10^Nvals))
-    
-    om &lt;- om.over &lt;- numeric()
-    
-    withProgress(message = 'Running simulation...', value = 0, {
-      for (i in seq_along(Nvals)) {
-        N &lt;- Nvals[i]
-        
-        x &lt;- rnorm(N)
-        p &lt;- 1/(1 + exp(-(b0 + b1*x)))
-        y &lt;- rbinom(N, 1, p)
-        y2 &lt;- rbinom(N, 1, p)
-        df &lt;- data.frame(x = x, x2 = x*x)
-        
-        m1 &lt;- glm(y ~ x + x2, family = 'binomial', df)
-        m0 &lt;- glm(y ~ x, family = 'binomial', df)
-        
-        om.over[as.character(N)] &lt;- imv.binary(y, 
-                                                     predict(m0, df, type='response'),
-                                                     predict(m1, df, type='response'))
-        om[as.character(N)] &lt;- imv.binary(y2, 
-                                                predict(m0, df, type='response'),
-                                                predict(m1, df, type='response'))
-        
-        incProgress(1/length(Nvals))
-      }
-    })
-    
-    list(om = om, om.over = om.over)
+
+  output$run_btn &lt;- renderUI({
+    if (input$dgm == input$dam) {
+      tags$button("Run simulation",
+                  class    = "btn btn-primary",
+                  disabled = "disabled",
+                  style    = "width:100%; opacity:0.5; cursor:not-allowed;")
+    } else {
+      actionButton("run", "Run simulation", class = "btn-primary",
+                   style = "width:100%;")
+    }
   })
-  
-  output$imvPlot &lt;- renderPlot({
-    req(simData())
-    
-    data &lt;- simData()
-    
-    N_over &lt;- as.numeric(names(data$om.over))
-    N_oos &lt;- as.numeric(names(data$om))
-    
-    plot(N_over, data$om.over, 
-         ylim = c(-0.1, 0.1), 
-         pch = 19, 
-         col = 'red',
-         xlab = "N", 
-         ylab = "IMV(y~x, y~x+x²)",
-         main = paste0("b0 = ", input$b0, ", b1 = ", input$b1),
-         cex = 1.2,
-         cex.lab = 1.2,
-         cex.main = 1.3)
-    
-    points(N_oos, data$om, 
-           col = 'blue', 
-           pch = 19,
-           cex = 1.2)
-    
-    loess_over &lt;- loess(data$om.over ~ N_over, span = 0.75)
-    loess_oos &lt;- loess(data$om ~ N_oos, span = 0.75)
-    
-    ord_over &lt;- order(N_over)
-    ord_oos &lt;- order(N_oos)
-    
-    lines(N_over[ord_over], predict(loess_over)[ord_over], 
-          col = 'red', lwd = 2.5, lty = 1)
-    lines(N_oos[ord_oos], predict(loess_oos)[ord_oos], 
-          col = 'blue', lwd = 2.5, lty = 1)
-    
-    abline(h = 0, lty = 2, lwd = 1.5)
-    
-    legend("topright", 
-           bty = 'n', 
-           col = c("blue", "red"),
-           pch = c(19, 19),
-           lty = c(1, 1),
-           lwd = c(2.5, 2.5),
-           legend = c("oos", "overfit"),
-           title = "DGM = y~x",
-           cex = 1.1)
+
+
+  get_b &lt;- function(K, spread) {
+    seq(-(K - 2) / 2, (K - 2) / 2, length.out = K - 1) * spread
+  }
+
+  th_grid &lt;- seq(-3, 3, length.out = 500)
+
+  ## Analytical CRFs on theta grid for all three models
+  all_probs &lt;- reactive({
+    K &lt;- input$K; a &lt;- input$a; b &lt;- get_b(K, input$spread)
+    list(
+      grm = getprob("grm", th_grid, b, a),
+      pcm = getprob("pcm", th_grid, b, a),
+      srm = getprob("srm", th_grid, b, a)
+    )
+  })
+
+  all_imp &lt;- reactive({
+    probs &lt;- all_probs()
+    list(
+      grm = dichotomize_probs(probs$grm),
+      pcm = dichotomize_probs(probs$pcm),
+      srm = dichotomize_probs(probs$srm)
+    )
+  })
+
+  dich_names &lt;- reactive({ names(all_imp()[["grm"]]) })
+
+  output$dich_selector &lt;- renderUI({
+    nms &lt;- dich_names()
+    selectInput("sel_dich", NULL,
+                choices  = setNames(seq_along(nms), nms),
+                selected = 1)
+  })
+
+  ## ── Tab 1: all three CRFs side by side ───────────────────────────────────
+  output$crf_plot &lt;- renderPlot({
+    K     &lt;- input$K
+    probs &lt;- all_probs()
+    cat_cols &lt;- c("#185FA5", "#D85A30", "#1D9E75", "#BA7517", "#A32D2D")
+    mod_labels &lt;- c(grm = "GRM", pcm = "PCM", srm = "SRM")
+    par(mfrow = c(1, 3), mgp = c(2, 1, 0), mar = c(4, 3.5, 3, 1),
+        oma = c(0, 0, 1.5, 0), family = "serif")
+    for (mod in c("grm", "pcm", "srm")) {
+      p &lt;- probs[[mod]]
+      plot(NULL, xlim = range(th_grid), ylim = 0:1,
+           xlab = expression(theta),
+           ylab = if (mod == "grm") expression(Pr(x == k ~ "|" ~ theta)) else "",
+           main = mod_labels[mod])
+      abline(h = 0.5, col = "gray80", lty = 2)
+      for (k in seq_len(K))
+        lines(th_grid, p[, k], col = cat_cols[k], lwd = 2)
+      if (mod == "grm")
+        legend("right", bty = "n", lwd = 2, col = cat_cols[seq_len(K)],
+               legend = paste0("k=", 0:(K - 1)), cex = 0.85)
+    }
+    mtext(paste0("CRFs — a = ", input$a, ", spread = ", input$spread),
+          outer = TRUE, line = 0.3, cex = 1, family = "serif")
+  }, res = 96)
+
+  ## ── Tab 2: implied probability for selected dichotomization ──────────────
+  output$imp_plot &lt;- renderPlot({
+    req(input$sel_dich)
+    imp &lt;- all_imp()
+    idx &lt;- as.integer(input$sel_dich)
+    nms &lt;- dich_names()
+    if (idx &gt; length(nms)) return(NULL)
+    nm  &lt;- nms[idx]
+
+    cols &lt;- c(grm = "#185FA5", pcm = "#1D9E75", srm = "#D85A30")
+    lwds &lt;- c(grm = 1, pcm = 2, srm = 3.5)
+    ltys &lt;- c(grm = 1,   pcm = 2, srm = 3)
+
+    par(mgp = c(2, 1, 0), mar = c(4, 4, 3, 1), family = "serif")
+    plot(NULL, xlim = range(th_grid), ylim = 0:1,
+         xlab = expression(theta),
+         ylab = "Pr(dichotomized = 1 | \u03b8)",
+         main = paste0("Implied probability: ", nm))
+    abline(h = 0.5, col = "gray80", lty = 2)
+    ## draw thinnest first so thicker lines sit on top, thinner ones stay visible
+    for (mod in c("srm", "pcm", "grm")) {
+      ip &lt;- imp[[mod]]
+      if (nm %in% names(ip))
+        lines(th_grid, ip[[nm]], col = cols[mod], lwd = lwds[mod], lty = ltys[mod])
+    }
+    legend("right", bty = "n",
+           lwd = c(lwds["grm"], lwds["pcm"], lwds["srm"]),
+           lty = c(ltys["grm"], ltys["pcm"], ltys["srm"]),
+           col = c(cols["grm"], cols["pcm"], cols["srm"]),
+           legend = c("GRM", "PCM", "SRM"), cex = 0.9)
+  }, res = 96)
+
+  ## ── Tab 3: IMV simulation ─────────────────────────────────────────────────
+
+  ## Warning when DGM == DAM
+  output$imv_warning &lt;- renderUI({
+    if (input$dgm == input$dam)
+      div(style = "background:#fff3cd; border:1px solid #ffc107; border-radius:4px;
+                   padding:10px 14px; margin-bottom:12px; font-size:13px;",
+          strong("Note: "), "DGM and DAM are the same model. IMV(DGM, DAM) will be
+          exactly zero for every dichotomization — the DAM is estimated from responses
+          generated by itself, so its predictions are identical to the DGM baseline.
+          Select different models to see meaningful IMV values.")
+  })
+
+  imv_results &lt;- eventReactive(input$run, {
+    K &lt;- input$K
+    a &lt;- input$a
+    b &lt;- get_b(K, input$spread)
+    N &lt;- 2000
+
+    withProgress(message = "Running simulation...", value = 0, {
+
+      ## Step 1: draw theta, simulate responses from DGM
+      incProgress(0.15, detail = "Simulating responses from DGM")
+      th   &lt;- rnorm(N)
+      resp &lt;- simresp(input$dgm, th = th, b = b, a = a)
+
+      ## Step 2: estimate both DGM and DAM parameters from those responses
+      incProgress(0.25, detail = paste("Estimating", toupper(input$dgm), "parameters"))
+      est_dgm &lt;- tryCatch(
+        estfun(input$dgm, resp, th),
+        error = function(e) c(a, b)
+      )
+
+      incProgress(0.25, detail = paste("Estimating", toupper(input$dam), "parameters"))
+      est_dam &lt;- tryCatch(
+        estfun(input$dam, resp, th),
+        error = function(e) c(a, b)
+      )
+
+      ## Step 3: generate a fresh set of responses from DGM with estimated DGM parameters
+      incProgress(0.15, detail = "Generating fresh responses from DGM")
+      resp2 &lt;- simresp(input$dgm, th = th, b = est_dgm[-1], a = est_dgm[1])
+
+      ## Step 4: predictions — both models use their estimated parameters
+      incProgress(0.15, detail = "Computing IMV")
+      p_dgm &lt;- getprob(input$dgm, th, b = est_dgm[-1], a = est_dgm[1])
+      p_dam &lt;- getprob(input$dam, th, b = est_dam[-1],  a = est_dam[1])
+
+      ## IMV(DGM, DAM): p1 = DAM predictions (baseline), p2 = DGM predictions (enhanced)
+      ## positive when DGM predicts better than DAM, as expected when DGM is correctly specified
+      testing_pipeline(resp2, p_dam, p_dgm)
+    })
+  })
+
+  output$imv_plot &lt;- renderPlot({
+    req(imv_results())
+    vals  &lt;- imv_results()
+    nms   &lt;- names(vals)
+    dgm_l &lt;- toupper(input$dgm)
+    dam_l &lt;- toupper(input$dam)
+    col_map &lt;- c(grm = "#185FA5", pcm = "#1D9E75", srm = "#D85A30")
+    bar_col &lt;- col_map[input$dam]
+
+    par(mgp = c(2, 1, 0), mar = c(4, 10, 3, 2), family = "serif")
+    barplot(rev(as.numeric(vals)),
+            names.arg = rev(nms),
+            horiz     = TRUE,
+            las       = 1,
+            col       = adjustcolor(bar_col, alpha.f = 0.7),
+            border    = bar_col,
+            xlab      = paste0("IMV(", dgm_l, ", ", dam_l, ")"),
+            main      = paste0("IMV(", dgm_l, ", ", dam_l, ")",
+                               "  [K=", input$K,
+                               ", a=", input$a,
+                               ", spread=", input$spread, "]"),
+            cex.names = 0.75,
+            cex.axis  = 0.85)
+    abline(v = 0,    col = "gray30", lty = 2, lwd = 1.5)
+    abline(v = 0.01, col = "gray60", lty = 3, lwd = 1.5)
+    legend("bottomright", bty = "n",
+           lty = c(2, 3), lwd = 1.5,
+           col = c("gray30", "gray60"),
+           legend = c("IMV = 0", "IMV = 0.01 benchmark"),
+           cex = 0.8)
+  }, res = 96)
+
+  output$imv_summary &lt;- renderPrint({
+    req(imv_results())
+    vals  &lt;- as.numeric(imv_results())
+    dgm_l &lt;- toupper(input$dgm)
+    dam_l &lt;- toupper(input$dam)
+    cat("IMV(", dgm_l, ", ", dam_l, ") across ", length(vals), " dichotomizations\n", sep = "")
+    cat("========================================\n\n")
+    cat("Parameters: K =", input$K, "| a =", input$a, "| spread =", input$spread, "\n\n")
+    cat(sprintf("  Max:    %7.4f\n", max(vals)))
+    cat(sprintf("  Mean:   %7.4f\n", mean(vals)))
+    cat(sprintf("  Median: %7.4f\n", median(vals)))
+    cat(sprintf("  Min:    %7.4f\n", min(vals)))
+    cat(sprintf("  &gt; 0:    %d / %d dichotomizations\n", sum(vals &gt; 0),    length(vals)))
+    cat(sprintf("  &gt; 0.01: %d / %d dichotomizations\n", sum(vals &gt; 0.01), length(vals)))
   })
 }
 
 shinyApp(ui = ui, server = server)</code></pre>
-<p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
+<p><a href="https://intermodelvigorish.github.io/shinysite/index.html">← Back to Home</a></p>
 
 
 
