@@ -152,6 +152,10 @@ window.Quarto = {
     <a class="dropdown-item" href="./collapse.html">
  <span class="dropdown-text">The collapse of the thresholded IMV</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./implied.html">
+ <span class="dropdown-text">Implied probabilities and the IMV</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -223,31 +227,8 @@ window.Quarto = {
 #| standalone: true
 #| viewerHeight: 900
 
-imv.binary&lt;-function(y, p1, p2, sigma=1e-4) {
-    p1&lt;-ifelse(p1&lt;sigma,sigma,p1)
-    p2&lt;-ifelse(p2&lt;sigma,sigma,p2)
-    p1&lt;-ifelse(p1&gt;1-sigma,1-sigma,p1)
-    p2&lt;-ifelse(p2&gt;1-sigma,1-sigma,p2)
-    
-    ll&lt;-function(x,p) {
-        z&lt;-log(p)*x+log(1-p)*(1-x)
-        z&lt;-sum(z)/length(x)
-        exp(z)
-    }    
-    loglik1&lt;-ll(y,p1)
-    loglik2&lt;-ll(y,p2)
-    getcoins&lt;-function(a) {
-        f&lt;-function(p,a) abs(p*log(p)+(1-p)*log(1-p)-log(a))
-        nlminb(.5,f,lower=0.001,upper=.999,a=a)$par
-    }
-    c1&lt;-getcoins(loglik1)
-    c2&lt;-getcoins(loglik2)
-    ew&lt;-function(p1,p0) (p1-p0)/p0
-    imv&lt;-ew(c2,c1)
-    imv
-}
-
 library(shiny)
+library(imv)
 
 est &lt;- function(x, th, fixc = FALSE) {
   ll &lt;- function(pars, x, th) {

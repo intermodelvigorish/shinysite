@@ -24,7 +24,7 @@ others regardless of the situation.
 ## Setup
 
 ```r
-# devtools::install_github("ben-domingue/imv")
+# install.packages("imv")
 library(imv)
 library(lme4)
 

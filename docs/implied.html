@@ -238,6 +238,7 @@ window.Quarto = {
 #| viewerHeight: 1050
 
 library(shiny)
+library(imv)
 
 ## ── Model functions ──────────────────────────────────────────────────────────
 
@@ -292,21 +293,6 @@ estfun &lt;- function(model, resp, th, K) {
     -sum(log(pmax(z, 1e-10)))
   }
   optim(inits, fn = f)$par
-}
-
-## ── IMV ──────────────────────────────────────────────────────────────────────
-
-imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
-  p1 &lt;- pmin(pmax(p1, sigma), 1 - sigma)
-  p2 &lt;- pmin(pmax(p2, sigma), 1 - sigma)
-  ll &lt;- function(x, p) exp(mean(log(p) * x + log(1 - p) * (1 - x)))
-  getcoins &lt;- function(a) {
-    f &lt;- function(p, a) abs(p * log(p) + (1 - p) * log(1 - p) - log(a))
-    nlminb(0.5, f, lower = 0.001, upper = 0.999, a = a)$par
-  }
-  c1 &lt;- getcoins(ll(y, p1))
-  c2 &lt;- getcoins(ll(y, p2))
-  (c2 - c1) / c1
 }
 
 ## ── Implied probabilities ────────────────────────────────────────────────────

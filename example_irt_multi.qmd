@@ -20,7 +20,7 @@ with stable estimates.** The IMV makes this concrete and quantifiable.
 ## Setup
 
 ```r
-# devtools::install_github("ben-domingue/imv")
+# install.packages("imv")
 library(imv)
 library(mirt)
 library(MASS)

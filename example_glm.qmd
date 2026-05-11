@@ -18,7 +18,7 @@ The dataset is available directly from Kaggle or via the `titanic` R package.
 
 ```r
 # Install the imv package from GitHub if not already installed
-# devtools::install_github("ben-domingue/imv")
+# install.packages("imv")
 
 library(imv)
 

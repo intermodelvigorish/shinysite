@@ -20,7 +20,7 @@ This example is adapted from the [IRW vignette on IMV calculation](https://itemr
 ## Setup
 
 ```r
-# devtools::install_github("ben-domingue/imv")
+# install.packages("imv")
 # install.packages("irw")     # IRW data access
 # install.packages("mirt")    # IRT models
 
