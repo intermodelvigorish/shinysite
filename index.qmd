@@ -707,9 +707,10 @@ Extends the IMV to **polytomous (multi-category) items** via the *thresholded IM
 ### Computational Examples
 
 These examples show how to use the `imv` R package to compute IMV values in
-real-life data analysis scenarios. Each example uses a publicly available
-dataset and walks through installation, model fitting, IMV computation, and
-interpretation of results.
+real-life data analysis scenarios. The package is available on CRAN and can be
+installed with `install.packages("imv")`. Each example uses a publicly available
+dataset and walks through model fitting, IMV computation, and interpretation of
+results.
 
 ::: {.callout-note appearance="minimal"}
 #### [6. Logistic regression (glm)](example_glm.html)

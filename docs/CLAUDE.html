@@ -205,14 +205,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.</p>
 <section id="what-this-project-is" class="level2">
 <h2 class="anchored" data-anchor-id="what-this-project-is">What this project is</h2>
-<p>A Quarto website documenting the <strong>InterModel Vigorish (IMV)</strong> — a statistical metric for comparing binary prediction models (Domingue et al., 2025). The site hosts interactive R Shiny demonstrations and computational examples using the <code>imv</code> R package (<code>github.com/ben-domingue/imv</code>).</p>
+<p>A Quarto website documenting the <strong>InterModel Vigorish (IMV)</strong> — a statistical metric for comparing binary prediction models (Domingue et al., 2025). The site hosts interactive R Shiny demonstrations and computational examples using the <code>imv</code> R package (available on CRAN).</p>
 </section>
 <section id="build-commands" class="level2">
 <h2 class="anchored" data-anchor-id="build-commands">Build commands</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render          <span class="co"># Render all .qmd files → docs/</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render foo.qmd  <span class="co"># Render a single page</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> preview         <span class="co"># Live preview with hot reload</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Output goes to <code>docs/</code> (GitHub Pages source). The <code>.quarto/</code> cache directory and <code>*.quarto_ipynb</code> files are gitignored.</p>
+<p>Output goes to <code>docs/</code> (GitHub Pages source). The <code>.quarto/</code> cache directory and <code>*.quarto_ipynb</code> files are gitignored. CLAUDE.md is also gitignored (local-only).</p>
 </section>
 <section id="architecture" class="level2">
 <h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
@@ -242,11 +242,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Home</td>
 <td><code>index.qmd</code></td>
-<td>IMV concept + weighted-coin interactive tutorial</td>
+<td>IMV concept, weighted-coin analogy, interactive tutorial</td>
 </tr>
 <tr class="even">
 <td>Simulation Examples</td>
-<td><code>logreg.qmd</code>, <code>oracle.qmd</code>, <code>overfit.qmd</code>, <code>23pl.qmd</code>, <code>collapse.qmd</code></td>
+<td><code>logreg.qmd</code>, <code>oracle.qmd</code>, <code>overfit.qmd</code>, <code>23pl.qmd</code>, <code>collapse.qmd</code>, <code>implied.qmd</code></td>
 <td>Shiny-powered simulations illustrating IMV behavior</td>
 </tr>
 <tr class="odd">
@@ -261,8 +261,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="key-conventions">Key conventions</h2>
 <ul>
 <li>Each page is self-contained. Shiny app logic (including IMV helper functions) is inlined directly in <code>{shinylive-r}</code> chunks — there are no shared R source files.</li>
-<li>The <code>imv</code> package is installed from GitHub in computational example chunks: <code>devtools::install_github("ben-domingue/imv")</code>.</li>
-<li>CLAUDE.md is gitignored (listed in <code>.gitignore</code>), so it is local-only.</li>
+<li>The three core IMV helper functions (<code>get_coin_weight</code>, <code>avg_ll</code>, <code>imv_coins</code>) are duplicated in every shinylive chunk that needs them. When updating the IMV math, update all pages.</li>
+<li>The <code>imv</code> package is on CRAN; computational example chunks use <code>install.packages("imv")</code> (commented out).</li>
+<li>Computational example pages (<code>example_*.qmd</code>) use plain <code>r</code> chunks (not shinylive) — they are static walkthroughs, not interactive apps.</li>
+<li>Chart.js is loaded from a CDN (<code>cdnjs.cloudflare.com</code>) inside shinylive chunks for canvas-based visualizations; it is not available as a package dependency.</li>
 </ul>
 
 
