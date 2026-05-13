@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>IRT versus Cognitive Diagnostic Models – The InterModel Vigorish (IMV)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-a413d5729d54e4aec2855233f035eb84.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<meta name="shinylive:serviceworker_dir" content=".">
+<script src="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">The InterModel Vigorish (IMV)</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-simulation-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Simulation Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-simulation-examples">    
+        <li>
+    <a class="dropdown-item" href="./logreg.html">
+ <span class="dropdown-text">Logistic regression and the intercept</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./oracle.html">
+ <span class="dropdown-text">Logistic regression and the Oracle</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./overfit.html">
+ <span class="dropdown-text">Logistic regression and the Overfit</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./23pl.html">
+ <span class="dropdown-text">2PL versus 3PL predictions</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./collapse.html">
+ <span class="dropdown-text">The collapse of the thresholded IMV</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./implied.html">
+ <span class="dropdown-text">Implied probabilities and the IMV</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./cdm_irt.html">
+ <span class="dropdown-text">IRT versus Cognitive Diagnostic Models</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-computational-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Computational Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-computational-examples">    
+        <li>
+    <a class="dropdown-item" href="./example_glm.html">
+ <span class="dropdown-text">Logistic regression (glm)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_glmer.html">
+ <span class="dropdown-text">Mixed-effects logistic regression (glmer)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_irt_uni.html">
+ <span class="dropdown-text">Unidimensional IRT</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./example_irt_multi.html">
+ <span class="dropdown-text">Multidimensional IRT</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content column-page" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">IRT versus Cognitive Diagnostic Models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta column-page">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><strong>Cognitive Diagnostic Models (CDMs)</strong> classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of <span class="math inline">\(K\)</span> skills — and predict item responses from those profiles. <strong>Item Response Theory (IRT)</strong> instead places respondents on a continuous latent trait <span class="math inline">\(\theta\)</span>. When the true data-generating process is a CDM, which model predicts better?</p>
+<p>The answer depends on the correlation among attributes. When skills are independent, a respondent’s profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.</p>
+<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J = 3K\)</span> items (three items per skill, each requiring exactly one skill). Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with inter-skill correlation <span class="math inline">\(\rho\)</span> varied across 10 evenly-spaced values from 0 to 0.7.</p>
+<p><strong>Evaluation scheme.</strong> To ensure all IMV comparisons are out-of-sample, three independent datasets are used:</p>
+<ol type="1">
+<li><strong>Training set</strong> (<span class="math inline">\(N\)</span> persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).</li>
+<li><strong>Test set</strong> (200 persons): used to estimate person-level latent variables — IRT <span class="math inline">\(\hat\theta\)</span> via MLE and CDM attribute profiles via MAP — applying the item parameters from step 1.</li>
+<li><strong>Evaluation set</strong> (200 persons, same attribute profiles as the test set, independent response draws): all IMV quantities are scored here. Because the evaluation responses are independent of the data used in steps 1 and 2, MAP and MLE cannot inflate their own scores by fitting to the evaluation outcomes.</li>
+</ol>
+<p>The three IMV quantities reported are:</p>
+<ul>
+<li><strong>IMV(IRT, CDM)</strong> — positive values mean CDM predicts better; negative means IRT predicts better</li>
+<li><strong>IMV(IRT, True)</strong> — oracle gap for IRT: how far fitted IRT predictions are from the true generating probabilities</li>
+<li><strong>IMV(CDM, True)</strong> — oracle gap for CDM: how far MAP-based CDM predictions are from the true probabilities</li>
+</ul>
+<p>Both oracle gaps should be non-negative: no fitted model should systematically beat the true probabilities on held-out data.</p>
+<p>Based on work by <a href="https://osf.io/preprints/psyarxiv/acwdz_v1">Ma, Liu, Kanopka, Ma, &amp; Domingue (2025)</a>.</p>
+<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 980
+
+webr::install("ltm",     repos = c("https://cran.r-universe.dev", "https://repo.r-wasm.org"))
+webr::install("mvtnorm", repos = c("https://repo.r-wasm.org"))
+
+library(shiny)
+library(ltm)
+library(mvtnorm)
+
+# ---- IMV ----------------------------------------------------------------
+imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
+  p1 &lt;- pmin(pmax(p1, sigma), 1 - sigma)
+  p2 &lt;- pmin(pmax(p2, sigma), 1 - sigma)
+  ll &lt;- function(x, p) exp(sum(log(p) * x + log(1 - p) * (1 - x)) / length(x))
+  coins &lt;- function(a) nlminb(0.5, function(p, a) abs(p*log(p) + (1-p)*log(1-p) - log(a)),
+                              lower = 1e-4, upper = 1 - 1e-4, a = a)$par
+  c1 &lt;- coins(ll(y, p1)); c2 &lt;- coins(ll(y, p2))
+  (c2 - c1) / c1
+}
+
+# ---- Build simulation parameters for a given K --------------------------
+make_params &lt;- function(K) {
+  J    &lt;- K * 3L
+  slip &lt;- rep(0.15, J)
+  guess &lt;- rep(0.15, J)
+
+  # Q-matrix: 3 items per skill, each requiring exactly one skill
+  Q &lt;- do.call(rbind, lapply(seq_len(K), function(k) {
+    r &lt;- rep(0L, K); r[k] &lt;- 1L
+    matrix(rep(r, 3), nrow = 3, ncol = K, byrow = TRUE)
+  }))
+
+  all_profiles &lt;- as.matrix(expand.grid(rep(list(0:1), K)))
+  n_prof &lt;- nrow(all_profiles)
+
+  pp &lt;- matrix(NA_real_, n_prof, J)
+  for (p in seq_len(n_prof))
+    for (j in seq_len(J)) {
+      req &lt;- Q[j, ] == 1
+      eta &lt;- if (!any(req)) 1 else prod(all_profiles[p, req])
+      pp[p, j] &lt;- eta * (1 - slip[j]) + (1 - eta) * guess[j]
+    }
+
+  list(K = K, J = J, slip = slip, guess = guess, Q = Q,
+       all_profiles = all_profiles,
+       log_pp   = log(pmax(pp,     1e-8)),
+       log_1mpp = log(pmax(1 - pp, 1e-8)),
+       pp = pp)
+}
+
+# ---- Helper functions (all take a params list) --------------------------
+gen_attrs &lt;- function(N, rho, pr) {
+  Sigma &lt;- matrix(rho, pr$K, pr$K); diag(Sigma) &lt;- 1
+  Z &lt;- rmvnorm(N, sigma = Sigma)
+  (Z &gt; 0) * 1L
+}
+
+dina_prob &lt;- function(alpha, pr) {
+  N &lt;- nrow(alpha)
+  probs &lt;- matrix(NA_real_, N, pr$J)
+  for (j in seq_len(pr$J)) {
+    req &lt;- pr$Q[j, ] == 1
+    eta &lt;- if (!any(req)) rep(1, N) else apply(alpha[, req, drop = FALSE], 1, prod)
+    probs[, j] &lt;- eta * (1 - pr$slip[j]) + (1 - eta) * pr$guess[j]
+  }
+  probs
+}
+
+map_dina &lt;- function(y_mat, pr) {
+  N   &lt;- nrow(y_mat)
+  y_t &lt;- t(y_mat)
+  alpha_hat &lt;- matrix(NA_integer_, N, pr$K)
+  for (i in seq_len(N)) {
+    ll &lt;- pr$log_pp %*% y_t[, i] + pr$log_1mpp %*% (1L - y_t[, i])
+    alpha_hat[i, ] &lt;- pr$all_profiles[which.max(ll), ]
+  }
+  alpha_hat
+}
+
+get_theta_mle &lt;- function(yi, a_vec, b_vec) {
+  nll &lt;- function(theta) {
+    p &lt;- pmin(pmax(1 / (1 + exp(-a_vec * (theta - b_vec))), 1e-8), 1 - 1e-8)
+    -sum(yi * log(p) + (1 - yi) * log(1 - p))
+  }
+  tryCatch(optimize(nll, interval = c(-5, 5))$minimum, error = function(e) 0)
+}
+
+# ---- One simulation at a given rho --------------------------------------
+sim_one &lt;- function(N_train, rho, pr) {
+  N_test &lt;- 200L
+
+  # Step 1: training data — fit IRT item parameters
+  a_tr &lt;- gen_attrs(N_train, rho, pr)
+  y_tr &lt;- matrix(rbinom(N_train * pr$J, 1L, dina_prob(a_tr, pr)), N_train, pr$J)
+
+  fit_irt &lt;- tryCatch(
+    ltm(as.data.frame(y_tr) ~ z1, control = list(iter.em = 30, iter.qN = 50)),
+    error = function(e) NULL
+  )
+  if (is.null(fit_irt)) return(NULL)
+
+  ipar  &lt;- coef(fit_irt)
+  b_vec &lt;- ipar[, "Dffclt"]
+  a_vec &lt;- ipar[, "Dscrmn"]
+
+  # Step 2: test data — estimate person-level parameters
+  a_te   &lt;- gen_attrs(N_test, rho, pr)
+  p_true &lt;- dina_prob(a_te, pr)
+  y_te   &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  # IRT: MLE theta from y_te, then compute predicted probabilities
+  theta_te &lt;- apply(y_te, 1, get_theta_mle, a_vec = a_vec, b_vec = b_vec)
+  p_irt &lt;- matrix(NA_real_, N_test, pr$J)
+  for (j in seq_len(pr$J))
+    p_irt[, j] &lt;- 1 / (1 + exp(-a_vec[j] * (theta_te - b_vec[j])))
+
+  # CDM: MAP attribute profiles from y_te
+  p_cdm &lt;- dina_prob(map_dina(y_te, pr), pr)
+
+  # Step 3: evaluation data — independent draw from same true probabilities
+  y_eval &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  y_v    &lt;- as.vector(y_eval)
+  pirt_v &lt;- as.vector(p_irt)
+  pcdm_v &lt;- as.vector(p_cdm)
+  ptru_v &lt;- as.vector(p_true)
+
+  c(
+    irt_cdm  = imv.binary(y_v, pirt_v, pcdm_v),
+    irt_true = imv.binary(y_v, pirt_v, ptru_v),
+    cdm_true = imv.binary(y_v, pcdm_v, ptru_v)
+  )
+}
+
+# ---- UI -----------------------------------------------------------------
+ui &lt;- fluidPage(
+  titlePanel("IRT vs CDM: IMV as a Function of Skill Correlation"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("K", "Number of skills (K):",
+                  choices = c("2" = 2, "3" = 3, "4" = 4),
+                  selected = 3),
+      selectInput("N_train", "Training sample size (N):",
+                  choices = c("250" = 250, "500" = 500, "1000" = 1000),
+                  selected = 500),
+      helpText("J = 3K items total (3 items per skill)."),
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      hr(),
+      helpText(
+        "First run installs ltm (~30s). Simulation sweeps 10 values of ρ ",
+        "and fits a 2PL IRT model at each; expect 1–3 minutes."
+      )
+    ),
+    mainPanel(
+      plotOutput("imvPlot", height = "520px"),
+      verbatimTextOutput("resultTable")
+    )
+  )
+)
+
+# ---- Server -------------------------------------------------------------
+server &lt;- function(input, output, session) {
+
+  results &lt;- eventReactive(input$run, {
+    pr       &lt;- make_params(as.integer(input$K))
+    N_train  &lt;- as.integer(input$N_train)
+    rho_vals &lt;- seq(0, 0.7, length.out = 10)
+    out      &lt;- matrix(NA_real_, length(rho_vals), 3,
+                       dimnames = list(NULL, c("irt_cdm", "irt_true", "cdm_true")))
+
+    withProgress(message = "Simulating…", value = 0, {
+      for (i in seq_along(rho_vals)) {
+        incProgress(1 / length(rho_vals),
+                    detail = sprintf("ρ = %.2f (%d of %d)", rho_vals[i], i, length(rho_vals)))
+        res &lt;- sim_one(N_train, rho_vals[i], pr)
+        if (!is.null(res)) out[i, ] &lt;- res
+      }
+    })
+
+    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J)
+  })
+
+  output$imvPlot &lt;- renderPlot({
+    req(results())
+    r   &lt;- results()
+    rho &lt;- r$rho
+    imv &lt;- r$imv
+
+    ylim &lt;- range(c(imv, 0), na.rm = TRUE)
+    ylim &lt;- ylim + diff(ylim) * c(-0.08, 0.08)
+
+    plot(rho, imv[, "irt_cdm"],
+         type = "n",
+         xlab = expression(paste("Skill inter-correlation (", rho, ")")),
+         ylab = "IMV",
+         main = sprintf("IMV vs Skill Correlation  (N = %s, K = %d, J = %d)",
+                        input$N_train, r$K, r$J),
+         ylim = ylim, las = 1)
+    grid(lty = 3, col = "grey85")
+    abline(h = 0, lty = 2, col = "grey40")
+
+    sm &lt;- function(y) {
+      ok &lt;- !is.na(y)
+      if (sum(ok) &lt; 4) return(rep(NA, length(y)))
+      predict(loess(y[ok] ~ rho[ok], span = 0.75), newdata = rho)
+    }
+
+    lines(rho, sm(imv[, "irt_true"]), col = "steelblue", lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "cdm_true"]), col = "tomato",    lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "irt_cdm"]),  col = "black",     lwd = 2.5)
+
+    points(rho, imv[, "irt_true"], col = "steelblue", pch = 16, cex = 0.9)
+    points(rho, imv[, "cdm_true"], col = "tomato",    pch = 16, cex = 0.9)
+    points(rho, imv[, "irt_cdm"],  col = "black",     pch = 16, cex = 1.1)
+
+    legend("topright", bty = "n",
+           legend = c("IMV(IRT, CDM)  [main]",
+                      "IMV(IRT, True) [oracle IRT]",
+                      "IMV(CDM, True) [oracle CDM]"),
+           col = c("black", "steelblue", "tomato"),
+           lwd = c(2.5, 2, 2), lty = c(1, 2, 2), pch = 16,
+           cex = 0.9)
+  })
+
+  output$resultTable &lt;- renderPrint({
+    req(results())
+    r &lt;- results()
+    df &lt;- data.frame(
+      rho      = round(r$rho, 2),
+      IRT_CDM  = round(r$imv[, "irt_cdm"],  4),
+      IRT_True = round(r$imv[, "irt_true"], 4),
+      CDM_True = round(r$imv[, "cdm_true"], 4)
+    )
+    print(df, row.names = FALSE)
+  })
+}
+
+shinyApp(ui = ui, server = server)</code></pre>
+<p><strong>What you should see:</strong></p>
+<ul>
+<li>At <strong>low <span class="math inline">\(\rho\)</span></strong> (near 0): skills are independent, so each person’s profile across attributes carries unique information that a unidimensional IRT score cannot capture. IMV(IRT, CDM) is positive and the oracle gap for IRT (blue) is larger than for CDM (red) — IRT is further from the truth.</li>
+<li>As <strong><span class="math inline">\(\rho\)</span> increases</strong> toward 0.7: the attribute profiles increasingly collapse to a single dimension. IRT, which estimates exactly that dimension, becomes more competitive. IMV(IRT, CDM) falls toward zero or below, and the oracle gaps converge.</li>
+<li>The <strong>oracle CDM gap</strong> (red) is generally smaller than the oracle IRT gap (blue) when the true model is DINA — the CDM is better calibrated to the data-generating process. This advantage shrinks as <span class="math inline">\(\rho\)</span> grows.</li>
+<li>With <strong>more skills</strong> (<span class="math inline">\(K=4\)</span>), the CDM has more structure to capture, and the advantage over IRT at low <span class="math inline">\(\rho\)</span> may be more pronounced.</li>
+</ul>
+<p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

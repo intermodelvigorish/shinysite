@@ -1,0 +1,276 @@
+---
+title: "IRT versus Cognitive Diagnostic Models"
+---
+
+**Cognitive Diagnostic Models (CDMs)** classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of $K$ skills — and predict item responses from those profiles. **Item Response Theory (IRT)** instead places respondents on a continuous latent trait $\theta$. When the true data-generating process is a CDM, which model predicts better?
+
+The answer depends on the correlation among attributes. When skills are independent, a respondent's profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.
+
+**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J = 3K$ items (three items per skill, each requiring exactly one skill). Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with inter-skill correlation $\rho$ varied across 10 evenly-spaced values from 0 to 0.7.
+
+**Evaluation scheme.** To ensure all IMV comparisons are out-of-sample, three independent datasets are used:
+
+1. **Training set** ($N$ persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).
+2. **Test set** (200 persons): used to estimate person-level latent variables — IRT $\hat\theta$ via MLE and CDM attribute profiles via MAP — applying the item parameters from step 1.
+3. **Evaluation set** (200 persons, same attribute profiles as the test set, independent response draws): all IMV quantities are scored here. Because the evaluation responses are independent of the data used in steps 1 and 2, MAP and MLE cannot inflate their own scores by fitting to the evaluation outcomes.
+
+The three IMV quantities reported are:
+
+- **IMV(IRT, CDM)** — positive values mean CDM predicts better; negative means IRT predicts better
+- **IMV(IRT, True)** — oracle gap for IRT: how far fitted IRT predictions are from the true generating probabilities
+- **IMV(CDM, True)** — oracle gap for CDM: how far MAP-based CDM predictions are from the true probabilities
+
+Both oracle gaps should be non-negative: no fitted model should systematically beat the true probabilities on held-out data.
+
+Based on work by [Ma, Liu, Kanopka, Ma, & Domingue (2025)](https://osf.io/preprints/psyarxiv/acwdz_v1).
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 980
+
+webr::install("ltm",     repos = c("https://cran.r-universe.dev", "https://repo.r-wasm.org"))
+webr::install("mvtnorm", repos = c("https://repo.r-wasm.org"))
+
+library(shiny)
+library(ltm)
+library(mvtnorm)
+
+# ---- IMV ----------------------------------------------------------------
+imv.binary <- function(y, p1, p2, sigma = 1e-4) {
+  p1 <- pmin(pmax(p1, sigma), 1 - sigma)
+  p2 <- pmin(pmax(p2, sigma), 1 - sigma)
+  ll <- function(x, p) exp(sum(log(p) * x + log(1 - p) * (1 - x)) / length(x))
+  coins <- function(a) nlminb(0.5, function(p, a) abs(p*log(p) + (1-p)*log(1-p) - log(a)),
+                              lower = 1e-4, upper = 1 - 1e-4, a = a)$par
+  c1 <- coins(ll(y, p1)); c2 <- coins(ll(y, p2))
+  (c2 - c1) / c1
+}
+
+# ---- Build simulation parameters for a given K --------------------------
+make_params <- function(K) {
+  J    <- K * 3L
+  slip <- rep(0.15, J)
+  guess <- rep(0.15, J)
+
+  # Q-matrix: 3 items per skill, each requiring exactly one skill
+  Q <- do.call(rbind, lapply(seq_len(K), function(k) {
+    r <- rep(0L, K); r[k] <- 1L
+    matrix(rep(r, 3), nrow = 3, ncol = K, byrow = TRUE)
+  }))
+
+  all_profiles <- as.matrix(expand.grid(rep(list(0:1), K)))
+  n_prof <- nrow(all_profiles)
+
+  pp <- matrix(NA_real_, n_prof, J)
+  for (p in seq_len(n_prof))
+    for (j in seq_len(J)) {
+      req <- Q[j, ] == 1
+      eta <- if (!any(req)) 1 else prod(all_profiles[p, req])
+      pp[p, j] <- eta * (1 - slip[j]) + (1 - eta) * guess[j]
+    }
+
+  list(K = K, J = J, slip = slip, guess = guess, Q = Q,
+       all_profiles = all_profiles,
+       log_pp   = log(pmax(pp,     1e-8)),
+       log_1mpp = log(pmax(1 - pp, 1e-8)),
+       pp = pp)
+}
+
+# ---- Helper functions (all take a params list) --------------------------
+gen_attrs <- function(N, rho, pr) {
+  Sigma <- matrix(rho, pr$K, pr$K); diag(Sigma) <- 1
+  Z <- rmvnorm(N, sigma = Sigma)
+  (Z > 0) * 1L
+}
+
+dina_prob <- function(alpha, pr) {
+  N <- nrow(alpha)
+  probs <- matrix(NA_real_, N, pr$J)
+  for (j in seq_len(pr$J)) {
+    req <- pr$Q[j, ] == 1
+    eta <- if (!any(req)) rep(1, N) else apply(alpha[, req, drop = FALSE], 1, prod)
+    probs[, j] <- eta * (1 - pr$slip[j]) + (1 - eta) * pr$guess[j]
+  }
+  probs
+}
+
+map_dina <- function(y_mat, pr) {
+  N   <- nrow(y_mat)
+  y_t <- t(y_mat)
+  alpha_hat <- matrix(NA_integer_, N, pr$K)
+  for (i in seq_len(N)) {
+    ll <- pr$log_pp %*% y_t[, i] + pr$log_1mpp %*% (1L - y_t[, i])
+    alpha_hat[i, ] <- pr$all_profiles[which.max(ll), ]
+  }
+  alpha_hat
+}
+
+get_theta_mle <- function(yi, a_vec, b_vec) {
+  nll <- function(theta) {
+    p <- pmin(pmax(1 / (1 + exp(-a_vec * (theta - b_vec))), 1e-8), 1 - 1e-8)
+    -sum(yi * log(p) + (1 - yi) * log(1 - p))
+  }
+  tryCatch(optimize(nll, interval = c(-5, 5))$minimum, error = function(e) 0)
+}
+
+# ---- One simulation at a given rho --------------------------------------
+sim_one <- function(N_train, rho, pr) {
+  N_test <- 200L
+
+  # Step 1: training data — fit IRT item parameters
+  a_tr <- gen_attrs(N_train, rho, pr)
+  y_tr <- matrix(rbinom(N_train * pr$J, 1L, dina_prob(a_tr, pr)), N_train, pr$J)
+
+  fit_irt <- tryCatch(
+    ltm(as.data.frame(y_tr) ~ z1, control = list(iter.em = 30, iter.qN = 50)),
+    error = function(e) NULL
+  )
+  if (is.null(fit_irt)) return(NULL)
+
+  ipar  <- coef(fit_irt)
+  b_vec <- ipar[, "Dffclt"]
+  a_vec <- ipar[, "Dscrmn"]
+
+  # Step 2: test data — estimate person-level parameters
+  a_te   <- gen_attrs(N_test, rho, pr)
+  p_true <- dina_prob(a_te, pr)
+  y_te   <- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  # IRT: MLE theta from y_te, then compute predicted probabilities
+  theta_te <- apply(y_te, 1, get_theta_mle, a_vec = a_vec, b_vec = b_vec)
+  p_irt <- matrix(NA_real_, N_test, pr$J)
+  for (j in seq_len(pr$J))
+    p_irt[, j] <- 1 / (1 + exp(-a_vec[j] * (theta_te - b_vec[j])))
+
+  # CDM: MAP attribute profiles from y_te
+  p_cdm <- dina_prob(map_dina(y_te, pr), pr)
+
+  # Step 3: evaluation data — independent draw from same true probabilities
+  y_eval <- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  y_v    <- as.vector(y_eval)
+  pirt_v <- as.vector(p_irt)
+  pcdm_v <- as.vector(p_cdm)
+  ptru_v <- as.vector(p_true)
+
+  c(
+    irt_cdm  = imv.binary(y_v, pirt_v, pcdm_v),
+    irt_true = imv.binary(y_v, pirt_v, ptru_v),
+    cdm_true = imv.binary(y_v, pcdm_v, ptru_v)
+  )
+}
+
+# ---- UI -----------------------------------------------------------------
+ui <- fluidPage(
+  titlePanel("IRT vs CDM: IMV as a Function of Skill Correlation"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("K", "Number of skills (K):",
+                  choices = c("2" = 2, "3" = 3, "4" = 4),
+                  selected = 3),
+      selectInput("N_train", "Training sample size (N):",
+                  choices = c("250" = 250, "500" = 500, "1000" = 1000),
+                  selected = 500),
+      helpText("J = 3K items total (3 items per skill)."),
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      hr(),
+      helpText(
+        "First run installs ltm (~30s). Simulation sweeps 10 values of ρ ",
+        "and fits a 2PL IRT model at each; expect 1–3 minutes."
+      )
+    ),
+    mainPanel(
+      plotOutput("imvPlot", height = "520px"),
+      verbatimTextOutput("resultTable")
+    )
+  )
+)
+
+# ---- Server -------------------------------------------------------------
+server <- function(input, output, session) {
+
+  results <- eventReactive(input$run, {
+    pr       <- make_params(as.integer(input$K))
+    N_train  <- as.integer(input$N_train)
+    rho_vals <- seq(0, 0.7, length.out = 10)
+    out      <- matrix(NA_real_, length(rho_vals), 3,
+                       dimnames = list(NULL, c("irt_cdm", "irt_true", "cdm_true")))
+
+    withProgress(message = "Simulating…", value = 0, {
+      for (i in seq_along(rho_vals)) {
+        incProgress(1 / length(rho_vals),
+                    detail = sprintf("ρ = %.2f (%d of %d)", rho_vals[i], i, length(rho_vals)))
+        res <- sim_one(N_train, rho_vals[i], pr)
+        if (!is.null(res)) out[i, ] <- res
+      }
+    })
+
+    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J)
+  })
+
+  output$imvPlot <- renderPlot({
+    req(results())
+    r   <- results()
+    rho <- r$rho
+    imv <- r$imv
+
+    ylim <- range(c(imv, 0), na.rm = TRUE)
+    ylim <- ylim + diff(ylim) * c(-0.08, 0.08)
+
+    plot(rho, imv[, "irt_cdm"],
+         type = "n",
+         xlab = expression(paste("Skill inter-correlation (", rho, ")")),
+         ylab = "IMV",
+         main = sprintf("IMV vs Skill Correlation  (N = %s, K = %d, J = %d)",
+                        input$N_train, r$K, r$J),
+         ylim = ylim, las = 1)
+    grid(lty = 3, col = "grey85")
+    abline(h = 0, lty = 2, col = "grey40")
+
+    sm <- function(y) {
+      ok <- !is.na(y)
+      if (sum(ok) < 4) return(rep(NA, length(y)))
+      predict(loess(y[ok] ~ rho[ok], span = 0.75), newdata = rho)
+    }
+
+    lines(rho, sm(imv[, "irt_true"]), col = "steelblue", lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "cdm_true"]), col = "tomato",    lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "irt_cdm"]),  col = "black",     lwd = 2.5)
+
+    points(rho, imv[, "irt_true"], col = "steelblue", pch = 16, cex = 0.9)
+    points(rho, imv[, "cdm_true"], col = "tomato",    pch = 16, cex = 0.9)
+    points(rho, imv[, "irt_cdm"],  col = "black",     pch = 16, cex = 1.1)
+
+    legend("topright", bty = "n",
+           legend = c("IMV(IRT, CDM)  [main]",
+                      "IMV(IRT, True) [oracle IRT]",
+                      "IMV(CDM, True) [oracle CDM]"),
+           col = c("black", "steelblue", "tomato"),
+           lwd = c(2.5, 2, 2), lty = c(1, 2, 2), pch = 16,
+           cex = 0.9)
+  })
+
+  output$resultTable <- renderPrint({
+    req(results())
+    r <- results()
+    df <- data.frame(
+      rho      = round(r$rho, 2),
+      IRT_CDM  = round(r$imv[, "irt_cdm"],  4),
+      IRT_True = round(r$imv[, "irt_true"], 4),
+      CDM_True = round(r$imv[, "cdm_true"], 4)
+    )
+    print(df, row.names = FALSE)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+**What you should see:**
+
+- At **low $\rho$** (near 0): skills are independent, so each person's profile across attributes carries unique information that a unidimensional IRT score cannot capture. IMV(IRT, CDM) is positive and the oracle gap for IRT (blue) is larger than for CDM (red) — IRT is further from the truth.
+- As **$\rho$ increases** toward 0.7: the attribute profiles increasingly collapse to a single dimension. IRT, which estimates exactly that dimension, becomes more competitive. IMV(IRT, CDM) falls toward zero or below, and the oracle gaps converge.
+- The **oracle CDM gap** (red) is generally smaller than the oracle IRT gap (blue) when the true model is DINA — the CDM is better calibrated to the data-generating process. This advantage shrinks as $\rho$ grows.
+- With **more skills** ($K=4$), the CDM has more structure to capture, and the advantage over IRT at low $\rho$ may be more pronounced.
+
+[← Back to Home](index.html){.btn .btn-secondary}
