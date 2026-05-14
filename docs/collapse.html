@@ -963,9 +963,73 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>As <span class="math inline">\(b_1\)</span> approaches <span class="math inline">\(b_0\)</span> (left side of the plot), all three curves converge to the same value. This is the collapse property: a 3-category item with two identical thresholds is indistinguishable from a binary item, and <span class="math inline">\(\omega_t\)</span> reflects this exactly.</li>
 <li>The relative positions of <span class="math inline">\(\omega_{x'}\)</span> and <span class="math inline">\(\omega_{x''}\)</span> depend on the distribution of abilities relative to the thresholds and can be explored by adjusting the mean of the theta distribution.</li>
 </ul>
+<hr>
+<section id="reference" class="level2">
+<h2 class="anchored" data-anchor-id="reference">Reference</h2>
+<p>The thresholded IMV (<span class="math inline">\(\omega_t\)</span>) is grounded in the concept of <strong>implied probabilities</strong>: for any polytomous item, each possible dichotomization of the response categories yields a binary probability that can be read off directly from the model’s category response function. The paper below formalizes this framework — enumerating all dichotomizations, deriving their implied probabilities under different polytomous IRT models, and showing how the differences across models can be used to evaluate fit. The collapse property demonstrated here is a direct consequence: when two thresholds coincide, the implied probabilities for all dichotomizations collapse to those of the corresponding binary item.</p>
+<style>
+.paper-card-single {
+  border: 1px solid #dee2e6;
+  border-left: 4px solid #2780e3;
+  border-radius: 6px;
+  padding: 1.1rem 1.4rem;
+  background: #fff;
+  transition: box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+.paper-card-single:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.paper-card-single .paper-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; line-height: 1.4; }
+.paper-card-single .paper-title a { color: #212529; text-decoration: none; }
+.paper-card-single .paper-title a:hover { color: #2780e3; }
+.paper-card-single .paper-meta { font-size: 0.82rem; color: #6c757d; margin-bottom: 0.2rem; }
+.paper-card-single .paper-journal { font-size: 0.85rem; font-style: italic; color: #495057; margin-bottom: 0.75rem; }
+.paper-card-single .paper-abstract {
+  display: none; font-size: 0.82rem; color: #495057; line-height: 1.55;
+  margin-bottom: 0.75rem; padding: 0.6rem 0.75rem;
+  background: #f8f9fa; border-radius: 4px; border-left: 3px solid #dee2e6;
+}
+.paper-card-single .paper-links { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: auto; }
+.paper-card-single .paper-btn {
+  display: inline-block; font-size: 0.78rem; font-weight: 500;
+  padding: 0.25rem 0.7rem; border-radius: 4px; text-decoration: none;
+  border: 1px solid; transition: background-color 0.15s, color 0.15s; white-space: nowrap;
+}
+.paper-card-single .paper-btn-journal { border-color: #2780e3; color: #2780e3; background: transparent; }
+.paper-card-single .paper-btn-journal:hover { background: #2780e3; color: #fff; }
+.paper-card-single .paper-btn-abstract {
+  border-color: #adb5bd; color: #6c757d; background: transparent;
+  cursor: pointer; font-family: inherit;
+}
+.paper-card-single .paper-btn-abstract:hover, .paper-card-single .paper-btn-abstract.active {
+  background: #e9ecef; color: #212529; border-color: #6c757d;
+}
+</style>
+<script>
+function toggleAbstractCollapse(id, btn) {
+  var el = document.getElementById(id);
+  var shown = el.style.display === 'block';
+  el.style.display = shown ? 'none' : 'block';
+  btn.classList.toggle('active', !shown);
+  btn.textContent = shown ? 'Abstract' : 'Abstract ▲';
+}
+</script>
+
+<div class="paper-card-single">
+<div class="paper-title"><a href="https://link.springer.com/article/10.1007/s41237-025-00262-9" target="_blank">Implied probabilities of polytomous response functions for model-based prediction and comparison</a></div>
+<div class="paper-meta">Domingue BW, Kanopka K, Ulitzsch E, &amp; Zhang L · 2025</div>
+<div class="paper-journal">Behaviormetrika, 52(2), 683–705</div>
+<div class="paper-abstract" id="abstract-collapse-1">Polytomous response models are typically motivated by assumptions about specific dichotomizations of the responses. We build on this concept by considering all possible dichotomizations. We first enumerate the full range of possible dichotomizations for an outcome in a given number of categories. We then show that many of these dichotomizations lead to "implied probabilities"—the probability associated with a specific dichotomization that can be computed directly from the category response function associated with a given model—that have dramatically different forms when computed for different models. The differences can be used to evaluate model fit.</div>
+<div class="paper-links">
+<button class="paper-btn paper-btn-abstract" onclick="toggleAbstractCollapse('abstract-collapse-1', this)">Abstract</button>
+<a href="https://link.springer.com/article/10.1007/s41237-025-00262-9" class="paper-btn paper-btn-journal" target="_blank">Journal →</a>
+</div>
+</div>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
