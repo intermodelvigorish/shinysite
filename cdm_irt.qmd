@@ -46,16 +46,16 @@ imv.binary <- function(y, p1, p2, sigma = 1e-4) {
   (c2 - c1) / c1
 }
 
-# ---- Build simulation parameters for a given K --------------------------
-make_params <- function(K) {
-  J    <- K * 3L
+# ---- Build simulation parameters for a given K and items-per-skill ------
+make_params <- function(K, ips) {
+  J    <- K * ips
   slip <- rep(0.15, J)
   guess <- rep(0.15, J)
 
-  # Q-matrix: 3 items per skill, each requiring exactly one skill
+  # Q-matrix: ips items per skill, each requiring exactly one skill
   Q <- do.call(rbind, lapply(seq_len(K), function(k) {
     r <- rep(0L, K); r[k] <- 1L
-    matrix(rep(r, 3), nrow = 3, ncol = K, byrow = TRUE)
+    matrix(rep(r, ips), nrow = ips, ncol = K, byrow = TRUE)
   }))
 
   all_profiles <- as.matrix(expand.grid(rep(list(0:1), K)))
@@ -168,15 +168,21 @@ ui <- fluidPage(
       selectInput("K", "Number of skills (K):",
                   choices = c("2" = 2, "3" = 3, "4" = 4),
                   selected = 3),
+      selectInput("ips", "Items per skill:",
+                  choices = c("2" = 2, "3" = 3, "4" = 4, "5" = 5),
+                  selected = 3),
+      helpText("Total items J = K × items per skill."),
       selectInput("N_train", "Training sample size (N):",
                   choices = c("250" = 250, "500" = 500, "1000" = 1000),
                   selected = 500),
-      helpText("J = 3K items total (3 items per skill)."),
+      sliderInput("n_rho", "Number of ρ values:",
+                  min = 5, max = 50, value = 10, step = 5),
       actionButton("run", "Run Simulation", class = "btn-primary"),
       hr(),
       helpText(
-        "First run installs ltm (~30s). Simulation sweeps 10 values of ρ ",
-        "and fits a 2PL IRT model at each; expect 1–3 minutes."
+        "First run installs ltm (~30s). Each ρ value fits a 2PL IRT model; ",
+        "run time scales with the number of ρ values. More points clarify ",
+        "the trend but 50 values may take 10+ minutes."
       )
     ),
     mainPanel(
@@ -190,9 +196,9 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   results <- eventReactive(input$run, {
-    pr       <- make_params(as.integer(input$K))
+    pr       <- make_params(as.integer(input$K), as.integer(input$ips))
     N_train  <- as.integer(input$N_train)
-    rho_vals <- seq(0, 0.7, length.out = 10)
+    rho_vals <- seq(0, 0.7, length.out = as.integer(input$n_rho))
     out      <- matrix(NA_real_, length(rho_vals), 3,
                        dimnames = list(NULL, c("irt_cdm", "irt_true", "cdm_true")))
 
@@ -214,8 +220,7 @@ server <- function(input, output, session) {
     rho <- r$rho
     imv <- r$imv
 
-    ylim <- range(c(imv, 0), na.rm = TRUE)
-    ylim <- ylim + diff(ylim) * c(-0.08, 0.08)
+    ylim <- c(-0.2, 0.5)
 
     plot(rho, imv[, "irt_cdm"],
          type = "n",
