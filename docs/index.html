@@ -1006,12 +1006,173 @@ shinyApp(ui, server)</code></pre>
 </section>
 <section id="references" class="level2">
 <h2 class="anchored" data-anchor-id="references">References</h2>
-<ul>
-<li><p>Domingue, B. W., Rahal, C., Faul, J., Freese, J., Kanopka, K., Rigos, A., … &amp; Tripathi, A. S. (2025). The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. <em>PLoS ONE</em>, 20(3), e0316491. <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491">→ Paper</a></p></li>
-<li><p>Domingue, B. W., Kanopka, K., Kapoor, R., Pohl, S., Chalmers, R. P., Rahal, C., &amp; Rhemtulla, M. (2024). The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items. <em>Psychometrika</em>, 89(3), 1034–1054. <a href="https://www.cambridge.org/core/journals/psychometrika/article/intermodel-vigorish-as-a-lens-for-understanding-and-quantifying-the-value-of-item-response-models-for-dichotomously-coded-items/F61C75F6F945A5B13F73C6128EB83998">→ Paper</a></p></li>
-<li><p>Domingue, B. W., Kanopka, K., Ulitzsch, E., &amp; Zhang, L. (2025). Implied probabilities of polytomous response functions for model-based prediction and comparison. <em>Behaviormetrika</em>, 52(2), 683–705. <a href="https://link.springer.com/article/10.1007/s41237-025-00262-9">→ Paper</a></p></li>
-<li><p>Zhang, L., Rahal, C., Kanopka, K., Ulitzsch, E., Zhang, Z., &amp; Domingue, B. W. (2026). Evaluating model predictive performance in confirmatory factor analysis with binary outcomes using the InterModel Vigorish. <em>Multivariate Behavioral Research</em>. DOI: 10.1080/00273171.2026.2645212. <a href="https://doi.org/10.1080/00273171.2026.2645212">→ Paper</a></p></li>
-</ul>
+<style>
+.paper-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 768px) {
+  .paper-grid { grid-template-columns: 1fr; }
+}
+.paper-card {
+  border: 1px solid #dee2e6;
+  border-left: 4px solid #2780e3;
+  border-radius: 6px;
+  padding: 1.1rem 1.4rem;
+  background: #fff;
+  transition: box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.paper-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.paper-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+.paper-title a {
+  color: #212529;
+  text-decoration: none;
+}
+.paper-title a:hover { color: #2780e3; }
+.paper-meta {
+  font-size: 0.82rem;
+  color: #6c757d;
+  margin-bottom: 0.2rem;
+}
+.paper-journal {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #495057;
+  margin-bottom: 0.75rem;
+  flex: 1;
+}
+.paper-abstract {
+  display: none;
+  font-size: 0.82rem;
+  color: #495057;
+  line-height: 1.55;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #dee2e6;
+}
+.paper-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.paper-btn {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.25rem 0.7rem;
+  border-radius: 4px;
+  text-decoration: none;
+  border: 1px solid;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.paper-btn-journal {
+  border-color: #2780e3;
+  color: #2780e3;
+  background: transparent;
+}
+.paper-btn-journal:hover {
+  background: #2780e3;
+  color: #fff;
+}
+.paper-btn-abstract {
+  border-color: #adb5bd;
+  color: #6c757d;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.paper-btn-abstract:hover, .paper-btn-abstract.active {
+  background: #e9ecef;
+  color: #212529;
+  border-color: #6c757d;
+}
+.badge-oa {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-style: normal;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #b8dac3;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+  letter-spacing: 0.02em;
+}
+</style>
+<script>
+function toggleAbstract(id, btn) {
+  var el = document.getElementById(id);
+  var shown = el.style.display === 'block';
+  el.style.display = shown ? 'none' : 'block';
+  btn.classList.toggle('active', !shown);
+  btn.textContent = shown ? 'Abstract' : 'Abstract ▲';
+}
+</script>
+
+<div class="paper-grid">
+
+<div class="paper-card">
+<div class="paper-title"><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491" target="_blank">The InterModel Vigorish (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes</a></div>
+<div class="paper-meta">Domingue BW, Rahal C, Faul J, Freese J, Kanopka K, Rigos A, … &amp; Tripathi AS · 2025</div>
+<div class="paper-journal">PLoS ONE, 20(3), e0316491 <span class="badge-oa">Open Access</span></div>
+<div class="paper-abstract" id="abstract-imv-1">Understanding the "fit" of models designed to predict binary outcomes has been a long-standing problem across the social sciences. We propose a flexible, portable, and intuitive metric for quantifying the change in accuracy between two predictive systems in the case of a binary outcome: the InterModel Vigorish (IMV). The IMV is based on an analogy to weighted coins, well-characterized physical systems with tractable probabilities. The IMV is always a statement about the change in fit relative to some baseline model—which can be as simple as the prevalence—whereas other metrics are stand-alone measures that need to be further manipulated to yield indices related to differences in fit across models. Moreover, the IMV is consistently interpretable independent of baseline prevalence. We contrast this metric with alternatives in numerous simulations. The IMV is more sensitive to estimation error than many alternatives and also shows distinctive sensitivity to prevalence. We consider its performance using examples spanning the social and natural sciences. The IMV allows for precise answers to questions about changes in model fit in a variety of settings in a manner that will be useful for furthering research and the understanding of social outcomes.</div>
+<div class="paper-links">
+<button class="paper-btn paper-btn-abstract" onclick="toggleAbstract('abstract-imv-1', this)">Abstract</button>
+<a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316491" class="paper-btn paper-btn-journal" target="_blank">Journal →</a>
+</div>
+</div>
+
+<div class="paper-card">
+<div class="paper-title"><a href="https://link.springer.com/article/10.1007/s11336-024-09977-2" target="_blank">The InterModel Vigorish as a lens for understanding (and quantifying) the value of item response models for dichotomously coded items</a></div>
+<div class="paper-meta">Domingue BW, Kanopka K, Kapoor R, Pohl S, Chalmers RP, Rahal C, &amp; Rhemtulla M · 2024</div>
+<div class="paper-journal">Psychometrika, 89(3), 1034–1054</div>
+<div class="paper-abstract" id="abstract-imv-2">The deployment of statistical models, such as those used in item response theory (IRT), necessitates the use of indices that are informative about the degree to which a given model is appropriate for a specific data context. We introduce the InterModel Vigorish (IMV) as an index that can be used to quantify accuracy for models of dichotomous item responses based on the improvement across two sets of predictions. This index has a range of desirable features: it can be used for the comparison of non-nested models and its values are highly portable and generalizable. We use this fact to compare predictive performance across a variety of simulated data contexts and also demonstrate qualitative differences in behavior between the IMV and other common indices (e.g., the AIC and RMSEA). We also illustrate the utility of the IMV in empirical applications with data from 89 dichotomous item response datasets, helping illustrate how the IMV can be used in practice and substantiating claims regarding various aspects of model performance.</div>
+<div class="paper-links">
+<button class="paper-btn paper-btn-abstract" onclick="toggleAbstract('abstract-imv-2', this)">Abstract</button>
+<a href="https://link.springer.com/article/10.1007/s11336-024-09977-2" class="paper-btn paper-btn-journal" target="_blank">Journal →</a>
+</div>
+</div>
+
+<div class="paper-card">
+<div class="paper-title"><a href="https://link.springer.com/article/10.1007/s41237-025-00262-9" target="_blank">Implied probabilities of polytomous response functions for model-based prediction and comparison</a></div>
+<div class="paper-meta">Domingue BW, Kanopka K, Ulitzsch E, &amp; Zhang L · 2025</div>
+<div class="paper-journal">Behaviormetrika, 52(2), 683–705</div>
+<div class="paper-abstract" id="abstract-imv-3">Polytomous response models are typically motivated by assumptions about specific dichotomizations of the responses. We build on this concept by considering all possible dichotomizations. We first enumerate the full range of possible dichotomizations for an outcome in a given number of categories. We then show that many of these dichotomizations lead to "implied probabilities"—the probability associated with a specific dichotomization that can be computed directly from the category response function associated with a given model—that have dramatically different forms when computed for different models. The differences can be used to evaluate model fit.</div>
+<div class="paper-links">
+<button class="paper-btn paper-btn-abstract" onclick="toggleAbstract('abstract-imv-3', this)">Abstract</button>
+<a href="https://link.springer.com/article/10.1007/s41237-025-00262-9" class="paper-btn paper-btn-journal" target="_blank">Journal →</a>
+</div>
+</div>
+
+<div class="paper-card">
+<div class="paper-title"><a href="https://doi.org/10.1080/00273171.2026.2645212" target="_blank">Evaluating model predictive performance in confirmatory factor analysis with binary outcomes using the InterModel Vigorish</a></div>
+<div class="paper-meta">Zhang L, Rahal C, Kanopka K, Ulitzsch E, Zhang Z, &amp; Domingue BW · 2026</div>
+<div class="paper-journal">Multivariate Behavioral Research</div>
+<div class="paper-abstract" id="abstract-imv-4">Confirmatory Factor Analysis (CFA) has been widely used to assess the fit of theoretical measurement models to observed data. We introduce the InterModel Vigorish (IMV) to the field; a predictive fit index that offers novel perspectives for model comparison. The IMV complements traditional fit indices by offering additional information to support model evaluation, with a particular emphasis on a model's generalizability to the hold-out data. It also yields an interpretable and intuitive metric that facilitates meaningful comparisons. We extend it into the CFA framework with binary outcomes and conduct four simulation studies to evaluate its effectiveness. The simulation results suggest that IMV effectively gauges model misspecification, offering insights both at the scale and item levels. As designed, it is insensitive to changes in sample size. By focusing on predictive accuracy, the IMV discourages overfitting. It also enables item-level comparisons, offering richer diagnostic information. To facilitate the practical application of IMV, we offer an empirical example that demonstrates its efficacy in applied research. The paper is accompanied by an R package to further advance the use of the IMV in the CFA space.</div>
+<div class="paper-links">
+<button class="paper-btn paper-btn-abstract" onclick="toggleAbstract('abstract-imv-4', this)">Abstract</button>
+<a href="https://doi.org/10.1080/00273171.2026.2645212" class="paper-btn paper-btn-journal" target="_blank">Journal →</a>
+</div>
+</div>
+
+</div>
 <hr>
 </section>
 <section id="contact-computing-resources" class="level2">
