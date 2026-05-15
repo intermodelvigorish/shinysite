@@ -239,6 +239,7 @@ window.Quarto = {
 <li><strong>Evaluation</strong> (200 persons, same attribute profiles, independent responses): score IMV(1D, True) here to prevent the MLE from inflating its own score.</li>
 </ol>
 <p>The y-axis, <strong>IMV(1D-2PL, True)</strong>, measures how far the fitted unidimensional predictions are from the true 2D generating probabilities. It is always <span class="math inline">\(\geq 0\)</span> in expectation; larger values indicate greater cost from ignoring the second dimension.</p>
+<p><strong>Note on relationship to Domingue et al.&nbsp;(2024, <em>Psychometrika</em>).</strong> This simulation measures the oracle gap — <strong>IMV(1D-2PL, True)</strong> — how far fitted unidimensional predictions fall from the true multidimensional generating probabilities. The Psychometrika paper instead reports <strong>IMV(2PL, 2F-2PL)</strong>: a head-to-head comparison of a fitted unidimensional 2PL against a fitted two-factor 2PL on empirical data (Figure 4). These address related but distinct questions. The oracle gap asks <em>how much information does the 1D model lose relative to perfect knowledge of the 2D truth?</em> The paper’s comparison asks <em>how much does estimating a second factor recover in practice?</em> The latter is bounded by estimation noise and sample size in ways the oracle is not.</p>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
