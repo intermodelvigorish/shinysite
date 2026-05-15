@@ -225,7 +225,7 @@ window.Quarto = {
 
 <p><strong>Cognitive Diagnostic Models (CDMs)</strong> classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of <span class="math inline">\(K\)</span> skills — and predict item responses from those profiles. <strong>Item Response Theory (IRT)</strong> instead places respondents on a continuous latent trait <span class="math inline">\(\theta\)</span>. When the true data-generating process is a CDM, which model predicts better?</p>
 <p>The answer depends on the correlation among attributes. When skills are independent, a respondent’s profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.</p>
-<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J = 3K\)</span> items (three items per skill, each requiring exactly one skill). Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with inter-skill correlation <span class="math inline">\(\rho\)</span> varied across 10 evenly-spaced values from 0 to 0.7.</p>
+<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J\)</span> items structured according to a Q-matrix. Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with the <strong>inter-skill correlation <span class="math inline">\(\rho\)</span></strong> controlling how tightly the skills co-vary. At <span class="math inline">\(\rho = 0\)</span> the skills are independent; at <span class="math inline">\(\rho = 0.7\)</span> they are strongly correlated. The simulation sweeps across a grid of evenly-spaced <span class="math inline">\(\rho\)</span> values between these extremes — more grid points produce a smoother curve but take longer to run.</p>
 <p><strong>Evaluation scheme.</strong> To ensure all IMV comparisons are out-of-sample, three independent datasets are used:</p>
 <ol type="1">
 <li><strong>Training set</strong> (<span class="math inline">\(N\)</span> persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).</li>
@@ -244,7 +244,7 @@ window.Quarto = {
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
 #| standalone: true
-#| viewerHeight: 980
+#| viewerHeight: 1100
 
 webr::install("ltm",     repos = c("https://cran.r-universe.dev", "https://repo.r-wasm.org"))
 webr::install("mvtnorm", repos = c("https://repo.r-wasm.org"))
@@ -264,17 +264,12 @@ imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
   (c2 - c1) / c1
 }
 
-# ---- Build simulation parameters for a given K and items-per-skill ------
-make_params &lt;- function(K, ips) {
-  J    &lt;- K * ips
-  slip &lt;- rep(0.15, J)
+# ---- Build simulation parameters from a Q matrix ------------------------
+make_params &lt;- function(Q) {
+  K &lt;- ncol(Q)
+  J &lt;- nrow(Q)
+  slip  &lt;- rep(0.15, J)
   guess &lt;- rep(0.15, J)
-
-  # Q-matrix: ips items per skill, each requiring exactly one skill
-  Q &lt;- do.call(rbind, lapply(seq_len(K), function(k) {
-    r &lt;- rep(0L, K); r[k] &lt;- 1L
-    matrix(rep(r, ips), nrow = ips, ncol = K, byrow = TRUE)
-  }))
 
   all_profiles &lt;- as.matrix(expand.grid(rep(list(0:1), K)))
   n_prof &lt;- nrow(all_profiles)
@@ -294,9 +289,64 @@ make_params &lt;- function(K, ips) {
        pp = pp)
 }
 
-# ---- Helper functions (all take a params list) --------------------------
-gen_attrs &lt;- function(N, rho, pr) {
-  Sigma &lt;- matrix(rho, pr$K, pr$K); diag(Sigma) &lt;- 1
+# ---- Random Q-matrix generator ------------------------------------------
+gen_random_Q &lt;- function(K, J, density) {
+  for (i in seq_len(200)) {
+    Q &lt;- matrix(rbinom(J * K, 1L, density), nrow = J, ncol = K)
+    if (all(rowSums(Q) &gt; 0) &amp;&amp; all(colSums(Q) &gt; 0)) return(Q)
+  }
+  # Fallback: guarantee one item per skill, fill remaining rows randomly
+  Q &lt;- matrix(0L, J, K)
+  perm &lt;- sample(K)
+  for (k in seq_len(K)) Q[k, perm[k]] &lt;- 1L
+  if (J &gt; K) {
+    for (j in (K + 1):J) {
+      q &lt;- rbinom(K, 1L, density)
+      if (sum(q) == 0L) q[sample(K, 1L)] &lt;- 1L
+      Q[j, ] &lt;- q
+    }
+  }
+  Q
+}
+
+# ---- Custom Q-matrix parser ---------------------------------------------
+parse_Q &lt;- function(text) {
+  lines &lt;- strsplit(trimws(text), "\n")[[1]]
+  lines &lt;- trimws(lines)
+  lines &lt;- lines[nchar(lines) &gt; 0]
+  if (length(lines) == 0) return(list(Q = NULL, error = "Empty input."))
+
+  rows &lt;- lapply(lines, function(l) {
+    parts &lt;- strsplit(l, "[,[:space:]]+")[[1]]
+    parts &lt;- parts[nchar(parts) &gt; 0]
+    suppressWarnings(as.integer(parts))
+  })
+
+  lens &lt;- lengths(rows)
+  if (length(unique(lens)) != 1)
+    return(list(Q = NULL,
+                error = sprintf("Rows have unequal lengths (%s).", paste(lens, collapse = ", "))))
+  if (unique(lens) &lt; 1)
+    return(list(Q = NULL, error = "Could not parse any values."))
+
+  Q &lt;- do.call(rbind, rows)
+  if (anyNA(Q))
+    return(list(Q = NULL, error = "Non-integer values found."))
+  if (!all(Q %in% c(0L, 1L)))
+    return(list(Q = NULL, error = "Matrix must contain only 0s and 1s."))
+  if (any(rowSums(Q) == 0))
+    return(list(Q = NULL, error = "Some rows are all zeros — each item must require at least one skill."))
+  if (any(colSums(Q) == 0))
+    return(list(Q = NULL, error = "Some columns are all zeros — each skill must appear in at least one item."))
+  if (nrow(Q) &lt; 4)
+    return(list(Q = NULL, error = "Need at least 4 items (rows) for IRT estimation."))
+
+  list(Q = Q, error = NULL)
+}
+
+# ---- Simulation helpers -------------------------------------------------
+gen_attrs &lt;- function(N, rho, K) {
+  Sigma &lt;- matrix(rho, K, K); diag(Sigma) &lt;- 1
   Z &lt;- rmvnorm(N, sigma = Sigma)
   (Z &gt; 0) * 1L
 }
@@ -335,8 +385,7 @@ get_theta_mle &lt;- function(yi, a_vec, b_vec) {
 sim_one &lt;- function(N_train, rho, pr) {
   N_test &lt;- 200L
 
-  # Step 1: training data — fit IRT item parameters
-  a_tr &lt;- gen_attrs(N_train, rho, pr)
+  a_tr &lt;- gen_attrs(N_train, rho, pr$K)
   y_tr &lt;- matrix(rbinom(N_train * pr$J, 1L, dina_prob(a_tr, pr)), N_train, pr$J)
 
   fit_irt &lt;- tryCatch(
@@ -349,21 +398,17 @@ sim_one &lt;- function(N_train, rho, pr) {
   b_vec &lt;- ipar[, "Dffclt"]
   a_vec &lt;- ipar[, "Dscrmn"]
 
-  # Step 2: test data — estimate person-level parameters
-  a_te   &lt;- gen_attrs(N_test, rho, pr)
+  a_te   &lt;- gen_attrs(N_test, rho, pr$K)
   p_true &lt;- dina_prob(a_te, pr)
   y_te   &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
 
-  # IRT: MLE theta from y_te, then compute predicted probabilities
   theta_te &lt;- apply(y_te, 1, get_theta_mle, a_vec = a_vec, b_vec = b_vec)
   p_irt &lt;- matrix(NA_real_, N_test, pr$J)
   for (j in seq_len(pr$J))
     p_irt[, j] &lt;- 1 / (1 + exp(-a_vec[j] * (theta_te - b_vec[j])))
 
-  # CDM: MAP attribute profiles from y_te
   p_cdm &lt;- dina_prob(map_dina(y_te, pr), pr)
 
-  # Step 3: evaluation data — independent draw from same true probabilities
   y_eval &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
 
   y_v    &lt;- as.vector(y_eval)
@@ -378,33 +423,55 @@ sim_one &lt;- function(N_train, rho, pr) {
   )
 }
 
+# ---- Default custom Q text (K=3, J=9, identity structure) ---------------
+default_qmat &lt;- paste(
+  "1 0 0", "1 0 0", "1 0 0",
+  "0 1 0", "0 1 0", "0 1 0",
+  "0 0 1", "0 0 1", "0 0 1",
+  sep = "\n"
+)
+
 # ---- UI -----------------------------------------------------------------
 ui &lt;- fluidPage(
   titlePanel("IRT vs CDM: IMV as a Function of Skill Correlation"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("K", "Number of skills (K):",
-                  choices = c("2" = 2, "3" = 3, "4" = 4),
-                  selected = 3),
-      selectInput("ips", "Items per skill:",
-                  choices = c("2" = 2, "3" = 3, "4" = 4, "5" = 5),
-                  selected = 3),
-      helpText("Total items J = K × items per skill."),
+      radioButtons("qmat_mode", "Q-matrix specification:",
+                   choices = c("Random (density)" = "random", "Custom (paste)" = "custom"),
+                   selected = "random", inline = TRUE),
+
+      conditionalPanel(condition = "input.qmat_mode == 'random'",
+        sliderInput("K", "Number of skills (K):", min = 2, max = 6, value = 3, step = 1),
+        sliderInput("J", "Number of items (J):", min = 4, max = 45, value = 9, step = 1),
+        sliderInput("density", "Q-matrix density:",
+                    min = 0.1, max = 0.9, value = 0.33, step = 0.05),
+        helpText("Density = probability each item loads on each skill.")
+      ),
+
+      conditionalPanel(condition = "input.qmat_mode == 'custom'",
+        textAreaInput("qmat_text",
+                      HTML("Q-matrix: rows = items, cols = skills&lt;br/&gt;(space or comma separated, 0s and 1s only)"),
+                      value = default_qmat,
+                      rows = 8, width = "100%")
+      ),
+
+      verbatimTextOutput("qmat_status"),
+      hr(),
       selectInput("N_train", "Training sample size (N):",
                   choices = c("250" = 250, "500" = 500, "1000" = 1000),
                   selected = 500),
-      sliderInput("n_rho", "Number of ρ values:",
+      sliderInput("n_rho", "Skill correlation (ρ) grid points:",
                   min = 5, max = 50, value = 10, step = 5),
+      helpText("Simulation is run at this many evenly-spaced inter-skill correlation values from ρ = 0 to ρ = 0.7."),
       actionButton("run", "Run Simulation", class = "btn-primary"),
       hr(),
       helpText(
-        "First run installs ltm (~30s). Each ρ value fits a 2PL IRT model; ",
-        "run time scales with the number of ρ values. More points clarify ",
-        "the trend but 50 values may take 10+ minutes."
+        "First run installs ltm (~30s). Run time scales with J, N, and the number of ρ values."
       )
     ),
     mainPanel(
       plotOutput("imvPlot", height = "520px"),
+      verbatimTextOutput("usedQ"),
       verbatimTextOutput("resultTable")
     )
   )
@@ -413,8 +480,51 @@ ui &lt;- fluidPage(
 # ---- Server -------------------------------------------------------------
 server &lt;- function(input, output, session) {
 
+  output$qmat_status &lt;- renderPrint({
+    if (input$qmat_mode == "random") {
+      K &lt;- as.integer(input$K)
+      J &lt;- as.integer(input$J)
+      d &lt;- input$density
+      if (J &lt; K) {
+        cat(sprintf("Error: J (%d) must be ≥ K (%d).\n", J, K))
+      } else {
+        p_multi &lt;- 1 - (1 - d)^K - K * d * (1 - d)^(K - 1)
+        cat(sprintf("Q: %d items × %d skills  |  density: %.2f\n", J, K, d))
+        cat(sprintf("Expected multi-skill items: %.1f of %d (%.0f%%)\n",
+                    p_multi * J, J, 100 * p_multi))
+      }
+    } else {
+      qr &lt;- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        cat("Error:", qr$error, "\n")
+      } else {
+        Q &lt;- qr$Q
+        cat(sprintf("Q: %d items × %d skills\n", nrow(Q), ncol(Q)))
+        cat(sprintf("Density: %.2f  |  Multi-skill items: %d of %d\n",
+                    mean(Q), sum(rowSums(Q) &gt; 1), nrow(Q)))
+      }
+    }
+  })
+
   results &lt;- eventReactive(input$run, {
-    pr       &lt;- make_params(as.integer(input$K), as.integer(input$ips))
+    if (input$qmat_mode == "random") {
+      K &lt;- as.integer(input$K)
+      J &lt;- as.integer(input$J)
+      if (J &lt; K) {
+        showNotification(sprintf("J (%d) must be ≥ K (%d).", J, K), type = "error")
+        return(NULL)
+      }
+      Q &lt;- gen_random_Q(K, J, input$density)
+    } else {
+      qr &lt;- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        showNotification(paste("Q-matrix error:", qr$error), type = "error")
+        return(NULL)
+      }
+      Q &lt;- qr$Q
+    }
+
+    pr       &lt;- make_params(Q)
     N_train  &lt;- as.integer(input$N_train)
     rho_vals &lt;- seq(0, 0.7, length.out = as.integer(input$n_rho))
     out      &lt;- matrix(NA_real_, length(rho_vals), 3,
@@ -429,7 +539,7 @@ server &lt;- function(input, output, session) {
       }
     })
 
-    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J)
+    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J, Q = pr$Q, N_train = N_train)
   })
 
   output$imvPlot &lt;- renderPlot({
@@ -444,8 +554,8 @@ server &lt;- function(input, output, session) {
          type = "n",
          xlab = expression(paste("Skill inter-correlation (", rho, ")")),
          ylab = "IMV",
-         main = sprintf("IMV vs Skill Correlation  (N = %s, K = %d, J = %d)",
-                        input$N_train, r$K, r$J),
+         main = sprintf("IMV vs Skill Correlation  (N = %d, K = %d, J = %d)",
+                        r$N_train, r$K, r$J),
          ylim = ylim, las = 1)
     grid(lty = 3, col = "grey85")
     abline(h = 0, lty = 2, col = "grey40")
@@ -471,6 +581,16 @@ server &lt;- function(input, output, session) {
            col = c("black", "steelblue", "tomato"),
            lwd = c(2.5, 2, 2), lty = c(1, 2, 2), pch = 16,
            cex = 0.9)
+  })
+
+  output$usedQ &lt;- renderPrint({
+    req(results())
+    r &lt;- results()
+    cat(sprintf("Q-matrix used (%d items × %d skills):\n", r$J, r$K))
+    Q &lt;- r$Q
+    colnames(Q) &lt;- paste0("s", seq_len(r$K))
+    rownames(Q) &lt;- paste0("i", seq_len(r$J))
+    print(Q)
   })
 
   output$resultTable &lt;- renderPrint({
