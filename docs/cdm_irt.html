@@ -225,7 +225,7 @@ window.Quarto = {
 
 <p><strong>Cognitive Diagnostic Models (CDMs)</strong> classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of <span class="math inline">\(K\)</span> skills — and predict item responses from those profiles. <strong>Item Response Theory (IRT)</strong> instead places respondents on a continuous latent trait <span class="math inline">\(\theta\)</span>. When the true data-generating process is a CDM, which model predicts better?</p>
 <p>The answer depends on the correlation among attributes. When skills are independent, a respondent’s profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.</p>
-<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J\)</span> items structured according to a Q-matrix. Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with the <strong>inter-skill correlation <span class="math inline">\(\rho\)</span></strong> controlling how tightly the skills co-vary. At <span class="math inline">\(\rho = 0\)</span> the skills are independent; at <span class="math inline">\(\rho = 0.7\)</span> they are strongly correlated. The simulation sweeps across a grid of evenly-spaced <span class="math inline">\(\rho\)</span> values between these extremes — more grid points produce a smoother curve but take longer to run.</p>
+<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J\)</span> items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary, with the <strong>inter-skill correlation <span class="math inline">\(\rho\)</span></strong> controlling how tightly the skills co-vary. At <span class="math inline">\(\rho = 0\)</span> the skills are independent; at <span class="math inline">\(\rho = 0.7\)</span> they are strongly correlated. The simulation sweeps across a grid of evenly-spaced <span class="math inline">\(\rho\)</span> values between these extremes — more grid points produce a smoother curve but take longer to run.</p>
 <p><strong>Evaluation scheme.</strong> To ensure all IMV comparisons are out-of-sample, three independent datasets are used:</p>
 <ol type="1">
 <li><strong>Training set</strong> (<span class="math inline">\(N\)</span> persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).</li>
@@ -268,8 +268,8 @@ imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
 make_params &lt;- function(Q) {
   K &lt;- ncol(Q)
   J &lt;- nrow(Q)
-  slip  &lt;- rep(0.15, J)
-  guess &lt;- rep(0.15, J)
+  slip  &lt;- runif(J, 0, 0.3)
+  guess &lt;- runif(J, 0, 0.3)
 
   all_profiles &lt;- as.matrix(expand.grid(rep(list(0:1), K)))
   n_prof &lt;- nrow(all_profiles)

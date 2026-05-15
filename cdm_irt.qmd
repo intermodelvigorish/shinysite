@@ -6,7 +6,7 @@ title: "IRT versus Cognitive Diagnostic Models"
 
 The answer depends on the correlation among attributes. When skills are independent, a respondent's profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.
 
-**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J$ items structured according to a Q-matrix. Slip and guess parameters are fixed at 0.15. Skills are drawn from a multivariate normal and thresholded to binary, with the **inter-skill correlation $\rho$** controlling how tightly the skills co-vary. At $\rho = 0$ the skills are independent; at $\rho = 0.7$ they are strongly correlated. The simulation sweeps across a grid of evenly-spaced $\rho$ values between these extremes — more grid points produce a smoother curve but take longer to run.
+**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J$ items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary, with the **inter-skill correlation $\rho$** controlling how tightly the skills co-vary. At $\rho = 0$ the skills are independent; at $\rho = 0.7$ they are strongly correlated. The simulation sweeps across a grid of evenly-spaced $\rho$ values between these extremes — more grid points produce a smoother curve but take longer to run.
 
 **Evaluation scheme.** To ensure all IMV comparisons are out-of-sample, three independent datasets are used:
 
@@ -50,8 +50,8 @@ imv.binary <- function(y, p1, p2, sigma = 1e-4) {
 make_params <- function(Q) {
   K <- ncol(Q)
   J <- nrow(Q)
-  slip  <- rep(0.15, J)
-  guess <- rep(0.15, J)
+  slip  <- runif(J, 0, 0.3)
+  guess <- runif(J, 0, 0.3)
 
   all_profiles <- as.matrix(expand.grid(rep(list(0:1), K)))
   n_prof <- nrow(all_profiles)
