@@ -66,7 +66,10 @@ ui <- fluidPage(
       actionButton("run", "Run Simulation", class = "btn-primary"),
       
       hr(),
-      
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
       helpText("Red points: overfitting (same data used for fitting and testing)"),
       helpText("Blue points: out-of-sample (independent test data)"),
       helpText("DGM: y ~ x (true model does not include x²)")
@@ -219,7 +222,7 @@ server <- function(input, output, session) {
     N_oos <- as.numeric(names(data$om))
     
     plot(N_over, data$om.over, 
-         ylim = c(-0.1, 0.1), 
+         ylim = c(input$ymin, input$ymax),
          pch = 19, 
          col = 'red',
          xlab = "N", 

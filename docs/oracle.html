@@ -156,6 +156,14 @@ window.Quarto = {
     <a class="dropdown-item" href="./implied.html">
  <span class="dropdown-text">Implied probabilities and the IMV</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./cdm_irt.html">
+ <span class="dropdown-text">IRT versus Cognitive Diagnostic Models</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./multidim.html">
+ <span class="dropdown-text">Multidimensional IRT and unidimensional scoring</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -272,7 +280,10 @@ ui &lt;- fluidPage(
       actionButton("run", "Run Simulation", class = "btn-primary"),
       
       hr(),
-      
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
       p("This app computes the Oracle IMV — the gap between estimated probabilities and the true generating probabilities — as a function of sample size.")
     ),
     
@@ -334,7 +345,7 @@ server &lt;- function(input, output, session) {
          pch = 16,
          col = rgb(0, 0, 1, 0.5),
          cex = 1.2,
-         ylim=c(0,.1),
+         ylim=c(input$ymin, input$ymax),
          log = "x")
     
     # Add a smoothed trend line

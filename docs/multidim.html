@@ -356,6 +356,10 @@ ui &lt;- fluidPage(
                   min = 5, max = 50, value = 10, step = 5),
       actionButton("run", "Run Simulation", class = "btn-primary"),
       hr(),
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value = 0.5, step = 0.05))
+      ),
       helpText(
         "First run installs ltm (~30s). Each ρ value fits a 2PL IRT model; ",
         "run time scales with the number of ρ values. More points clarify ",
@@ -399,7 +403,7 @@ server &lt;- function(input, output, session) {
     rho &lt;- r$rho
     imv &lt;- r$imv
 
-    ylim &lt;- c(0, 0.5)
+    ylim &lt;- c(input$ymin, input$ymax)
 
     plot(rho, imv,
          type = "n",
