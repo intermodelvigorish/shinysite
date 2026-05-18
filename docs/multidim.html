@@ -227,7 +227,7 @@ window.Quarto = {
 <p>This simulation generates data from a <strong>compensatory 2D-2PL model</strong>,</p>
 <p><span class="math display">\[P(Y_{ij}=1\mid\theta_{1i},\theta_{2i}) = \frac{1}{1+\exp\!\bigl(-(a_{1j}\,\theta_{1i}+a_{2j}\,\theta_{2i}+d_j)\bigr)},\]</span></p>
 <p>and fits a <strong>unidimensional 2PL</strong> to recover person scores. The dimensions <span class="math inline">\((\theta_1,\theta_2)\)</span> are drawn from a bivariate standard normal with inter-dimension correlation <span class="math inline">\(\rho\)</span>, which is varied across the x-axis.</p>
-<p><strong>Loading balance (M).</strong> Each item has one randomly assigned dominant dimension. The dominant loading <span class="math inline">\(a_{\text{dom},j}\)</span> is drawn from Uniform(0.5, 1.5); the non-dominant loading is <span class="math inline">\(M\times a_{\text{dom},j}\)</span>.</p>
+<p><strong>Loading balance (M).</strong> Each item has one randomly assigned dominant dimension. Base loadings <span class="math inline">\(a_{1,j}\)</span> and <span class="math inline">\(a_{2,j}\)</span> are drawn independently from Uniform(0.5, 1.5). If dimension 1 is dominant, the item’s loadings are <span class="math inline">\((a_{1,j},\; M \times a_{2,j})\)</span>; if dimension 2 is dominant, they are <span class="math inline">\((M \times a_{1,j},\; a_{2,j})\)</span>.</p>
 <ul>
 <li><span class="math inline">\(M=0\)</span>: <strong>between-item multidimensionality</strong> — each item loads on exactly one dimension; the test is a mixture of two unidimensional subtests.</li>
 <li><span class="math inline">\(M=1\)</span>: <strong>within-item multidimensionality</strong> — every item loads equally on both dimensions.</li>

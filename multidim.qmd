@@ -10,7 +10,7 @@ $$P(Y_{ij}=1\mid\theta_{1i},\theta_{2i}) = \frac{1}{1+\exp\!\bigl(-(a_{1j}\,\the
 
 and fits a **unidimensional 2PL** to recover person scores. The dimensions $(\theta_1,\theta_2)$ are drawn from a bivariate standard normal with inter-dimension correlation $\rho$, which is varied across the x-axis.
 
-**Loading balance (M).** Each item has one randomly assigned dominant dimension. The dominant loading $a_{\text{dom},j}$ is drawn from Uniform(0.5, 1.5); the non-dominant loading is $M\times a_{\text{dom},j}$.
+**Loading balance (M).** Each item has one randomly assigned dominant dimension. Base loadings $a_{1,j}$ and $a_{2,j}$ are drawn independently from Uniform(0.5, 1.5). If dimension 1 is dominant, the item's loadings are $(a_{1,j},\; M \times a_{2,j})$; if dimension 2 is dominant, they are $(M \times a_{1,j},\; a_{2,j})$.
 
 - $M=0$: **between-item multidimensionality** — each item loads on exactly one dimension; the test is a mixture of two unidimensional subtests.
 - $M=1$: **within-item multidimensionality** — every item loads equally on both dimensions.
@@ -49,10 +49,11 @@ imv.binary <- function(y, p1, p2, sigma = 1e-4) {
 
 # ---- Item parameters (drawn once per run) -------------------------------
 make_item_params <- function(J, M) {
-  a_base   <- runif(J, 0.5, 1.5)
+  a1_base  <- runif(J, 0.5, 1.5)
+  a2_base  <- runif(J, 0.5, 1.5)
   dominant <- sample(c(1L, 2L), J, replace = TRUE)
-  a1 <- ifelse(dominant == 1L, a_base, M * a_base)
-  a2 <- ifelse(dominant == 2L, a_base, M * a_base)
+  a1 <- ifelse(dominant == 1L, a1_base, M * a1_base)
+  a2 <- ifelse(dominant == 2L, a2_base, M * a2_base)
   d  <- rnorm(J, 0, 0.5)
   list(J = J, a1 = a1, a2 = a2, d = d)
 }

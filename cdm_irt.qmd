@@ -245,6 +245,8 @@ ui <- fluidPage(
       sliderInput("n_rho", "Skill correlation (ρ) grid points:",
                   min = 5, max = 50, value = 10, step = 5),
       helpText("Simulation is run at this many evenly-spaced inter-skill correlation values from ρ = 0 to ρ = 0.7."),
+      numericInput("seed", "Random seed:", value = 42, min = 1, max = 99999, step = 1),
+      helpText("Seed controls Q-matrix generation, item slip/guess draws (each from Uniform(0, 0.3)), and all simulation draws."),
       actionButton("run", "Run Simulation", class = "btn-primary"),
       hr(),
       fluidRow(
@@ -293,6 +295,7 @@ server <- function(input, output, session) {
   })
 
   results <- eventReactive(input$run, {
+    set.seed(as.integer(input$seed))
     if (input$qmat_mode == "random") {
       K <- as.integer(input$K)
       J <- as.integer(input$J)
