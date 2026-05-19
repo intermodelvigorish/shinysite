@@ -6,7 +6,7 @@ title: "IRT versus Cognitive Diagnostic Models"
 
 The answer depends on the correlation among attributes. When skills are independent, a respondent's profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.
 
-**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J$ items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary, with the **inter-skill correlation $\rho$** controlling how tightly the skills co-vary. At $\rho = 0$ the skills are independent; at $\rho = 0.7$ they are strongly correlated. The simulation sweeps across a grid of evenly-spaced $\rho$ values between these extremes — more grid points produce a smoother curve but take longer to run.
+**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J$ items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary using evenly-spaced quantile cutoffs ($q_{k} = \Phi^{-1}(k/(K+1))$), so each skill has a distinct marginal prevalence. The **inter-skill correlation $\rho$** controls how tightly the skills co-vary. At $\rho = 0$ the skills are independent; at $\rho = 0.7$ they are strongly correlated. The simulation sweeps across a grid of evenly-spaced $\rho$ values between these extremes — more grid points produce a smoother curve but take longer to run.
 
 **Evaluation scheme.** To ensure all IMV comparisons are out-of-sample, three independent datasets are used:
 
@@ -130,7 +130,8 @@ parse_Q <- function(text) {
 gen_attrs <- function(N, rho, K) {
   Sigma <- matrix(rho, K, K); diag(Sigma) <- 1
   Z <- rmvnorm(N, sigma = Sigma)
-  (Z > 0) * 1L
+  cutoffs <- qnorm(seq_len(K) / (K + 1))
+  t(t(Z) > cutoffs) * 1L
 }
 
 dina_prob <- function(alpha, pr) {
