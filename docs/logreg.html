@@ -152,6 +152,18 @@ window.Quarto = {
     <a class="dropdown-item" href="./collapse.html">
  <span class="dropdown-text">The collapse of the thresholded IMV</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./implied.html">
+ <span class="dropdown-text">Implied probabilities and the IMV</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./cdm_irt.html">
+ <span class="dropdown-text">IRT versus Cognitive Diagnostic Models</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./multidim.html">
+ <span class="dropdown-text">Multidimensional IRT and unidimensional scoring</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -261,7 +273,10 @@ ui &lt;- fluidPage(
       actionButton("run", "Run Simulation", class = "btn-primary"),
       
       hr(),
-      
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
       helpText("Adjust b0 and click 'Run Simulation' to see how IMV varies with b1.")
     ),
     
@@ -318,7 +333,7 @@ server &lt;- function(input, output, session) {
     plot(results$b1vals, results$om,
          xlab = expression(b[1]), 
          ylab = "IMV(prevalence, fitted model)",
-         ylim=c(0,.8),
+         ylim=c(input$ymin, input$ymax),
          main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
          pch = 19,
          col = "steelblue")

@@ -22,6 +22,10 @@ website:
             text: The collapse of the thresholded IMV
           - href: implied.qmd
             text: Implied probabilities and the IMV
+          - href: cdm_irt.qmd
+            text: IRT versus Cognitive Diagnostic Models
+          - href: multidim.qmd
+            text: Multidimensional IRT and unidimensional scoring
       - text: "Computational Examples"
         menu:
           - href: example_glm.qmd

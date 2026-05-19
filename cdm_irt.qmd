@@ -1,0 +1,412 @@
+---
+title: "IRT versus Cognitive Diagnostic Models"
+---
+
+**Cognitive Diagnostic Models (CDMs)** classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of $K$ skills — and predict item responses from those profiles. **Item Response Theory (IRT)** instead places respondents on a continuous latent trait $\theta$. When the true data-generating process is a CDM, which model predicts better?
+
+The answer depends on the correlation among attributes. When skills are independent, a respondent's profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.
+
+**Simulation design.** Data are generated from a **DINA model** (Deterministic Input, Noisy And-gate) with $K$ skills and $J$ items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary using evenly-spaced quantile cutoffs ($q_{k} = \Phi^{-1}(k/(K+1))$), so each skill has a distinct marginal prevalence. The **inter-skill correlation $\rho$** controls how tightly the skills co-vary. At $\rho = 0$ the skills are independent; at $\rho = 0.7$ they are strongly correlated. The simulation sweeps across a grid of evenly-spaced $\rho$ values between these extremes — more grid points produce a smoother curve but take longer to run.
+
+**Evaluation scheme.** To ensure all IMV comparisons are out-of-sample, three independent datasets are used:
+
+1. **Training set** ($N$ persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).
+2. **Test set** (200 persons): used to estimate person-level latent variables — IRT $\hat\theta$ via MLE and CDM attribute profiles via MAP — applying the item parameters from step 1.
+3. **Evaluation set** (200 persons, same attribute profiles as the test set, independent response draws): all IMV quantities are scored here. Because the evaluation responses are independent of the data used in steps 1 and 2, MAP and MLE cannot inflate their own scores by fitting to the evaluation outcomes.
+
+The three IMV quantities reported are:
+
+- **IMV(IRT, CDM)** — positive values mean CDM predicts better; negative means IRT predicts better
+- **IMV(IRT, True)** — oracle gap for IRT: how far fitted IRT predictions are from the true generating probabilities
+- **IMV(CDM, True)** — oracle gap for CDM: how far MAP-based CDM predictions are from the true probabilities
+
+Both oracle gaps should be non-negative: no fitted model should systematically beat the true probabilities on held-out data.
+
+Based on work by [Ma, Liu, Kanopka, Ma, & Domingue (2025)](https://osf.io/preprints/psyarxiv/acwdz_v1).
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 1100
+
+webr::install("ltm",     repos = c("https://cran.r-universe.dev", "https://repo.r-wasm.org"))
+webr::install("mvtnorm", repos = c("https://repo.r-wasm.org"))
+
+library(shiny)
+library(ltm)
+library(mvtnorm)
+
+# ---- IMV ----------------------------------------------------------------
+imv.binary <- function(y, p1, p2, sigma = 1e-4) {
+  p1 <- pmin(pmax(p1, sigma), 1 - sigma)
+  p2 <- pmin(pmax(p2, sigma), 1 - sigma)
+  ll <- function(x, p) exp(sum(log(p) * x + log(1 - p) * (1 - x)) / length(x))
+  coins <- function(a) nlminb(0.5, function(p, a) abs(p*log(p) + (1-p)*log(1-p) - log(a)),
+                              lower = 1e-4, upper = 1 - 1e-4, a = a)$par
+  c1 <- coins(ll(y, p1)); c2 <- coins(ll(y, p2))
+  (c2 - c1) / c1
+}
+
+# ---- Build simulation parameters from a Q matrix ------------------------
+make_params <- function(Q) {
+  K <- ncol(Q)
+  J <- nrow(Q)
+  slip  <- runif(J, 0, 0.3)
+  guess <- runif(J, 0, 0.3)
+
+  all_profiles <- as.matrix(expand.grid(rep(list(0:1), K)))
+  n_prof <- nrow(all_profiles)
+
+  pp <- matrix(NA_real_, n_prof, J)
+  for (p in seq_len(n_prof))
+    for (j in seq_len(J)) {
+      req <- Q[j, ] == 1
+      eta <- if (!any(req)) 1 else prod(all_profiles[p, req])
+      pp[p, j] <- eta * (1 - slip[j]) + (1 - eta) * guess[j]
+    }
+
+  list(K = K, J = J, slip = slip, guess = guess, Q = Q,
+       all_profiles = all_profiles,
+       log_pp   = log(pmax(pp,     1e-8)),
+       log_1mpp = log(pmax(1 - pp, 1e-8)),
+       pp = pp)
+}
+
+# ---- Random Q-matrix generator ------------------------------------------
+gen_random_Q <- function(K, J, density) {
+  for (i in seq_len(200)) {
+    Q <- matrix(rbinom(J * K, 1L, density), nrow = J, ncol = K)
+    if (all(rowSums(Q) > 0) && all(colSums(Q) > 0)) return(Q)
+  }
+  # Fallback: guarantee one item per skill, fill remaining rows randomly
+  Q <- matrix(0L, J, K)
+  perm <- sample(K)
+  for (k in seq_len(K)) Q[k, perm[k]] <- 1L
+  if (J > K) {
+    for (j in (K + 1):J) {
+      q <- rbinom(K, 1L, density)
+      if (sum(q) == 0L) q[sample(K, 1L)] <- 1L
+      Q[j, ] <- q
+    }
+  }
+  Q
+}
+
+# ---- Custom Q-matrix parser ---------------------------------------------
+parse_Q <- function(text) {
+  lines <- strsplit(trimws(text), "\n")[[1]]
+  lines <- trimws(lines)
+  lines <- lines[nchar(lines) > 0]
+  if (length(lines) == 0) return(list(Q = NULL, error = "Empty input."))
+
+  rows <- lapply(lines, function(l) {
+    parts <- strsplit(l, "[,[:space:]]+")[[1]]
+    parts <- parts[nchar(parts) > 0]
+    suppressWarnings(as.integer(parts))
+  })
+
+  lens <- lengths(rows)
+  if (length(unique(lens)) != 1)
+    return(list(Q = NULL,
+                error = sprintf("Rows have unequal lengths (%s).", paste(lens, collapse = ", "))))
+  if (unique(lens) < 1)
+    return(list(Q = NULL, error = "Could not parse any values."))
+
+  Q <- do.call(rbind, rows)
+  if (anyNA(Q))
+    return(list(Q = NULL, error = "Non-integer values found."))
+  if (!all(Q %in% c(0L, 1L)))
+    return(list(Q = NULL, error = "Matrix must contain only 0s and 1s."))
+  if (any(rowSums(Q) == 0))
+    return(list(Q = NULL, error = "Some rows are all zeros — each item must require at least one skill."))
+  if (any(colSums(Q) == 0))
+    return(list(Q = NULL, error = "Some columns are all zeros — each skill must appear in at least one item."))
+  if (nrow(Q) < 4)
+    return(list(Q = NULL, error = "Need at least 4 items (rows) for IRT estimation."))
+
+  list(Q = Q, error = NULL)
+}
+
+# ---- Simulation helpers -------------------------------------------------
+gen_attrs <- function(N, rho, K) {
+  Sigma <- matrix(rho, K, K); diag(Sigma) <- 1
+  Z <- rmvnorm(N, sigma = Sigma)
+  cutoffs <- qnorm(seq_len(K) / (K + 1))
+  t(t(Z) > cutoffs) * 1L
+}
+
+dina_prob <- function(alpha, pr) {
+  N <- nrow(alpha)
+  probs <- matrix(NA_real_, N, pr$J)
+  for (j in seq_len(pr$J)) {
+    req <- pr$Q[j, ] == 1
+    eta <- if (!any(req)) rep(1, N) else apply(alpha[, req, drop = FALSE], 1, prod)
+    probs[, j] <- eta * (1 - pr$slip[j]) + (1 - eta) * pr$guess[j]
+  }
+  probs
+}
+
+map_dina <- function(y_mat, pr) {
+  N   <- nrow(y_mat)
+  y_t <- t(y_mat)
+  alpha_hat <- matrix(NA_integer_, N, pr$K)
+  for (i in seq_len(N)) {
+    ll <- pr$log_pp %*% y_t[, i] + pr$log_1mpp %*% (1L - y_t[, i])
+    alpha_hat[i, ] <- pr$all_profiles[which.max(ll), ]
+  }
+  alpha_hat
+}
+
+get_theta_mle <- function(yi, a_vec, b_vec) {
+  nll <- function(theta) {
+    p <- pmin(pmax(1 / (1 + exp(-a_vec * (theta - b_vec))), 1e-8), 1 - 1e-8)
+    -sum(yi * log(p) + (1 - yi) * log(1 - p))
+  }
+  tryCatch(optimize(nll, interval = c(-5, 5))$minimum, error = function(e) 0)
+}
+
+# ---- One simulation at a given rho --------------------------------------
+sim_one <- function(N_train, rho, pr) {
+  N_test <- 200L
+
+  a_tr <- gen_attrs(N_train, rho, pr$K)
+  y_tr <- matrix(rbinom(N_train * pr$J, 1L, dina_prob(a_tr, pr)), N_train, pr$J)
+
+  fit_irt <- tryCatch(
+    ltm(as.data.frame(y_tr) ~ z1, control = list(iter.em = 30, iter.qN = 50)),
+    error = function(e) NULL
+  )
+  if (is.null(fit_irt)) return(NULL)
+
+  ipar  <- coef(fit_irt)
+  b_vec <- ipar[, "Dffclt"]
+  a_vec <- ipar[, "Dscrmn"]
+
+  a_te   <- gen_attrs(N_test, rho, pr$K)
+  p_true <- dina_prob(a_te, pr)
+  y_te   <- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  theta_te <- apply(y_te, 1, get_theta_mle, a_vec = a_vec, b_vec = b_vec)
+  p_irt <- matrix(NA_real_, N_test, pr$J)
+  for (j in seq_len(pr$J))
+    p_irt[, j] <- 1 / (1 + exp(-a_vec[j] * (theta_te - b_vec[j])))
+
+  p_cdm <- dina_prob(map_dina(y_te, pr), pr)
+
+  y_eval <- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  y_v    <- as.vector(y_eval)
+  pirt_v <- as.vector(p_irt)
+  pcdm_v <- as.vector(p_cdm)
+  ptru_v <- as.vector(p_true)
+
+  c(
+    irt_cdm  = imv.binary(y_v, pirt_v, pcdm_v),
+    irt_true = imv.binary(y_v, pirt_v, ptru_v),
+    cdm_true = imv.binary(y_v, pcdm_v, ptru_v)
+  )
+}
+
+# ---- Default custom Q text (K=3, J=9, identity structure) ---------------
+default_qmat <- paste(
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 1 0 0 0", "1 0 1 0 0", "1 0 0 1 0", "1 0 0 0 1", "0 1 1 0 0",
+  "0 1 0 1 0", "0 1 0 0 1", "0 0 1 1 0", "0 0 1 0 1", "0 0 0 1 1",
+  "1 1 1 0 0", "1 1 0 1 0", "1 1 0 0 1", "1 0 1 1 0", "1 0 1 0 1",
+  "1 0 0 1 1", "0 1 1 1 0", "0 1 1 0 1", "0 1 0 1 1", "0 0 1 1 1",
+  sep = "\n"
+)
+
+# ---- UI -----------------------------------------------------------------
+ui <- fluidPage(
+  titlePanel("IRT vs CDM: IMV as a Function of Skill Correlation"),
+  sidebarLayout(
+    sidebarPanel(
+      radioButtons("qmat_mode", "Q-matrix specification:",
+                   choices = c("Random (density)" = "random", "Custom (paste)" = "custom"),
+                   selected = "random", inline = TRUE),
+
+      conditionalPanel(condition = "input.qmat_mode == 'random'",
+        sliderInput("K", "Number of skills (K):", min = 2, max = 6, value = 3, step = 1),
+        sliderInput("J", "Number of items (J):", min = 4, max = 45, value = 9, step = 1),
+        sliderInput("density", "Q-matrix density:",
+                    min = 0.1, max = 0.9, value = 0.33, step = 0.05),
+        helpText("Density = probability each item loads on each skill.")
+      ),
+
+      conditionalPanel(condition = "input.qmat_mode == 'custom'",
+        textAreaInput("qmat_text",
+                      HTML("Q-matrix: rows = items, cols = skills<br/>(space or comma separated, 0s and 1s only)"),
+                      value = default_qmat,
+                      rows = 8, width = "100%")
+      ),
+
+      verbatimTextOutput("qmat_status"),
+      hr(),
+      selectInput("N_train", "Training sample size (N):",
+                  choices = c("250" = 250, "500" = 500, "1000" = 1000),
+                  selected = 500),
+      sliderInput("n_rho", "Skill correlation (ρ) grid points:",
+                  min = 5, max = 50, value = 10, step = 5),
+      helpText("Simulation is run at this many evenly-spaced inter-skill correlation values from ρ = 0 to ρ = 0.7."),
+      numericInput("seed", "Random seed:", value = 42, min = 1, max = 99999, step = 1),
+      helpText("Seed controls Q-matrix generation, item slip/guess draws (each from Uniform(0, 0.3)), and all simulation draws."),
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      hr(),
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
+      helpText(
+        "First run installs ltm (~30s). Run time scales with J, N, and the number of ρ values."
+      )
+    ),
+    mainPanel(
+      plotOutput("imvPlot", height = "520px"),
+      verbatimTextOutput("usedQ"),
+      verbatimTextOutput("resultTable")
+    )
+  )
+)
+
+# ---- Server -------------------------------------------------------------
+server <- function(input, output, session) {
+
+  output$qmat_status <- renderPrint({
+    if (input$qmat_mode == "random") {
+      K <- as.integer(input$K)
+      J <- as.integer(input$J)
+      d <- input$density
+      if (J < K) {
+        cat(sprintf("Error: J (%d) must be ≥ K (%d).\n", J, K))
+      } else {
+        p_multi <- 1 - (1 - d)^K - K * d * (1 - d)^(K - 1)
+        cat(sprintf("Q: %d items × %d skills  |  density: %.2f\n", J, K, d))
+        cat(sprintf("Expected multi-skill items: %.1f of %d (%.0f%%)\n",
+                    p_multi * J, J, 100 * p_multi))
+      }
+    } else {
+      qr <- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        cat("Error:", qr$error, "\n")
+      } else {
+        Q <- qr$Q
+        cat(sprintf("Q: %d items × %d skills\n", nrow(Q), ncol(Q)))
+        cat(sprintf("Density: %.2f  |  Multi-skill items: %d of %d\n",
+                    mean(Q), sum(rowSums(Q) > 1), nrow(Q)))
+      }
+    }
+  })
+
+  results <- eventReactive(input$run, {
+    set.seed(as.integer(input$seed))
+    if (input$qmat_mode == "random") {
+      K <- as.integer(input$K)
+      J <- as.integer(input$J)
+      if (J < K) {
+        showNotification(sprintf("J (%d) must be ≥ K (%d).", J, K), type = "error")
+        return(NULL)
+      }
+      Q <- gen_random_Q(K, J, input$density)
+    } else {
+      qr <- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        showNotification(paste("Q-matrix error:", qr$error), type = "error")
+        return(NULL)
+      }
+      Q <- qr$Q
+    }
+
+    pr       <- make_params(Q)
+    N_train  <- as.integer(input$N_train)
+    rho_vals <- seq(0, 0.7, length.out = as.integer(input$n_rho))
+    out      <- matrix(NA_real_, length(rho_vals), 3,
+                       dimnames = list(NULL, c("irt_cdm", "irt_true", "cdm_true")))
+
+    withProgress(message = "Simulating…", value = 0, {
+      for (i in seq_along(rho_vals)) {
+        incProgress(1 / length(rho_vals),
+                    detail = sprintf("ρ = %.2f (%d of %d)", rho_vals[i], i, length(rho_vals)))
+        res <- sim_one(N_train, rho_vals[i], pr)
+        if (!is.null(res)) out[i, ] <- res
+      }
+    })
+
+    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J, Q = pr$Q, N_train = N_train)
+  })
+
+  output$imvPlot <- renderPlot({
+    req(results())
+    r   <- results()
+    rho <- r$rho
+    imv <- r$imv
+
+    ylim <- c(input$ymin, input$ymax)
+
+    plot(rho, imv[, "irt_cdm"],
+         type = "n",
+         xlab = expression(paste("Skill inter-correlation (", rho, ")")),
+         ylab = "IMV",
+         main = sprintf("IMV vs Skill Correlation  (N = %d, K = %d, J = %d)",
+                        r$N_train, r$K, r$J),
+         ylim = ylim, las = 1)
+    grid(lty = 3, col = "grey85")
+    abline(h = 0, lty = 2, col = "grey40")
+
+    sm <- function(y) {
+      ok <- !is.na(y)
+      if (sum(ok) < 4) return(rep(NA, length(y)))
+      predict(loess(y[ok] ~ rho[ok], span = 0.75), newdata = rho)
+    }
+
+    lines(rho, sm(imv[, "irt_true"]), col = "steelblue", lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "cdm_true"]), col = "tomato",    lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "irt_cdm"]),  col = "black",     lwd = 2.5)
+
+    points(rho, imv[, "irt_true"], col = "steelblue", pch = 16, cex = 0.9)
+    points(rho, imv[, "cdm_true"], col = "tomato",    pch = 16, cex = 0.9)
+    points(rho, imv[, "irt_cdm"],  col = "black",     pch = 16, cex = 1.1)
+
+    legend("topright", bty = "n",
+           legend = c("IMV(IRT, CDM)  [main]",
+                      "IMV(IRT, True) [oracle IRT]",
+                      "IMV(CDM, True) [oracle CDM]"),
+           col = c("black", "steelblue", "tomato"),
+           lwd = c(2.5, 2, 2), lty = c(1, 2, 2), pch = 16,
+           cex = 0.9)
+  })
+
+  output$usedQ <- renderPrint({
+    req(results())
+    r <- results()
+    cat(sprintf("Q-matrix used (%d items × %d skills):\n", r$J, r$K))
+    Q <- r$Q
+    colnames(Q) <- paste0("s", seq_len(r$K))
+    rownames(Q) <- paste0("i", seq_len(r$J))
+    print(Q)
+  })
+
+  output$resultTable <- renderPrint({
+    req(results())
+    r <- results()
+    df <- data.frame(
+      rho      = round(r$rho, 2),
+      IRT_CDM  = round(r$imv[, "irt_cdm"],  4),
+      IRT_True = round(r$imv[, "irt_true"], 4),
+      CDM_True = round(r$imv[, "cdm_true"], 4)
+    )
+    print(df, row.names = FALSE)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+**What you should see:**
+
+- At **low $\rho$** (near 0): skills are independent, so each person's profile across attributes carries unique information that a unidimensional IRT score cannot capture. IMV(IRT, CDM) is positive and the oracle gap for IRT (blue) is larger than for CDM (red) — IRT is further from the truth.
+- As **$\rho$ increases** toward 0.7: the attribute profiles increasingly collapse to a single dimension. IRT, which estimates exactly that dimension, becomes more competitive. IMV(IRT, CDM) falls toward zero or below, and the oracle gaps converge.
+- The **oracle CDM gap** (red) is generally smaller than the oracle IRT gap (blue) when the true model is DINA — the CDM is better calibrated to the data-generating process. This advantage shrinks as $\rho$ grows.
+- With **more skills** ($K=4$), the CDM has more structure to capture, and the advantage over IRT at low $\rho$ may be more pronounced.
+
+[← Back to Home](index.html){.btn .btn-secondary}

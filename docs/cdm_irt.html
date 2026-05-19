@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Computational Example: Multidimensional IRT – The InterModel Vigorish (IMV)</title>
+<title>IRT versus Cognitive Diagnostic Models – The InterModel Vigorish (IMV)</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,41 +19,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -76,6 +41,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="site_libs/bootstrap/bootstrap-a413d5729d54e4aec2855233f035eb84.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<meta name="shinylive:serviceworker_dir" content=".">
+<script src="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/run-python-blocks.js" type="module"></script>
+<link href="site_libs/quarto-contrib/shinylive-0.9.1/shinylive/shinylive.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -104,6 +74,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -161,6 +160,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="./cdm_irt.html">
  <span class="dropdown-text">IRT versus Cognitive Diagnostic Models</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./multidim.html">
+ <span class="dropdown-text">Multidimensional IRT and unidimensional scoring</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -203,7 +206,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Computational Example: Multidimensional IRT</h1>
+<h1 class="title">IRT versus Cognitive Diagnostic Models</h1>
 </div>
 
 
@@ -220,135 +223,410 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>This example uses the <code>imv</code> package to compare a unidimensional 2PL model against two multidimensional 2PL models fit to simulated data. The key question is not just whether adding a second dimension improves prediction, but whether the way that dimension is estimated matters — specifically, whether placing priors on the discrimination parameters is necessary to realize any predictive benefit from the more complex model.</p>
-<p>The example illustrates an important general principle: <strong>a correctly specified model with poorly estimated parameters can predict worse than a simpler model with stable estimates.</strong> The IMV makes this concrete and quantifiable.</p>
-<hr>
-</section>
-<section id="setup" class="level2">
-<h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("imv")</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(imv)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
-</section>
-<section id="simulating-the-data" class="level2">
-<h2 class="anchored" data-anchor-id="simulating-the-data">Simulating the Data</h2>
-<p>We simulate responses from a genuinely two-dimensional model. All 40 items load on both dimensions, with discrimination parameters drawn from log-normal distributions. The two latent dimensions are correlated (r = 0.5).</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">10101</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n_items   <span class="ot">&lt;-</span> <span class="dv">40</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>n_persons <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Discrimination matrix: every item loads on both dimensions</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>a_matrix <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">rlnorm</span>(n_items, <span class="at">sdlog =</span> <span class="fl">0.5</span>),</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">rlnorm</span>(n_items, <span class="at">sdlog =</span> <span class="fl">0.5</span>))</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Item difficulties spread across the ability range</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>d_vector <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>, <span class="at">length.out =</span> n_items)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Correlated person parameters (r = 0.5)</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>Sigma <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">1.0</span>, <span class="fl">0.5</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                  <span class="fl">0.5</span>, <span class="fl">1.0</span>), <span class="at">ncol =</span> <span class="dv">2</span>)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">mvrnorm</span>(<span class="at">n =</span> n_persons, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> Sigma)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate binary item responses</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>sim_data <span class="ot">&lt;-</span> mirt<span class="sc">::</span><span class="fu">simdata</span>(</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">a        =</span> a_matrix,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">d        =</span> d_vector,</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">N        =</span> n_persons,</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">itemtype =</span> <span class="st">'2PL'</span>,</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">Theta    =</span> theta</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
-</section>
-<section id="fitting-the-models" class="level2">
-<h2 class="anchored" data-anchor-id="fitting-the-models">Fitting the Models</h2>
-<p>We fit three models of increasing complexity:</p>
+<p><strong>Cognitive Diagnostic Models (CDMs)</strong> classify respondents into discrete latent attribute profiles — binary mastery/non-mastery states for each of <span class="math inline">\(K\)</span> skills — and predict item responses from those profiles. <strong>Item Response Theory (IRT)</strong> instead places respondents on a continuous latent trait <span class="math inline">\(\theta\)</span>. When the true data-generating process is a CDM, which model predicts better?</p>
+<p>The answer depends on the correlation among attributes. When skills are independent, a respondent’s profile on each attribute carries unique information that a unidimensional score cannot capture, and the CDM has a genuine advantage. As skills become more correlated, the attribute profiles increasingly collapse toward a single dimension, and IRT becomes competitive.</p>
+<p><strong>Simulation design.</strong> Data are generated from a <strong>DINA model</strong> (Deterministic Input, Noisy And-gate) with <span class="math inline">\(K\)</span> skills and <span class="math inline">\(J\)</span> items structured according to a Q-matrix. Slip and guess parameters are sampled independently for each item from Uniform(0, 0.3). Skills are drawn from a multivariate normal and thresholded to binary, with the <strong>inter-skill correlation <span class="math inline">\(\rho\)</span></strong> controlling how tightly the skills co-vary. At <span class="math inline">\(\rho = 0\)</span> the skills are independent; at <span class="math inline">\(\rho = 0.7\)</span> they are strongly correlated. The simulation sweeps across a grid of evenly-spaced <span class="math inline">\(\rho\)</span> values between these extremes — more grid points produce a smoother curve but take longer to run.</p>
+<p><strong>Evaluation scheme.</strong> To ensure all IMV comparisons are out-of-sample, three independent datasets are used:</p>
+<ol type="1">
+<li><strong>Training set</strong> (<span class="math inline">\(N\)</span> persons): used to fit the 2PL IRT model and estimate item parameters (discrimination and difficulty).</li>
+<li><strong>Test set</strong> (200 persons): used to estimate person-level latent variables — IRT <span class="math inline">\(\hat\theta\)</span> via MLE and CDM attribute profiles via MAP — applying the item parameters from step 1.</li>
+<li><strong>Evaluation set</strong> (200 persons, same attribute profiles as the test set, independent response draws): all IMV quantities are scored here. Because the evaluation responses are independent of the data used in steps 1 and 2, MAP and MLE cannot inflate their own scores by fitting to the evaluation outcomes.</li>
+</ol>
+<p>The three IMV quantities reported are:</p>
 <ul>
-<li><strong><code>m0</code></strong> — Unidimensional 2PL. Misspecified: ignores the second dimension entirely.</li>
-<li><strong><code>m1</code></strong> — Two-dimensional 2PL, <strong>no priors</strong>. Correct structure, but discrimination parameters are estimated without regularization. With 80 free discrimination parameters (40 items × 2 dimensions), estimation is unstable and parameter recovery is poor.</li>
-<li><strong><code>m2</code></strong> — Two-dimensional 2PL, <strong>with log-normal priors</strong> on all discrimination parameters. Same structure as <code>m1</code>, but priors shrink extreme estimates toward plausible values, substantially improving parameter recovery.</li>
+<li><strong>IMV(IRT, CDM)</strong> — positive values mean CDM predicts better; negative means IRT predicts better</li>
+<li><strong>IMV(IRT, True)</strong> — oracle gap for IRT: how far fitted IRT predictions are from the true generating probabilities</li>
+<li><strong>IMV(CDM, True)</strong> — oracle gap for CDM: how far MAP-based CDM predictions are from the true probabilities</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Unidimensional 2PL (baseline)</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>m0 <span class="ot">&lt;-</span> mirt<span class="sc">::</span><span class="fu">mirt</span>(sim_data, <span class="dv">1</span>, <span class="st">'2PL'</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2D model without priors</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> mirt<span class="sc">::</span><span class="fu">mirt</span>(sim_data, <span class="dv">2</span>, <span class="at">itemtype =</span> <span class="st">'2PL'</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2D model with log-normal priors on discriminations</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>model_spec <span class="ot">&lt;-</span> mirt<span class="sc">::</span><span class="fu">mirt.model</span>(<span class="st">'</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="st">  F1 = 1-40</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="st">  F2 = 1-40</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="st">  PRIOR = (1-40, a1, lnorm, 0, 1),</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="st">          (1-40, a2, lnorm, 0, 1)</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="st">  COV = F1*F2</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="st">'</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> mirt<span class="sc">::</span><span class="fu">mirt</span>(sim_data, model_spec, <span class="at">itemtype =</span> <span class="st">'2PL'</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
-</section>
-<section id="parameter-recovery" class="level2">
-<h2 class="anchored" data-anchor-id="parameter-recovery">Parameter Recovery</h2>
-<p>Before computing the IMV, it is instructive to examine how well each multidimensional model recovers the true discrimination parameters. We plot estimated vs.&nbsp;true values for the first dimension:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(a_matrix[, <span class="dv">1</span>],</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>     <span class="fu">coef</span>(m1, <span class="at">simplify =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>items[, <span class="dv">1</span>],</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"True a1"</span>, <span class="at">ylab =</span> <span class="st">"Estimated a1"</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"2D 2PL — no priors"</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">col =</span> <span class="st">"#b33a1e"</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(a_matrix[, <span class="dv">1</span>],</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">coef</span>(m2, <span class="at">simplify =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>items[, <span class="dv">1</span>],</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"True a1"</span>, <span class="at">ylab =</span> <span class="st">"Estimated a1"</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"2D 2PL — with priors"</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">col =</span> <span class="st">"#2a7d2e"</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The left panel (<code>m1</code>, no priors) shows poor recovery: estimated discriminations scatter widely around the true values, with substantial attenuation and instability. The right panel (<code>m2</code>, with priors) shows dramatically better recovery — estimates track the true values closely along the diagonal.</p>
-<p>Both models have the correct number of dimensions and the same item structure. The only difference is regularization. This sets up the central question: does better parameter recovery translate into better out-of-sample prediction, as measured by the IMV?</p>
-<hr>
-</section>
-<section id="computing-the-imv" class="level2">
-<h2 class="anchored" data-anchor-id="computing-the-imv">Computing the IMV</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">10101</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>result_m1 <span class="ot">&lt;-</span> <span class="fu">imv</span>(m0, m1, <span class="at">nfold =</span> <span class="dv">4</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>result_m2 <span class="ot">&lt;-</span> <span class="fu">imv</span>(m0, m2, <span class="at">nfold =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Both calls compare the unidimensional <code>m0</code> as baseline against each two-dimensional model. A positive IMV means the 2D model predicts better than the 1D model; a negative or near-zero IMV means the added complexity is not paying off predictively.</p>
-<hr>
-</section>
-<section id="interpreting-the-results" class="level2">
-<h2 class="anchored" data-anchor-id="interpreting-the-results">Interpreting the Results</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"--- 2D no priors vs. 1D ---</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean IMV:"</span>, <span class="fu">round</span>(result_m1<span class="sc">$</span>mean, <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD:      "</span>, <span class="fu">round</span>(result_m1<span class="sc">$</span>sd,   <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI:  ["</span>, <span class="fu">round</span>(result_m1<span class="sc">$</span>ci[<span class="st">"lower"</span>], <span class="dv">3</span>), <span class="st">","</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">round</span>(result_m1<span class="sc">$</span>ci[<span class="st">"upper"</span>], <span class="dv">3</span>), <span class="st">"]</span><span class="sc">\n\n</span><span class="st">"</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"--- 2D with priors vs. 1D ---</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean IMV:"</span>, <span class="fu">round</span>(result_m2<span class="sc">$</span>mean, <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD:      "</span>, <span class="fu">round</span>(result_m2<span class="sc">$</span>sd,   <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI:  ["</span>, <span class="fu">round</span>(result_m2<span class="sc">$</span>ci[<span class="st">"lower"</span>], <span class="dv">3</span>), <span class="st">","</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">round</span>(result_m2<span class="sc">$</span>ci[<span class="st">"upper"</span>], <span class="dv">3</span>), <span class="st">"]</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The results illustrate the key message of this example:</p>
+<p>Both oracle gaps should be non-negative: no fitted model should systematically beat the true probabilities on held-out data.</p>
+<p>Based on work by <a href="https://osf.io/preprints/psyarxiv/acwdz_v1">Ma, Liu, Kanopka, Ma, &amp; Domingue (2025)</a>.</p>
+<pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 1100
+
+webr::install("ltm",     repos = c("https://cran.r-universe.dev", "https://repo.r-wasm.org"))
+webr::install("mvtnorm", repos = c("https://repo.r-wasm.org"))
+
+library(shiny)
+library(ltm)
+library(mvtnorm)
+
+# ---- IMV ----------------------------------------------------------------
+imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
+  p1 &lt;- pmin(pmax(p1, sigma), 1 - sigma)
+  p2 &lt;- pmin(pmax(p2, sigma), 1 - sigma)
+  ll &lt;- function(x, p) exp(sum(log(p) * x + log(1 - p) * (1 - x)) / length(x))
+  coins &lt;- function(a) nlminb(0.5, function(p, a) abs(p*log(p) + (1-p)*log(1-p) - log(a)),
+                              lower = 1e-4, upper = 1 - 1e-4, a = a)$par
+  c1 &lt;- coins(ll(y, p1)); c2 &lt;- coins(ll(y, p2))
+  (c2 - c1) / c1
+}
+
+# ---- Build simulation parameters from a Q matrix ------------------------
+make_params &lt;- function(Q) {
+  K &lt;- ncol(Q)
+  J &lt;- nrow(Q)
+  slip  &lt;- runif(J, 0, 0.3)
+  guess &lt;- runif(J, 0, 0.3)
+
+  all_profiles &lt;- as.matrix(expand.grid(rep(list(0:1), K)))
+  n_prof &lt;- nrow(all_profiles)
+
+  pp &lt;- matrix(NA_real_, n_prof, J)
+  for (p in seq_len(n_prof))
+    for (j in seq_len(J)) {
+      req &lt;- Q[j, ] == 1
+      eta &lt;- if (!any(req)) 1 else prod(all_profiles[p, req])
+      pp[p, j] &lt;- eta * (1 - slip[j]) + (1 - eta) * guess[j]
+    }
+
+  list(K = K, J = J, slip = slip, guess = guess, Q = Q,
+       all_profiles = all_profiles,
+       log_pp   = log(pmax(pp,     1e-8)),
+       log_1mpp = log(pmax(1 - pp, 1e-8)),
+       pp = pp)
+}
+
+# ---- Random Q-matrix generator ------------------------------------------
+gen_random_Q &lt;- function(K, J, density) {
+  for (i in seq_len(200)) {
+    Q &lt;- matrix(rbinom(J * K, 1L, density), nrow = J, ncol = K)
+    if (all(rowSums(Q) &gt; 0) &amp;&amp; all(colSums(Q) &gt; 0)) return(Q)
+  }
+  # Fallback: guarantee one item per skill, fill remaining rows randomly
+  Q &lt;- matrix(0L, J, K)
+  perm &lt;- sample(K)
+  for (k in seq_len(K)) Q[k, perm[k]] &lt;- 1L
+  if (J &gt; K) {
+    for (j in (K + 1):J) {
+      q &lt;- rbinom(K, 1L, density)
+      if (sum(q) == 0L) q[sample(K, 1L)] &lt;- 1L
+      Q[j, ] &lt;- q
+    }
+  }
+  Q
+}
+
+# ---- Custom Q-matrix parser ---------------------------------------------
+parse_Q &lt;- function(text) {
+  lines &lt;- strsplit(trimws(text), "\n")[[1]]
+  lines &lt;- trimws(lines)
+  lines &lt;- lines[nchar(lines) &gt; 0]
+  if (length(lines) == 0) return(list(Q = NULL, error = "Empty input."))
+
+  rows &lt;- lapply(lines, function(l) {
+    parts &lt;- strsplit(l, "[,[:space:]]+")[[1]]
+    parts &lt;- parts[nchar(parts) &gt; 0]
+    suppressWarnings(as.integer(parts))
+  })
+
+  lens &lt;- lengths(rows)
+  if (length(unique(lens)) != 1)
+    return(list(Q = NULL,
+                error = sprintf("Rows have unequal lengths (%s).", paste(lens, collapse = ", "))))
+  if (unique(lens) &lt; 1)
+    return(list(Q = NULL, error = "Could not parse any values."))
+
+  Q &lt;- do.call(rbind, rows)
+  if (anyNA(Q))
+    return(list(Q = NULL, error = "Non-integer values found."))
+  if (!all(Q %in% c(0L, 1L)))
+    return(list(Q = NULL, error = "Matrix must contain only 0s and 1s."))
+  if (any(rowSums(Q) == 0))
+    return(list(Q = NULL, error = "Some rows are all zeros — each item must require at least one skill."))
+  if (any(colSums(Q) == 0))
+    return(list(Q = NULL, error = "Some columns are all zeros — each skill must appear in at least one item."))
+  if (nrow(Q) &lt; 4)
+    return(list(Q = NULL, error = "Need at least 4 items (rows) for IRT estimation."))
+
+  list(Q = Q, error = NULL)
+}
+
+# ---- Simulation helpers -------------------------------------------------
+gen_attrs &lt;- function(N, rho, K) {
+  Sigma &lt;- matrix(rho, K, K); diag(Sigma) &lt;- 1
+  Z &lt;- rmvnorm(N, sigma = Sigma)
+  (Z &gt; 0) * 1L
+}
+
+dina_prob &lt;- function(alpha, pr) {
+  N &lt;- nrow(alpha)
+  probs &lt;- matrix(NA_real_, N, pr$J)
+  for (j in seq_len(pr$J)) {
+    req &lt;- pr$Q[j, ] == 1
+    eta &lt;- if (!any(req)) rep(1, N) else apply(alpha[, req, drop = FALSE], 1, prod)
+    probs[, j] &lt;- eta * (1 - pr$slip[j]) + (1 - eta) * pr$guess[j]
+  }
+  probs
+}
+
+map_dina &lt;- function(y_mat, pr) {
+  N   &lt;- nrow(y_mat)
+  y_t &lt;- t(y_mat)
+  alpha_hat &lt;- matrix(NA_integer_, N, pr$K)
+  for (i in seq_len(N)) {
+    ll &lt;- pr$log_pp %*% y_t[, i] + pr$log_1mpp %*% (1L - y_t[, i])
+    alpha_hat[i, ] &lt;- pr$all_profiles[which.max(ll), ]
+  }
+  alpha_hat
+}
+
+get_theta_mle &lt;- function(yi, a_vec, b_vec) {
+  nll &lt;- function(theta) {
+    p &lt;- pmin(pmax(1 / (1 + exp(-a_vec * (theta - b_vec))), 1e-8), 1 - 1e-8)
+    -sum(yi * log(p) + (1 - yi) * log(1 - p))
+  }
+  tryCatch(optimize(nll, interval = c(-5, 5))$minimum, error = function(e) 0)
+}
+
+# ---- One simulation at a given rho --------------------------------------
+sim_one &lt;- function(N_train, rho, pr) {
+  N_test &lt;- 200L
+
+  a_tr &lt;- gen_attrs(N_train, rho, pr$K)
+  y_tr &lt;- matrix(rbinom(N_train * pr$J, 1L, dina_prob(a_tr, pr)), N_train, pr$J)
+
+  fit_irt &lt;- tryCatch(
+    ltm(as.data.frame(y_tr) ~ z1, control = list(iter.em = 30, iter.qN = 50)),
+    error = function(e) NULL
+  )
+  if (is.null(fit_irt)) return(NULL)
+
+  ipar  &lt;- coef(fit_irt)
+  b_vec &lt;- ipar[, "Dffclt"]
+  a_vec &lt;- ipar[, "Dscrmn"]
+
+  a_te   &lt;- gen_attrs(N_test, rho, pr$K)
+  p_true &lt;- dina_prob(a_te, pr)
+  y_te   &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  theta_te &lt;- apply(y_te, 1, get_theta_mle, a_vec = a_vec, b_vec = b_vec)
+  p_irt &lt;- matrix(NA_real_, N_test, pr$J)
+  for (j in seq_len(pr$J))
+    p_irt[, j] &lt;- 1 / (1 + exp(-a_vec[j] * (theta_te - b_vec[j])))
+
+  p_cdm &lt;- dina_prob(map_dina(y_te, pr), pr)
+
+  y_eval &lt;- matrix(rbinom(N_test * pr$J, 1L, p_true), N_test, pr$J)
+
+  y_v    &lt;- as.vector(y_eval)
+  pirt_v &lt;- as.vector(p_irt)
+  pcdm_v &lt;- as.vector(p_cdm)
+  ptru_v &lt;- as.vector(p_true)
+
+  c(
+    irt_cdm  = imv.binary(y_v, pirt_v, pcdm_v),
+    irt_true = imv.binary(y_v, pirt_v, ptru_v),
+    cdm_true = imv.binary(y_v, pcdm_v, ptru_v)
+  )
+}
+
+# ---- Default custom Q text (K=3, J=9, identity structure) ---------------
+default_qmat &lt;- paste(
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 1 0 0 0", "1 0 1 0 0", "1 0 0 1 0", "1 0 0 0 1", "0 1 1 0 0",
+  "0 1 0 1 0", "0 1 0 0 1", "0 0 1 1 0", "0 0 1 0 1", "0 0 0 1 1",
+  "1 1 1 0 0", "1 1 0 1 0", "1 1 0 0 1", "1 0 1 1 0", "1 0 1 0 1",
+  "1 0 0 1 1", "0 1 1 1 0", "0 1 1 0 1", "0 1 0 1 1", "0 0 1 1 1",
+  sep = "\n"
+)
+
+# ---- UI -----------------------------------------------------------------
+ui &lt;- fluidPage(
+  titlePanel("IRT vs CDM: IMV as a Function of Skill Correlation"),
+  sidebarLayout(
+    sidebarPanel(
+      radioButtons("qmat_mode", "Q-matrix specification:",
+                   choices = c("Random (density)" = "random", "Custom (paste)" = "custom"),
+                   selected = "random", inline = TRUE),
+
+      conditionalPanel(condition = "input.qmat_mode == 'random'",
+        sliderInput("K", "Number of skills (K):", min = 2, max = 6, value = 3, step = 1),
+        sliderInput("J", "Number of items (J):", min = 4, max = 45, value = 9, step = 1),
+        sliderInput("density", "Q-matrix density:",
+                    min = 0.1, max = 0.9, value = 0.33, step = 0.05),
+        helpText("Density = probability each item loads on each skill.")
+      ),
+
+      conditionalPanel(condition = "input.qmat_mode == 'custom'",
+        textAreaInput("qmat_text",
+                      HTML("Q-matrix: rows = items, cols = skills&lt;br/&gt;(space or comma separated, 0s and 1s only)"),
+                      value = default_qmat,
+                      rows = 8, width = "100%")
+      ),
+
+      verbatimTextOutput("qmat_status"),
+      hr(),
+      selectInput("N_train", "Training sample size (N):",
+                  choices = c("250" = 250, "500" = 500, "1000" = 1000),
+                  selected = 500),
+      sliderInput("n_rho", "Skill correlation (ρ) grid points:",
+                  min = 5, max = 50, value = 10, step = 5),
+      helpText("Simulation is run at this many evenly-spaced inter-skill correlation values from ρ = 0 to ρ = 0.7."),
+      numericInput("seed", "Random seed:", value = 42, min = 1, max = 99999, step = 1),
+      helpText("Seed controls Q-matrix generation, item slip/guess draws (each from Uniform(0, 0.3)), and all simulation draws."),
+      actionButton("run", "Run Simulation", class = "btn-primary"),
+      hr(),
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
+      helpText(
+        "First run installs ltm (~30s). Run time scales with J, N, and the number of ρ values."
+      )
+    ),
+    mainPanel(
+      plotOutput("imvPlot", height = "520px"),
+      verbatimTextOutput("usedQ"),
+      verbatimTextOutput("resultTable")
+    )
+  )
+)
+
+# ---- Server -------------------------------------------------------------
+server &lt;- function(input, output, session) {
+
+  output$qmat_status &lt;- renderPrint({
+    if (input$qmat_mode == "random") {
+      K &lt;- as.integer(input$K)
+      J &lt;- as.integer(input$J)
+      d &lt;- input$density
+      if (J &lt; K) {
+        cat(sprintf("Error: J (%d) must be ≥ K (%d).\n", J, K))
+      } else {
+        p_multi &lt;- 1 - (1 - d)^K - K * d * (1 - d)^(K - 1)
+        cat(sprintf("Q: %d items × %d skills  |  density: %.2f\n", J, K, d))
+        cat(sprintf("Expected multi-skill items: %.1f of %d (%.0f%%)\n",
+                    p_multi * J, J, 100 * p_multi))
+      }
+    } else {
+      qr &lt;- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        cat("Error:", qr$error, "\n")
+      } else {
+        Q &lt;- qr$Q
+        cat(sprintf("Q: %d items × %d skills\n", nrow(Q), ncol(Q)))
+        cat(sprintf("Density: %.2f  |  Multi-skill items: %d of %d\n",
+                    mean(Q), sum(rowSums(Q) &gt; 1), nrow(Q)))
+      }
+    }
+  })
+
+  results &lt;- eventReactive(input$run, {
+    set.seed(as.integer(input$seed))
+    if (input$qmat_mode == "random") {
+      K &lt;- as.integer(input$K)
+      J &lt;- as.integer(input$J)
+      if (J &lt; K) {
+        showNotification(sprintf("J (%d) must be ≥ K (%d).", J, K), type = "error")
+        return(NULL)
+      }
+      Q &lt;- gen_random_Q(K, J, input$density)
+    } else {
+      qr &lt;- parse_Q(input$qmat_text)
+      if (!is.null(qr$error)) {
+        showNotification(paste("Q-matrix error:", qr$error), type = "error")
+        return(NULL)
+      }
+      Q &lt;- qr$Q
+    }
+
+    pr       &lt;- make_params(Q)
+    N_train  &lt;- as.integer(input$N_train)
+    rho_vals &lt;- seq(0, 0.7, length.out = as.integer(input$n_rho))
+    out      &lt;- matrix(NA_real_, length(rho_vals), 3,
+                       dimnames = list(NULL, c("irt_cdm", "irt_true", "cdm_true")))
+
+    withProgress(message = "Simulating…", value = 0, {
+      for (i in seq_along(rho_vals)) {
+        incProgress(1 / length(rho_vals),
+                    detail = sprintf("ρ = %.2f (%d of %d)", rho_vals[i], i, length(rho_vals)))
+        res &lt;- sim_one(N_train, rho_vals[i], pr)
+        if (!is.null(res)) out[i, ] &lt;- res
+      }
+    })
+
+    list(rho = rho_vals, imv = out, K = pr$K, J = pr$J, Q = pr$Q, N_train = N_train)
+  })
+
+  output$imvPlot &lt;- renderPlot({
+    req(results())
+    r   &lt;- results()
+    rho &lt;- r$rho
+    imv &lt;- r$imv
+
+    ylim &lt;- c(input$ymin, input$ymax)
+
+    plot(rho, imv[, "irt_cdm"],
+         type = "n",
+         xlab = expression(paste("Skill inter-correlation (", rho, ")")),
+         ylab = "IMV",
+         main = sprintf("IMV vs Skill Correlation  (N = %d, K = %d, J = %d)",
+                        r$N_train, r$K, r$J),
+         ylim = ylim, las = 1)
+    grid(lty = 3, col = "grey85")
+    abline(h = 0, lty = 2, col = "grey40")
+
+    sm &lt;- function(y) {
+      ok &lt;- !is.na(y)
+      if (sum(ok) &lt; 4) return(rep(NA, length(y)))
+      predict(loess(y[ok] ~ rho[ok], span = 0.75), newdata = rho)
+    }
+
+    lines(rho, sm(imv[, "irt_true"]), col = "steelblue", lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "cdm_true"]), col = "tomato",    lwd = 2,   lty = 2)
+    lines(rho, sm(imv[, "irt_cdm"]),  col = "black",     lwd = 2.5)
+
+    points(rho, imv[, "irt_true"], col = "steelblue", pch = 16, cex = 0.9)
+    points(rho, imv[, "cdm_true"], col = "tomato",    pch = 16, cex = 0.9)
+    points(rho, imv[, "irt_cdm"],  col = "black",     pch = 16, cex = 1.1)
+
+    legend("topright", bty = "n",
+           legend = c("IMV(IRT, CDM)  [main]",
+                      "IMV(IRT, True) [oracle IRT]",
+                      "IMV(CDM, True) [oracle CDM]"),
+           col = c("black", "steelblue", "tomato"),
+           lwd = c(2.5, 2, 2), lty = c(1, 2, 2), pch = 16,
+           cex = 0.9)
+  })
+
+  output$usedQ &lt;- renderPrint({
+    req(results())
+    r &lt;- results()
+    cat(sprintf("Q-matrix used (%d items × %d skills):\n", r$J, r$K))
+    Q &lt;- r$Q
+    colnames(Q) &lt;- paste0("s", seq_len(r$K))
+    rownames(Q) &lt;- paste0("i", seq_len(r$J))
+    print(Q)
+  })
+
+  output$resultTable &lt;- renderPrint({
+    req(results())
+    r &lt;- results()
+    df &lt;- data.frame(
+      rho      = round(r$rho, 2),
+      IRT_CDM  = round(r$imv[, "irt_cdm"],  4),
+      IRT_True = round(r$imv[, "irt_true"], 4),
+      CDM_True = round(r$imv[, "cdm_true"], 4)
+    )
+    print(df, row.names = FALSE)
+  })
+}
+
+shinyApp(ui = ui, server = server)</code></pre>
+<p><strong>What you should see:</strong></p>
 <ul>
-<li><strong><code>m1</code> vs.&nbsp;<code>m0</code></strong> (2D no priors vs.&nbsp;1D): The IMV is likely near zero or even negative. Despite being the correctly specified model, <code>m1</code>’s unstable discrimination estimates hurt its out-of-sample predictions. The added complexity does not help — and may actively harm — predictive performance.</li>
-<li><strong><code>m2</code> vs.&nbsp;<code>m0</code></strong> (2D with priors vs.&nbsp;1D): The IMV is positive and meaningfully larger. Regularized estimates allow the correct model structure to actually express its advantage over the simpler 1D model.</li>
+<li>At <strong>low <span class="math inline">\(\rho\)</span></strong> (near 0): skills are independent, so each person’s profile across attributes carries unique information that a unidimensional IRT score cannot capture. IMV(IRT, CDM) is positive and the oracle gap for IRT (blue) is larger than for CDM (red) — IRT is further from the truth.</li>
+<li>As <strong><span class="math inline">\(\rho\)</span> increases</strong> toward 0.7: the attribute profiles increasingly collapse to a single dimension. IRT, which estimates exactly that dimension, becomes more competitive. IMV(IRT, CDM) falls toward zero or below, and the oracle gaps converge.</li>
+<li>The <strong>oracle CDM gap</strong> (red) is generally smaller than the oracle IRT gap (blue) when the true model is DINA — the CDM is better calibrated to the data-generating process. This advantage shrinks as <span class="math inline">\(\rho\)</span> grows.</li>
+<li>With <strong>more skills</strong> (<span class="math inline">\(K=4\)</span>), the CDM has more structure to capture, and the advantage over IRT at low <span class="math inline">\(\rho\)</span> may be more pronounced.</li>
 </ul>
-<p>This contrast makes a point that goes beyond model selection: <strong>the value of a more complex model depends not just on whether it is correctly specified, but on whether its parameters can be estimated reliably given the data at hand.</strong> The IMV captures this distinction directly, because it evaluates models on out-of-sample predictions rather than in-sample fit.</p>
-<hr>
-</section>
-<section id="going-further" class="level2">
-<h2 class="anchored" data-anchor-id="going-further">Going Further</h2>
-<p>The simulation above uses N = 1,000 persons. You can examine how the results change with smaller samples by reducing <code>n_persons</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Try n_persons &lt;- 300 or n_persons &lt;- 500</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expect the gap between m1 and m2 to widen as N decreases,</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># since estimation instability is more severe in smaller samples.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>You can also explore what happens as the correlation between dimensions increases toward 1 (near-unidimensional data) or decreases toward 0 (orthogonal dimensions). As the correlation approaches 1, the 1D model becomes a better approximation and the IMV advantage of the 2D model shrinks accordingly.</p>
+<p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

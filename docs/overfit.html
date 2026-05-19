@@ -156,6 +156,14 @@ window.Quarto = {
     <a class="dropdown-item" href="./implied.html">
  <span class="dropdown-text">Implied probabilities and the IMV</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./cdm_irt.html">
+ <span class="dropdown-text">IRT versus Cognitive Diagnostic Models</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./multidim.html">
+ <span class="dropdown-text">Multidimensional IRT and unidimensional scoring</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -277,7 +285,10 @@ ui &lt;- fluidPage(
       actionButton("run", "Run Simulation", class = "btn-primary"),
       
       hr(),
-      
+      fluidRow(
+        column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
+        column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
+      ),
       helpText("Red points: overfitting (same data used for fitting and testing)"),
       helpText("Blue points: out-of-sample (independent test data)"),
       helpText("DGM: y ~ x (true model does not include x²)")
@@ -430,7 +441,7 @@ server &lt;- function(input, output, session) {
     N_oos &lt;- as.numeric(names(data$om))
     
     plot(N_over, data$om.over, 
-         ylim = c(-0.1, 0.1), 
+         ylim = c(input$ymin, input$ymax),
          pch = 19, 
          col = 'red',
          xlab = "N", 
