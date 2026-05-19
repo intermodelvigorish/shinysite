@@ -342,7 +342,7 @@ ui &lt;- fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("M", "Loading balance (M):",
-                  min = 0, max = 1, value = 0.5, step = 0.1),
+                  min = 0, max = 1, value = 0, step = 0.1),
       helpText(
         "M = 0: between-item (each item loads on one dimension only).",
         "M = 1: within-item (both dimensions equally weighted per item)."
@@ -437,7 +437,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <p><strong>What you should see:</strong></p>
 <ul>
 <li><strong>IMV(1D-2PL, True) decreases as <span class="math inline">\(\rho\)</span> increases.</strong> When the two dimensions are highly correlated, they are nearly interchangeable, and the unidimensional model captures most of the predictive signal. As <span class="math inline">\(\rho \to 1\)</span>, the cost of ignoring the second dimension vanishes.</li>
-<li><strong>M amplifies the effect.</strong> At <span class="math inline">\(M=1\)</span> (within-item), every item pulls on both dimensions simultaneously — ignoring the second dimension is most costly at low <span class="math inline">\(\rho\)</span>. At <span class="math inline">\(M=0\)</span> (between-item), items split cleanly across dimensions; the 1D model essentially averages two subtests, which is a less severe misspecification.</li>
+<li><strong>M modulates the effect.</strong> At <span class="math inline">\(M=0\)</span> (between-item), each item loads on exactly one dimension; the 1D model must bridge two independent subtests, so the cost of ignoring the second dimension is largest — and decreases most sharply as <span class="math inline">\(\rho\)</span> increases. At <span class="math inline">\(M=1\)</span> (within-item), every item loads on both dimensions with similar magnitudes, so the 1D sum-score closely approximates the true 2D probabilities and IMV is small and nearly flat across <span class="math inline">\(\rho\)</span>.</li>
 <li><strong>Larger <span class="math inline">\(N\)</span> gives a smoother, more stable curve</strong> but does not shift it — sample size affects estimation quality, not the underlying cost of misspecification.</li>
 </ul>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
