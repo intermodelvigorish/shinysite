@@ -425,9 +425,12 @@ sim_one &lt;- function(N_train, rho, pr) {
 
 # ---- Default custom Q text (K=3, J=9, identity structure) ---------------
 default_qmat &lt;- paste(
-  "1 0 0", "1 0 0", "1 0 0",
-  "0 1 0", "0 1 0", "0 1 0",
-  "0 0 1", "0 0 1", "0 0 1",
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 0 0 0 0", "0 1 0 0 0", "0 0 1 0 0", "0 0 0 1 0", "0 0 0 0 1",
+  "1 1 0 0 0", "1 0 1 0 0", "1 0 0 1 0", "1 0 0 0 1", "0 1 1 0 0",
+  "0 1 0 1 0", "0 1 0 0 1", "0 0 1 1 0", "0 0 1 0 1", "0 0 0 1 1",
+  "1 1 1 0 0", "1 1 0 1 0", "1 1 0 0 1", "1 0 1 1 0", "1 0 1 0 1",
+  "1 0 0 1 1", "0 1 1 1 0", "0 1 1 0 1", "0 1 0 1 1", "0 0 1 1 1",
   sep = "\n"
 )
 
@@ -513,6 +516,7 @@ server &lt;- function(input, output, session) {
   })
 
   results &lt;- eventReactive(input$run, {
+    set.seed(as.integer(input$seed))
     if (input$qmat_mode == "random") {
       K &lt;- as.integer(input$K)
       J &lt;- as.integer(input$J)
