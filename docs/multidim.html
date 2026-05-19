@@ -230,7 +230,7 @@ window.Quarto = {
 <p><strong>Loading balance (M).</strong> Each item has one randomly assigned dominant dimension. Base loadings <span class="math inline">\(a_{1,j}\)</span> and <span class="math inline">\(a_{2,j}\)</span> are drawn independently from Uniform(0.5, 1.5). If dimension 1 is dominant, the item’s loadings are <span class="math inline">\((a_{1,j},\; M \times a_{2,j})\)</span>; if dimension 2 is dominant, they are <span class="math inline">\((M \times a_{1,j},\; a_{2,j})\)</span>.</p>
 <ul>
 <li><span class="math inline">\(M=0\)</span>: <strong>between-item multidimensionality</strong> — each item loads on exactly one dimension; the test is a mixture of two unidimensional subtests.</li>
-<li><span class="math inline">\(M=1\)</span>: <strong>within-item multidimensionality</strong> — every item loads equally on both dimensions.</li>
+<li><span class="math inline">\(M=1\)</span>: <strong>within-item multidimensionality</strong> — every item loads on both dimensions, with independently drawn loadings for the two dimensions.</li>
 </ul>
 <p><strong>Evaluation scheme.</strong> Item parameters are drawn once per run and held fixed across the <span class="math inline">\(\rho\)</span> sweep. Three independent datasets are used at each <span class="math inline">\(\rho\)</span>:</p>
 <ol type="1">
@@ -266,10 +266,11 @@ imv.binary &lt;- function(y, p1, p2, sigma = 1e-4) {
 
 # ---- Item parameters (drawn once per run) -------------------------------
 make_item_params &lt;- function(J, M) {
-  a_base   &lt;- runif(J, 0.5, 1.5)
+  a1_base  &lt;- runif(J, 0.5, 1.5)
+  a2_base  &lt;- runif(J, 0.5, 1.5)
   dominant &lt;- sample(c(1L, 2L), J, replace = TRUE)
-  a1 &lt;- ifelse(dominant == 1L, a_base, M * a_base)
-  a2 &lt;- ifelse(dominant == 2L, a_base, M * a_base)
+  a1 &lt;- ifelse(dominant == 1L, a1_base, M * a1_base)
+  a2 &lt;- ifelse(dominant == 2L, a2_base, M * a2_base)
   d  &lt;- rnorm(J, 0, 0.5)
   list(J = J, a1 = a1, a2 = a2, d = d)
 }

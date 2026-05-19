@@ -13,7 +13,7 @@ and fits a **unidimensional 2PL** to recover person scores. The dimensions $(\th
 **Loading balance (M).** Each item has one randomly assigned dominant dimension. Base loadings $a_{1,j}$ and $a_{2,j}$ are drawn independently from Uniform(0.5, 1.5). If dimension 1 is dominant, the item's loadings are $(a_{1,j},\; M \times a_{2,j})$; if dimension 2 is dominant, they are $(M \times a_{1,j},\; a_{2,j})$.
 
 - $M=0$: **between-item multidimensionality** — each item loads on exactly one dimension; the test is a mixture of two unidimensional subtests.
-- $M=1$: **within-item multidimensionality** — every item loads equally on both dimensions.
+- $M=1$: **within-item multidimensionality** — every item loads on both dimensions, with independently drawn loadings for the two dimensions.
 
 **Evaluation scheme.** Item parameters are drawn once per run and held fixed across the $\rho$ sweep. Three independent datasets are used at each $\rho$:
 
