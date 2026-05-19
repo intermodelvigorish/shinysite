@@ -125,7 +125,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("M", "Loading balance (M):",
-                  min = 0, max = 1, value = 0.5, step = 0.1),
+                  min = 0, max = 1, value = 0, step = 0.1),
       helpText(
         "M = 0: between-item (each item loads on one dimension only).",
         "M = 1: within-item (both dimensions equally weighted per item)."
@@ -222,7 +222,7 @@ shinyApp(ui = ui, server = server)
 **What you should see:**
 
 - **IMV(1D-2PL, True) decreases as $\rho$ increases.** When the two dimensions are highly correlated, they are nearly interchangeable, and the unidimensional model captures most of the predictive signal. As $\rho \to 1$, the cost of ignoring the second dimension vanishes.
-- **M amplifies the effect.** At $M=1$ (within-item), every item pulls on both dimensions simultaneously — ignoring the second dimension is most costly at low $\rho$. At $M=0$ (between-item), items split cleanly across dimensions; the 1D model essentially averages two subtests, which is a less severe misspecification.
+- **M modulates the effect.** At $M=0$ (between-item), each item loads on exactly one dimension; the 1D model must bridge two independent subtests, so the cost of ignoring the second dimension is largest — and decreases most sharply as $\rho$ increases. At $M=1$ (within-item), every item loads on both dimensions with similar magnitudes, so the 1D sum-score closely approximates the true 2D probabilities and IMV is small and nearly flat across $\rho$.
 - **Larger $N$ gives a smoother, more stable curve** but does not shift it — sample size affects estimation quality, not the underlying cost of misspecification.
 
 [← Back to Home](index.html){.btn .btn-secondary}
