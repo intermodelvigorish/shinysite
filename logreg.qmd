@@ -6,7 +6,7 @@ In this example, we consider the logistic regression model $$\Pr(y=1)=\frac{1}{1
 
 The **baseline** model uses only the overall proportion of 1s — i.e., $\text{mean}(y)$ — as a flat prediction. The **enhanced** model uses the fitted logistic regression predictions $\hat{p}$. The IMV measures how much better the regression predictions are compared to simply using the prevalence.
 
-The key question this example addresses: does the intercept $b_0$ matter for the IMV, even when the slope $b_1$ is held fixed? Adjust $b_0$ with the slider and run the simulation to find out.
+The key question this example addresses: does the intercept $b_0$ matter for the IMV, even when the slope $b_1$ is held fixed? Adjust $b_1$ with the slider and run the simulation to find out.
 
 ```{shinylive-r}
 #| standalone: true
@@ -39,25 +39,25 @@ imv.binary<-function(y, p1, p2, sigma=1e-4) {
 }
 
 ui <- fluidPage(
-  titlePanel("Logistic Regression: IMV vs b1"),
-  
+  titlePanel("Logistic Regression: IMV vs b0"),
+
   sidebarLayout(
     sidebarPanel(
-      sliderInput("b0", 
-                  "Intercept (b0):", 
-                  min = -2, 
-                  max = 2, 
-                  value = 0, 
+      sliderInput("b1",
+                  "Slope (b1):",
+                  min = -2,
+                  max = 2,
+                  value = 1,
                   step = 0.1),
-      
+
       actionButton("run", "Run Simulation", class = "btn-primary"),
-      
+
       hr(),
       fluidRow(
         column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
         column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
       ),
-      helpText("Adjust b0 and click 'Run Simulation' to see how IMV varies with b1.")
+      helpText("Adjust b1 and click 'Run Simulation' to see how IMV varies with b0.")
     ),
     
     mainPanel(
@@ -70,33 +70,33 @@ server <- function(input, output, session) {
   
   sim_results <- eventReactive(input$run, {
     withProgress(message = 'Running simulation...', value = 0, {
-      
-      b0 <- input$b0
-      b1vals <- seq(-1.5, 1.5, length.out = 100)
+
+      b1 <- input$b1
+      b0vals <- seq(-2, 2, length.out = 100)
       om <- numeric()
-      
-      for (i in seq_along(b1vals)) {
-        b1 <- b1vals[i]
-        
+
+      for (i in seq_along(b0vals)) {
+        b0 <- b0vals[i]
+
         pr <- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
-        
+
         x <- rnorm(5000)
         p <- pr(x, b0 = b0, b1 = b1)
         y <- rbinom(length(x), 1, p)
         df <- data.frame(x = x, y = y)
         m <- glm(y ~ x, df, family = 'binomial')
-        
+
         ##oos data
         x2 <- rnorm(1000)
         p2 <- pr(x2, b0 = b0, b1 = b1)
         y2 <- rbinom(length(x2), 1, p2)
         p.oos <- predict(m, data.frame(x = x2), type = 'response')
-        om[as.character(b1)] <- imv.binary(y2, mean(y), p.oos)
-        
-        incProgress(1/length(b1vals))
+        om[as.character(b0)] <- imv.binary(y2, mean(y), p.oos)
+
+        incProgress(1/length(b0vals))
       }
-      
-      list(b1vals = b1vals, om = om)
+
+      list(b0vals = b0vals, om = om)
     })
   })
   
@@ -106,20 +106,20 @@ server <- function(input, output, session) {
     results <- sim_results()
     
     # Fit loess
-    loess_fit <- loess(results$om ~ results$b1vals, span = 0.5)
+    loess_fit <- loess(results$om ~ results$b0vals, span = 0.5)
     loess_pred <- predict(loess_fit)
-    
+
     # Plot points
-    plot(results$b1vals, results$om,
-         xlab = expression(b[1]), 
+    plot(results$b0vals, results$om,
+         xlab = expression(b[0]),
          ylab = "IMV(prevalence, fitted model)",
          ylim=c(input$ymin, input$ymax),
-         main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
+         main = paste0("IMV vs b0 (b1 = ", input$b1, ")"),
          pch = 19,
          col = "steelblue")
-    
+
     # Add loess smooth
-    lines(results$b1vals, loess_pred, col = "darkred", lwd = 2)
+    lines(results$b0vals, loess_pred, col = "darkred", lwd = 2)
     
     # Add reference line and grid
     abline(h = 0, lty = 2, col = "red")
@@ -132,8 +132,8 @@ shinyApp(ui = ui, server = server)
 
 **What you should see:**
 
-- The IMV is always near zero when $b_1$ is near zero — a flat predictor with no slope carries no information over the baseline.
-- The curve is symmetric: negative $b_1$ values give the same IMV as their positive counterparts, since the direction of the relationship doesn't affect predictive accuracy.
-- When $b_0=0$, $b_1=1$ translates to an IMV of around 0.4. But as $b_0$ gets large (high or low prevalence), the same $b_1=1$ yields a much smaller IMV. This is the intercept effect: when outcomes are already highly predictable from prevalence alone, there is less uncertainty for the regression to reduce.
+- The IMV peaks near $b_0=0$ (balanced classes) and falls off as $|b_0|$ grows — when the intercept pushes the outcome prevalence toward 0 or 1, the baseline (mean $y$) already captures most of the outcome, leaving little for the regression to improve on.
+- The curve is symmetric around $b_0=0$: a large positive intercept and a large negative intercept produce the same IMV because both create an extreme prevalence with the same predictability.
+- As $b_1$ increases (stronger slope), the peak IMV at $b_0=0$ rises and the curve stays elevated over a wider range of $b_0$ values — a stronger predictor can partially overcome the headwind of extreme prevalence.
 
 [← Back to Home](index.html){.btn .btn-secondary}

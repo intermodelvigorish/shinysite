@@ -4,7 +4,7 @@ title: "Logistic Regression and the Oracle"
 
 The **Oracle IMV** is a special diagnostic that is only available in simulation studies, where the true data-generating probabilities $p$ are known. Normally, we only have estimated probabilities $\hat{p}$ from a fitted model. The Oracle IMV compares $\hat{p}$ directly against the true $p$ — measuring not how well the model predicts new outcomes, but how close the estimated probabilities are to the truth. As sample size grows and estimation improves, $\hat{p} \to p$ and the Oracle IMV should shrink toward zero.
 
-We consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.$$ We generate $y$ based on samples of $x$ values across a wide range of sample sizes. For each sample size we fit the correctly specified model (yielding estimates $\hat{p}$) and compute **IMV($\hat{p}$, $p$)** — the Oracle IMV — which measures how far the estimates are from the true probabilities. A large Oracle IMV indicates substantial estimation noise; an Oracle IMV near zero means $\hat{p} \approx p$.
+We consider the logistic regression model $$p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1(x_1+x_2+x_3+x_4+x_5)))},$$ where five independent standard-normal covariates each carry the same slope $b_1$. We generate $y$ based on samples across a wide range of sample sizes. For each sample size we fit the correctly specified model (yielding estimates $\hat{p}$) and compute **IMV($\hat{p}$, $p$)** — the Oracle IMV — which measures how far the estimates are from the true probabilities. With six parameters to estimate, small samples produce noisy $\hat{p}$; a large Oracle IMV indicates substantial estimation noise; an Oracle IMV near zero means $\hat{p} \approx p$.
 
 Adjust $b_0$ and $b_1$ and run the simulation to see how estimation quality changes with sample size.
 
@@ -84,30 +84,32 @@ server <- function(input, output, session) {
     b0 <- input$b0
     b1 <- input$b1
     
-    N <- runif(100, 2.4, 4)
+    N <- runif(100, 2, 4)
     Nvals <- round(10^N)
-    
+
     om <- numeric()
-    
+
     withProgress(message = 'Running simulation...', value = 0, {
       for (i in seq_along(Nvals)) {
         N <- Nvals[i]
-        
-        pr <- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
-        
-        x <- rnorm(N)
-        p <- pr(x, b0 = b0, b1 = b1)
-        y <- rbinom(length(x), 1, p)
-        df <- data.frame(x = x, y = y)
-        m <- glm(y ~ x, df, family = 'binomial')
-        
+
+        lp <- function(x1,x2,x3,x4,x5,b0,b1) b0 + b1*(x1+x2+x3+x4+x5)
+        pr <- function(x1,x2,x3,x4,x5,b0,b1) 1/(1+exp(-lp(x1,x2,x3,x4,x5,b0,b1)))
+
+        x1<-rnorm(N); x2<-rnorm(N); x3<-rnorm(N); x4<-rnorm(N); x5<-rnorm(N)
+        p <- pr(x1,x2,x3,x4,x5,b0,b1)
+        y <- rbinom(N, 1, p)
+        df <- data.frame(x1=x1,x2=x2,x3=x3,x4=x4,x5=x5)
+        m <- glm(y ~ x1+x2+x3+x4+x5, data=df, family='binomial')
+
         ## oos data
-        x2 <- rnorm(10000)
-        p2 <- pr(x2, b0 = b0, b1 = b1)
-        y2 <- rbinom(length(x2), 1, p2)
-        p.oos <- predict(m, data.frame(x = x2), type = 'response')
+        x1<-rnorm(10000); x2<-rnorm(10000); x3<-rnorm(10000); x4<-rnorm(10000); x5<-rnorm(10000)
+        p2 <- pr(x1,x2,x3,x4,x5,b0,b1)
+        y2 <- rbinom(10000, 1, p2)
+        df2 <- data.frame(x1=x1,x2=x2,x3=x3,x4=x4,x5=x5)
+        p.oos <- predict(m, df2, type='response')
         om[as.character(N)] <- imv.binary(y2, p.oos, p2)
-        
+
         incProgress(1/length(Nvals))
       }
     })
@@ -121,8 +123,8 @@ server <- function(input, output, session) {
     plot(data$n, data$om,
          xlab = "Sample Size (N)",
          ylab = "Oracle IMV: IMV(estimated p, true p)",
-         main = paste0("Oracle IMV vs Sample Size\n(b0 = ", 
-                      input$b0, ", b1 = ", input$b1, ")"),
+         main = paste0("Oracle IMV vs Sample Size\n(b0 = ",
+                      input$b0, ", b1 = ", input$b1, ", 5 covariates)"),
          pch = 16,
          col = rgb(0, 0, 1, 0.5),
          cex = 1.2,
@@ -155,8 +157,9 @@ shinyApp(ui = ui, server = server)
 **What you should see:**
 
 - As sample size increases, the Oracle IMV decreases toward zero — this is the statistical property of consistency: with enough data, $\hat{p} \to p$ and the estimation gap vanishes.
-- When $b_1$ is small, the outcome probabilities are all close to the prevalence and hard to distinguish. Even with large $N$, there is little signal for the model to recover, so estimation noise remains relatively high.
-- When $b_1$ is large, the model has strong signal to estimate and converges quickly — the Oracle IMV drops steeply as $N$ grows.
+- With six parameters to estimate, the decay is noticeably slower than in a two-parameter model: the Oracle IMV stays elevated well past $N=100$ and the convergence trend is clearly visible across the full range.
+- When $b_1$ is small, the outcome probabilities are close to the prevalence and the signal is weak — estimation noise persists to larger $N$.
+- When $b_1$ is larger, each covariate contributes more discriminating information and the estimates converge faster.
 - The Oracle IMV is always non-negative by construction: estimated probabilities can never be systematically *better* than the truth they are approximating.
 
 [← Back to Home](index.html){.btn .btn-secondary}

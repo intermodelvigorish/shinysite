@@ -225,7 +225,7 @@ window.Quarto = {
 
 <p>In this example, we consider the logistic regression model <span class="math display">\[\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on a sample of 5000 <span class="math inline">\(x\)</span> values and consider the IMV associated with predicting new <span class="math inline">\(y\)</span> outcomes (based on new <span class="math inline">\(x\)</span> observations) for different values of <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>.</p>
 <p>The <strong>baseline</strong> model uses only the overall proportion of 1s — i.e., <span class="math inline">\(\text{mean}(y)\)</span> — as a flat prediction. The <strong>enhanced</strong> model uses the fitted logistic regression predictions <span class="math inline">\(\hat{p}\)</span>. The IMV measures how much better the regression predictions are compared to simply using the prevalence.</p>
-<p>The key question this example addresses: does the intercept <span class="math inline">\(b_0\)</span> matter for the IMV, even when the slope <span class="math inline">\(b_1\)</span> is held fixed? Adjust <span class="math inline">\(b_0\)</span> with the slider and run the simulation to find out.</p>
+<p>The key question this example addresses: does the intercept <span class="math inline">\(b_0\)</span> matter for the IMV, even when the slope <span class="math inline">\(b_1\)</span> is held fixed? Adjust <span class="math inline">\(b_1\)</span> with the slider and run the simulation to find out.</p>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
 #|   Please set `embed-resources: false` in your metadata.
@@ -259,25 +259,25 @@ imv.binary&lt;-function(y, p1, p2, sigma=1e-4) {
 }
 
 ui &lt;- fluidPage(
-  titlePanel("Logistic Regression: IMV vs b1"),
-  
+  titlePanel("Logistic Regression: IMV vs b0"),
+
   sidebarLayout(
     sidebarPanel(
-      sliderInput("b0", 
-                  "Intercept (b0):", 
-                  min = -2, 
-                  max = 2, 
-                  value = 0, 
+      sliderInput("b1",
+                  "Slope (b1):",
+                  min = -2,
+                  max = 2,
+                  value = 1,
                   step = 0.1),
-      
+
       actionButton("run", "Run Simulation", class = "btn-primary"),
-      
+
       hr(),
       fluidRow(
         column(6, numericInput("ymin", "Y-axis min:", value = -0.2, step = 0.05)),
         column(6, numericInput("ymax", "Y-axis max:", value =  0.5, step = 0.05))
       ),
-      helpText("Adjust b0 and click 'Run Simulation' to see how IMV varies with b1.")
+      helpText("Adjust b1 and click 'Run Simulation' to see how IMV varies with b0.")
     ),
     
     mainPanel(
@@ -290,33 +290,33 @@ server &lt;- function(input, output, session) {
   
   sim_results &lt;- eventReactive(input$run, {
     withProgress(message = 'Running simulation...', value = 0, {
-      
-      b0 &lt;- input$b0
-      b1vals &lt;- seq(-1.5, 1.5, length.out = 100)
+
+      b1 &lt;- input$b1
+      b0vals &lt;- seq(-2, 2, length.out = 100)
       om &lt;- numeric()
-      
-      for (i in seq_along(b1vals)) {
-        b1 &lt;- b1vals[i]
-        
+
+      for (i in seq_along(b0vals)) {
+        b0 &lt;- b0vals[i]
+
         pr &lt;- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
-        
+
         x &lt;- rnorm(5000)
         p &lt;- pr(x, b0 = b0, b1 = b1)
         y &lt;- rbinom(length(x), 1, p)
         df &lt;- data.frame(x = x, y = y)
         m &lt;- glm(y ~ x, df, family = 'binomial')
-        
+
         ##oos data
         x2 &lt;- rnorm(1000)
         p2 &lt;- pr(x2, b0 = b0, b1 = b1)
         y2 &lt;- rbinom(length(x2), 1, p2)
         p.oos &lt;- predict(m, data.frame(x = x2), type = 'response')
-        om[as.character(b1)] &lt;- imv.binary(y2, mean(y), p.oos)
-        
-        incProgress(1/length(b1vals))
+        om[as.character(b0)] &lt;- imv.binary(y2, mean(y), p.oos)
+
+        incProgress(1/length(b0vals))
       }
-      
-      list(b1vals = b1vals, om = om)
+
+      list(b0vals = b0vals, om = om)
     })
   })
   
@@ -326,20 +326,20 @@ server &lt;- function(input, output, session) {
     results &lt;- sim_results()
     
     # Fit loess
-    loess_fit &lt;- loess(results$om ~ results$b1vals, span = 0.5)
+    loess_fit &lt;- loess(results$om ~ results$b0vals, span = 0.5)
     loess_pred &lt;- predict(loess_fit)
-    
+
     # Plot points
-    plot(results$b1vals, results$om,
-         xlab = expression(b[1]), 
+    plot(results$b0vals, results$om,
+         xlab = expression(b[0]),
          ylab = "IMV(prevalence, fitted model)",
          ylim=c(input$ymin, input$ymax),
-         main = paste0("IMV vs b1 (b0 = ", input$b0, ")"),
+         main = paste0("IMV vs b0 (b1 = ", input$b1, ")"),
          pch = 19,
          col = "steelblue")
-    
+
     # Add loess smooth
-    lines(results$b1vals, loess_pred, col = "darkred", lwd = 2)
+    lines(results$b0vals, loess_pred, col = "darkred", lwd = 2)
     
     # Add reference line and grid
     abline(h = 0, lty = 2, col = "red")
@@ -350,9 +350,9 @@ server &lt;- function(input, output, session) {
 shinyApp(ui = ui, server = server)</code></pre>
 <p><strong>What you should see:</strong></p>
 <ul>
-<li>The IMV is always near zero when <span class="math inline">\(b_1\)</span> is near zero — a flat predictor with no slope carries no information over the baseline.</li>
-<li>The curve is symmetric: negative <span class="math inline">\(b_1\)</span> values give the same IMV as their positive counterparts, since the direction of the relationship doesn’t affect predictive accuracy.</li>
-<li>When <span class="math inline">\(b_0=0\)</span>, <span class="math inline">\(b_1=1\)</span> translates to an IMV of around 0.4. But as <span class="math inline">\(b_0\)</span> gets large (high or low prevalence), the same <span class="math inline">\(b_1=1\)</span> yields a much smaller IMV. This is the intercept effect: when outcomes are already highly predictable from prevalence alone, there is less uncertainty for the regression to reduce.</li>
+<li>The IMV peaks near <span class="math inline">\(b_0=0\)</span> (balanced classes) and falls off as <span class="math inline">\(|b_0|\)</span> grows — when the intercept pushes the outcome prevalence toward 0 or 1, the baseline (mean <span class="math inline">\(y\)</span>) already captures most of the outcome, leaving little for the regression to improve on.</li>
+<li>The curve is symmetric around <span class="math inline">\(b_0=0\)</span>: a large positive intercept and a large negative intercept produce the same IMV because both create an extreme prevalence with the same predictability.</li>
+<li>As <span class="math inline">\(b_1\)</span> increases (stronger slope), the peak IMV at <span class="math inline">\(b_0=0\)</span> rises and the curve stays elevated over a wider range of <span class="math inline">\(b_0\)</span> values — a stronger predictor can partially overcome the headwind of extreme prevalence.</li>
 </ul>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
 

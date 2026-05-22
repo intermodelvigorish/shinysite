@@ -96,8 +96,8 @@ ui <- fluidPage(
                  tags$hr(),
                  tags$h4("Core Simulation Loop"),
                  tags$pre(tags$code(
-'# Sample sizes (150 values between 100 and 2000, log-spaced)
-Nvals <- runif(150, log10(100), log10(2000))
+'# Sample sizes (150 values between 100 and 1000, log-spaced)
+Nvals <- runif(150, log10(100), log10(1000))
 Nvals <- sort(round(10^Nvals))
 
 for (i in seq_along(Nvals)) {
@@ -181,7 +181,7 @@ server <- function(input, output, session) {
     b0 <- input$b0
     b1 <- input$b1
     
-    Nvals <- runif(150, log10(100), log10(2000))
+    Nvals <- runif(150, log10(100), log10(1000))
     Nvals <- sort(round(10^Nvals))
     
     om <- om.over <- numeric()
@@ -256,7 +256,7 @@ server <- function(input, output, session) {
            pch = c(19, 19),
            lty = c(1, 1),
            lwd = c(2.5, 2.5),
-           legend = c("oos", "overfit"),
+           legend = c("Oracle", "Overfit"),
            title = "DGM = y~x",
            cex = 1.1)
   })

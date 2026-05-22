@@ -224,7 +224,7 @@ window.Quarto = {
 
 
 <p>The <strong>Oracle IMV</strong> is a special diagnostic that is only available in simulation studies, where the true data-generating probabilities <span class="math inline">\(p\)</span> are known. Normally, we only have estimated probabilities <span class="math inline">\(\hat{p}\)</span> from a fitted model. The Oracle IMV compares <span class="math inline">\(\hat{p}\)</span> directly against the true <span class="math inline">\(p\)</span> — measuring not how well the model predicts new outcomes, but how close the estimated probabilities are to the truth. As sample size grows and estimation improves, <span class="math inline">\(\hat{p} \to p\)</span> and the Oracle IMV should shrink toward zero.</p>
-<p>We consider the logistic regression model <span class="math display">\[p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1 x))}.\]</span> We generate <span class="math inline">\(y\)</span> based on samples of <span class="math inline">\(x\)</span> values across a wide range of sample sizes. For each sample size we fit the correctly specified model (yielding estimates <span class="math inline">\(\hat{p}\)</span>) and compute <strong>IMV(<span class="math inline">\(\hat{p}\)</span>, <span class="math inline">\(p\)</span>)</strong> — the Oracle IMV — which measures how far the estimates are from the true probabilities. A large Oracle IMV indicates substantial estimation noise; an Oracle IMV near zero means <span class="math inline">\(\hat{p} \approx p\)</span>.</p>
+<p>We consider the logistic regression model <span class="math display">\[p=\Pr(y=1)=\frac{1}{1+\text{exp}(-(b_0+b_1(x_1+x_2+x_3+x_4+x_5)))},\]</span> where five independent standard-normal covariates each carry the same slope <span class="math inline">\(b_1\)</span>. We generate <span class="math inline">\(y\)</span> based on samples across a wide range of sample sizes. For each sample size we fit the correctly specified model (yielding estimates <span class="math inline">\(\hat{p}\)</span>) and compute <strong>IMV(<span class="math inline">\(\hat{p}\)</span>, <span class="math inline">\(p\)</span>)</strong> — the Oracle IMV — which measures how far the estimates are from the true probabilities. With six parameters to estimate, small samples produce noisy <span class="math inline">\(\hat{p}\)</span>; a large Oracle IMV indicates substantial estimation noise; an Oracle IMV near zero means <span class="math inline">\(\hat{p} \approx p\)</span>.</p>
 <p>Adjust <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span> and run the simulation to see how estimation quality changes with sample size.</p>
 <pre class="shinylive-r" data-engine="r"><code>#| '!! shinylive warning !!': |
 #|   shinylive does not work in self-contained HTML documents.
@@ -303,30 +303,32 @@ server &lt;- function(input, output, session) {
     b0 &lt;- input$b0
     b1 &lt;- input$b1
     
-    N &lt;- runif(100, 2.4, 4)
+    N &lt;- runif(100, 2, 4)
     Nvals &lt;- round(10^N)
-    
+
     om &lt;- numeric()
-    
+
     withProgress(message = 'Running simulation...', value = 0, {
       for (i in seq_along(Nvals)) {
         N &lt;- Nvals[i]
-        
-        pr &lt;- function(x, b0, b1) 1/(1 + exp(-(b0 + b1*x)))
-        
-        x &lt;- rnorm(N)
-        p &lt;- pr(x, b0 = b0, b1 = b1)
-        y &lt;- rbinom(length(x), 1, p)
-        df &lt;- data.frame(x = x, y = y)
-        m &lt;- glm(y ~ x, df, family = 'binomial')
-        
+
+        lp &lt;- function(x1,x2,x3,x4,x5,b0,b1) b0 + b1*(x1+x2+x3+x4+x5)
+        pr &lt;- function(x1,x2,x3,x4,x5,b0,b1) 1/(1+exp(-lp(x1,x2,x3,x4,x5,b0,b1)))
+
+        x1&lt;-rnorm(N); x2&lt;-rnorm(N); x3&lt;-rnorm(N); x4&lt;-rnorm(N); x5&lt;-rnorm(N)
+        p &lt;- pr(x1,x2,x3,x4,x5,b0,b1)
+        y &lt;- rbinom(N, 1, p)
+        df &lt;- data.frame(x1=x1,x2=x2,x3=x3,x4=x4,x5=x5)
+        m &lt;- glm(y ~ x1+x2+x3+x4+x5, data=df, family='binomial')
+
         ## oos data
-        x2 &lt;- rnorm(10000)
-        p2 &lt;- pr(x2, b0 = b0, b1 = b1)
-        y2 &lt;- rbinom(length(x2), 1, p2)
-        p.oos &lt;- predict(m, data.frame(x = x2), type = 'response')
+        x1&lt;-rnorm(10000); x2&lt;-rnorm(10000); x3&lt;-rnorm(10000); x4&lt;-rnorm(10000); x5&lt;-rnorm(10000)
+        p2 &lt;- pr(x1,x2,x3,x4,x5,b0,b1)
+        y2 &lt;- rbinom(10000, 1, p2)
+        df2 &lt;- data.frame(x1=x1,x2=x2,x3=x3,x4=x4,x5=x5)
+        p.oos &lt;- predict(m, df2, type='response')
         om[as.character(N)] &lt;- imv.binary(y2, p.oos, p2)
-        
+
         incProgress(1/length(Nvals))
       }
     })
@@ -340,8 +342,8 @@ server &lt;- function(input, output, session) {
     plot(data$n, data$om,
          xlab = "Sample Size (N)",
          ylab = "Oracle IMV: IMV(estimated p, true p)",
-         main = paste0("Oracle IMV vs Sample Size\n(b0 = ", 
-                      input$b0, ", b1 = ", input$b1, ")"),
+         main = paste0("Oracle IMV vs Sample Size\n(b0 = ",
+                      input$b0, ", b1 = ", input$b1, ", 5 covariates)"),
          pch = 16,
          col = rgb(0, 0, 1, 0.5),
          cex = 1.2,
@@ -372,8 +374,9 @@ shinyApp(ui = ui, server = server)
 <p><strong>What you should see:</strong></p>
 <ul>
 <li>As sample size increases, the Oracle IMV decreases toward zero — this is the statistical property of consistency: with enough data, <span class="math inline">\(\hat{p} \to p\)</span> and the estimation gap vanishes.</li>
-<li>When <span class="math inline">\(b_1\)</span> is small, the outcome probabilities are all close to the prevalence and hard to distinguish. Even with large <span class="math inline">\(N\)</span>, there is little signal for the model to recover, so estimation noise remains relatively high.</li>
-<li>When <span class="math inline">\(b_1\)</span> is large, the model has strong signal to estimate and converges quickly — the Oracle IMV drops steeply as <span class="math inline">\(N\)</span> grows.</li>
+<li>With six parameters to estimate, the decay is noticeably slower than in a two-parameter model: the Oracle IMV stays elevated well past <span class="math inline">\(N=100\)</span> and the convergence trend is clearly visible across the full range.</li>
+<li>When <span class="math inline">\(b_1\)</span> is small, the outcome probabilities are close to the prevalence and the signal is weak — estimation noise persists to larger <span class="math inline">\(N\)</span>.</li>
+<li>When <span class="math inline">\(b_1\)</span> is larger, each covariate contributes more discriminating information and the estimates converge faster.</li>
 <li>The Oracle IMV is always non-negative by construction: estimated probabilities can never be systematically <em>better</em> than the truth they are approximating.</li>
 </ul>
 <p><a href="index.html" class="btn btn-secondary">← Back to Home</a></p>
